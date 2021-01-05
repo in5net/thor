@@ -1,0 +1,13 @@
+expr    : term (('+' | '-') term)*
+
+term    : factor (('+' | '-') factor)*
+
+factor  : ('+' | '-') factor
+        : power
+
+power   : atom ('^' atom)*
+
+atom    : '(' expr ')'
+        : number
+
+number  : [0-9]*.?[0-9]*
