@@ -1,7 +1,9 @@
-import Token from './token.ts';
+import Token, { Keyword } from './token.ts';
 
 const WHITESPACE = ' \n\r\t';
 const DIGITS = '0123456789';
+const LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_';
+const KEYWORDS: Keyword[] = ['let'];
 
 export default class Lexer {
   text: IterableIterator<string>;
@@ -17,15 +19,20 @@ export default class Lexer {
     return tokens;
   }
 
-  advance() {
+  eof(): boolean {
+    return this.char === '';
+  }
+
+  advance(): void {
     this.char = this.text.next().value || '';
   }
 
-  *generateTokens() {
-    while (this.char !== '') {
+  *generateTokens(): Generator<Token> {
+    while (!this.eof()) {
       const { char } = this;
       if (WHITESPACE.includes(char)) this.advance();
-      else if ((DIGITS + '.').includes(char)) yield this.generateNumber();
+      else if ((DIGITS + '.').includes(char)) yield this.number();
+      else if (LETTERS.includes(char)) yield this.identifier();
       else
         switch (char) {
           case '+':
@@ -33,6 +40,7 @@ export default class Lexer {
           case '*':
           case '/':
           case '^':
+          case '=':
             this.advance();
             yield new Token('operator', char);
             continue;
@@ -48,12 +56,12 @@ export default class Lexer {
     yield new Token('eof', undefined);
   }
 
-  generateNumber() {
+  number(): Token<'number'> {
     let str = this.char;
     let decimals = 0;
     this.advance();
 
-    while (this.char !== '' && (DIGITS + '.').includes(this.char)) {
+    while (!this.eof() && (DIGITS + '.').includes(this.char)) {
       if (this.char === '.' && ++decimals > 1) break;
 
       str += this.char;
@@ -62,4 +70,21 @@ export default class Lexer {
 
     return new Token('number', parseFloat(str));
   }
+
+  identifier(): Token<'identifier' | 'keyword'> {
+    let str = this.char;
+    this.advance();
+
+    while (!this.eof() && (LETTERS + DIGITS).includes(this.char)) {
+      str += this.char;
+      this.advance();
+    }
+
+    if (isKeyword(str)) return new Token('keyword', str);
+    return new Token('identifier', str);
+  }
+}
+
+function isKeyword(str: string): str is Keyword {
+  return KEYWORDS.includes(str as Keyword);
 }

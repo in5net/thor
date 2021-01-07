@@ -1,4 +1,10 @@
-import Node, { BinaryOpNode, NumberNode, UnaryOpNode } from './nodes.ts';
+import Node, {
+  AssignmentNode,
+  BinaryOpNode,
+  IdentifierNode,
+  NumberNode,
+  UnaryOpNode,
+} from './nodes.ts';
 import Token, { UnaryOp } from './token.ts';
 
 export default class Parser {
@@ -10,16 +16,16 @@ export default class Parser {
     this.advance();
   }
 
-  error(): never {
-    throw 'Invalid syntax';
-  }
-
-  eof() {
-    return this.token.type === 'eof';
+  error(message?: string): never {
+    throw `Syntax Error${message ? `: ${message}` : ''}`;
   }
 
   advance() {
     this.token = this.tokens.next().value;
+  }
+
+  eof() {
+    return this.token.type === 'eof';
   }
 
   parse() {
@@ -32,7 +38,23 @@ export default class Parser {
     return result;
   }
 
-  expr() {
+  expr(): Node {
+    if (this.token.is('keyword', 'let' as const)) {
+      this.advance();
+      if (!(this.token as Token).is('identifier'))
+        return this.error('Expected identifier');
+      const identifier = this.token.value as string;
+
+      this.advance();
+      if (!(this.token as Token).is('operator', '=' as const))
+        return this.error("Expected '='");
+
+      this.advance();
+      const node = this.expr();
+
+      return new AssignmentNode(identifier, node);
+    }
+
     let result = this.term();
 
     while (
@@ -51,7 +73,7 @@ export default class Parser {
     return result;
   }
 
-  term() {
+  term(): Node {
     let result = this.factor();
 
     while (
@@ -118,6 +140,10 @@ export default class Parser {
     if (token.type === 'number') {
       this.advance();
       return new NumberNode((token as Token<'number'>).value);
+    }
+    if (token.type === 'identifier') {
+      this.advance();
+      return new IdentifierNode((token as Token<'identifier'>).value);
     }
 
     this.error();

@@ -12,6 +12,22 @@ export class NumberNode implements Node {
   }
 }
 
+export class IdentifierNode implements Node {
+  constructor(public name: string) {}
+
+  toString() {
+    return this.name;
+  }
+}
+
+export class AssignmentNode implements Node {
+  constructor(public identifier: string, public node: Node) {}
+
+  toString() {
+    return `(${this.identifier} = ${this.node})`;
+  }
+}
+
 export class UnaryOpNode implements Node {
   constructor(public node: Node, public operator: UnaryOp) {}
 

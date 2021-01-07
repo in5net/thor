@@ -1,13 +1,13 @@
-expr    : term (('+' | '-') term)*
+expr            : term (('+' | '-') term)*
+                : 'let' identifier '=' expr
 
-term    : factor (('+' | '-') factor)*
+term            : factor (('+' | '-') factor)*
 
-factor  : ('+' | '-') factor
-        : power
+factor          : ('+' | '-') factor
+                : power
 
-power   : atom ('^' atom)*
+power           : atom ('^' atom)*
 
-atom    : '(' expr ')'
-        : number
-
-number  : [0-9]*.?[0-9]*
+atom            : '(' expr ')'
+                : NUMBER
+                : IDENTIFIER
