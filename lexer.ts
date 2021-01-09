@@ -1,9 +1,9 @@
 import Token, { Keyword } from './token.ts';
 
-const WHITESPACE = ' \n\r\t';
+const WHITESPACE = ' \t\r';
 const DIGITS = '0123456789';
 const LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_';
-const KEYWORDS: Keyword[] = ['let'];
+const KEYWORDS: Keyword[] = ['let', 'fn', 'return'];
 
 export default class Lexer {
   text: IterableIterator<string>;
@@ -35,17 +35,24 @@ export default class Lexer {
       else if (LETTERS.includes(char)) yield this.identifier();
       else
         switch (char) {
+          case '\n':
+            this.advance();
+            yield new Token('newline', undefined);
+            continue;
           case '+':
           case '-':
           case '*':
           case '/':
           case '^':
           case '=':
+          case ',':
             this.advance();
             yield new Token('operator', char);
             continue;
           case '(':
           case ')':
+          case '{':
+          case '}':
             this.advance();
             yield new Token('parenthesis', char);
             continue;

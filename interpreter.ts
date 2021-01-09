@@ -1,46 +1,68 @@
 import Node, {
   AssignmentNode,
   BinaryOpNode,
+  FuncCallNode,
+  FuncDefNode,
   IdentifierNode,
   NumberNode,
+  ReturnNode,
+  StatementsNode,
   UnaryOpNode,
 } from './nodes.ts';
-import { Number } from './values.ts';
-
-const identifiers = new Map<string, number>();
+import Value, { BuiltInFunction, Function, Number } from './values.ts';
+import Scope from './scope.ts';
 
 export default class Interpreter {
-  visit(node: Node): Number {
+  visit(node: Node, scope: Scope): Value {
     const methodName = `visit_${node.constructor.name}`;
     // @ts-ignore
-    const method = this[methodName] as (node: Node) => NumberNode;
-    return method.call(this, node);
+    const method = this[methodName] as (node: Node, scope: Scope) => Value;
+    return method.call(this, node, scope);
   }
 
-  visit_NumberNode({ value }: NumberNode): Number {
+  error(message: string): never {
+    throw `Error: ${message}`;
+  }
+
+  visit_NumberNode({ value }: NumberNode, scope: Scope): Number {
     return new Number(value);
   }
 
-  visit_IdentifierNode({ name }: IdentifierNode): Number {
-    const value = identifiers.get(name);
-    return new Number(value !== undefined ? value : NaN);
+  visit_StatementsNode({ nodes }: StatementsNode, scope: Scope): Value {
+    for (const node of nodes) {
+      const value = this.visit(node, scope);
+      if (node instanceof ReturnNode) return value;
+    }
+    return new Number(0);
   }
 
-  visit_AssignmentNode({ identifier, node }: AssignmentNode): Number {
-    const { value } = this.visit(node);
-    identifiers.set(identifier, value);
-    return new Number(value);
+  visit_IdentifierNode({ name }: IdentifierNode, scope: Scope): Value {
+    const value = scope.symbolTable.get(name);
+    if (!value) this.error(`${name} is not defined`);
+    return value;
   }
 
-  visit_UnaryOpNode({ node, operator }: UnaryOpNode): Number {
-    let value = this.visit(node).value;
+  visit_AssignmentNode(
+    { identifier, node }: AssignmentNode,
+    scope: Scope
+  ): Value {
+    const value = this.visit(node, scope);
+    scope.symbolTable.set(identifier, value);
+    return value;
+  }
+
+  visit_UnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Number {
+    let value = (this.visit(node, scope) as Number).value;
     if (operator === '-') value *= -1;
     return new Number(value);
   }
 
-  visit_BinaryOpNode({ left, operator, right }: BinaryOpNode): Number {
-    const leftValue = this.visit(left).value;
-    const rightValue = this.visit(right).value;
+  visit_BinaryOpNode(
+    { left, operator, right }: BinaryOpNode,
+    scope: Scope
+  ): Number {
+    const leftValue = (this.visit(left, scope) as Number).value;
+    const rightValue = (this.visit(right, scope) as Number).value;
     let value: number;
     switch (operator) {
       case '+':
@@ -62,5 +84,26 @@ export default class Interpreter {
         value = 0;
     }
     return new Number(value);
+  }
+
+  visit_FuncDefNode(
+    { name, argNames, body }: FuncDefNode,
+    scope: Scope
+  ): Function {
+    const value = new Function(name, argNames, body);
+    scope.symbolTable.set(name, value);
+    return value;
+  }
+
+  visit_FuncCallNode({ name, args }: FuncCallNode, scope: Scope): Value {
+    const func = scope.symbolTable.get(name) as Function | BuiltInFunction;
+    const argValues = args.map(arg => this.visit(arg, scope));
+    const value = func.execute(argValues);
+    return value;
+  }
+
+  visit_ReturnNode({ node }: ReturnNode, scope: Scope): Value {
+    const value = this.visit(node, scope);
+    return value ?? new Number(0);
   }
 }

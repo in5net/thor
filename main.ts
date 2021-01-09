@@ -1,6 +1,4 @@
-import Interpreter from './interpreter.ts';
-import Lexer from './lexer.ts';
-import Parser from './parser.ts';
+import run from './thor.ts';
 
 if (Deno.args.length > 1) {
   console.log('Usage: deno run --allow-read main.ts [path]');
@@ -12,33 +10,14 @@ if (Deno.args.length > 1) {
 }
 
 function runFile(path: string): void {
-  const file = Deno.readTextFileSync(path);
-  run(file);
+  const text = Deno.readTextFileSync(path);
+  run(text);
 }
 
 function runPrompt(): void {
-  while (1) {
+  while (true) {
     const line = prompt('>');
     if (line === null) break;
     run(line);
-  }
-}
-
-function run(text: string) {
-  try {
-    if (!text) return;
-
-    const lexer = new Lexer(text);
-    const tokens = lexer.lex();
-
-    const parser = new Parser(tokens);
-    const ast = parser.parse();
-    if (!ast) return;
-
-    const interpreter = new Interpreter();
-    const value = interpreter.visit(ast);
-    console.log(value.toString());
-  } catch (e) {
-    console.error('Error:', e);
   }
 }

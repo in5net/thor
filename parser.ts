@@ -1,11 +1,15 @@
 import Node, {
   AssignmentNode,
   BinaryOpNode,
+  FuncCallNode,
+  FuncDefNode,
   IdentifierNode,
   NumberNode,
+  ReturnNode,
+  StatementsNode,
   UnaryOpNode,
 } from './nodes.ts';
-import Token, { UnaryOp } from './token.ts';
+import Token, { BinaryOp, UnaryOp } from './token.ts';
 
 export default class Parser {
   tokens: IterableIterator<Token>;
@@ -20,6 +24,26 @@ export default class Parser {
     throw `Syntax Error${message ? `: ${message}` : ''}`;
   }
 
+  expect(strs: string | string[]): never {
+    let message: string;
+    if (typeof strs === 'string') message = strs;
+    else
+      switch (strs.length) {
+        case 1:
+          message = strs[0];
+          break;
+        case 2:
+          message = `${strs[0]} or ${strs[1]}`;
+          break;
+        default:
+          const begin = strs.slice(0, -2);
+          return this.error(
+            `Expected ${begin.join(', ')}, or ${strs[strs.length - 1]}`
+          );
+      }
+    this.error(`Expected ${message}`);
+  }
+
   advance() {
     this.token = this.tokens.next().value;
   }
@@ -31,23 +55,64 @@ export default class Parser {
   parse() {
     if (this.eof()) return;
 
-    const result = this.expr();
+    const result = this.statements();
 
-    if (!this.eof()) this.error();
+    if (!this.eof()) return this.expect('<eof>');
 
     return result;
+  }
+
+  statements(): StatementsNode {
+    const statements: Node[] = [];
+
+    while (this.token.is('newline')) this.advance();
+
+    statements.push(this.statement());
+
+    let moreStatements = true;
+
+    while (true) {
+      let newlines = 0;
+      while (this.token.is('newline')) {
+        this.advance();
+        newlines++;
+      }
+      if (newlines === 0) moreStatements = false;
+
+      if (!moreStatements || this.token.is('parenthesis', '}')) break;
+
+      const statement = this.statement();
+      if (!statement) {
+        moreStatements = false;
+        continue;
+      }
+      statements.push(statement);
+    }
+
+    return new StatementsNode(statements);
+  }
+
+  statement(): Node {
+    if (this.token.is('keyword', 'return' as const)) {
+      this.advance();
+      const node = this.expr();
+
+      return new ReturnNode(node);
+    }
+
+    return this.expr();
   }
 
   expr(): Node {
     if (this.token.is('keyword', 'let' as const)) {
       this.advance();
       if (!(this.token as Token).is('identifier'))
-        return this.error('Expected identifier');
+        return this.expect('identifier');
       const identifier = this.token.value as string;
 
       this.advance();
       if (!(this.token as Token).is('operator', '=' as const))
-        return this.error("Expected '='");
+        return this.expect("'='");
 
       this.advance();
       const node = this.expr();
@@ -55,41 +120,11 @@ export default class Parser {
       return new AssignmentNode(identifier, node);
     }
 
-    let result = this.term();
-
-    while (
-      !this.eof() &&
-      ['+', '-'].includes((this.token as Token<'operator'>).value)
-    ) {
-      const { token } = this;
-      this.advance();
-      result = new BinaryOpNode(
-        result,
-        (token as Token<'operator'>).value,
-        this.term()
-      );
-    }
-
-    return result;
+    return this.binaryOp(this.term, ['+', '-']);
   }
 
   term(): Node {
-    let result = this.factor();
-
-    while (
-      !this.eof() &&
-      ['*', '/'].includes((this.token as Token<'operator'>).value)
-    ) {
-      const { token } = this;
-      this.advance();
-      result = new BinaryOpNode(
-        result,
-        (token as Token<'operator'>).value,
-        this.factor()
-      );
-    }
-
-    return result;
+    return this.binaryOp(this.factor, ['*', '/']);
   }
 
   factor(): Node {
@@ -110,33 +145,40 @@ export default class Parser {
   }
 
   power(): Node {
-    let result = this.atom();
+    return this.binaryOp(this.call, ['^'], this.factor);
+  }
 
-    while (!this.eof() && (this.token as Token<'operator'>).value === '^') {
-      const { token } = this;
+  call(): Node {
+    // call : atom ('(' (expr (',' expr)*)? ')')?;
+    const atom = this.atom();
+
+    if (this.token.is('parenthesis', '(')) {
       this.advance();
-      result = new BinaryOpNode(
-        result,
-        (token as Token<'operator'>).value,
-        this.atom()
-      );
+      const args: Node[] = [];
+
+      if (this.token.is('parenthesis', ')')) this.advance();
+      else {
+        args.push(this.expr());
+
+        while ((this.token as Token).is('operator', ',')) {
+          this.advance();
+          args.push(this.expr());
+        }
+
+        if (!(this.token as Token).is('parenthesis', ')'))
+          return this.expect(["','", "')'"]);
+        this.advance();
+      }
+
+      return new FuncCallNode((atom as IdentifierNode).name, args);
     }
 
-    return result;
+    return atom;
   }
 
   atom(): Node {
     const { token } = this;
 
-    if (token.value === '(') {
-      this.advance();
-      const result = this.expr();
-
-      if (this.token?.value !== ')') this.error();
-
-      this.advance();
-      return result;
-    }
     if (token.type === 'number') {
       this.advance();
       return new NumberNode((token as Token<'number'>).value);
@@ -145,7 +187,80 @@ export default class Parser {
       this.advance();
       return new IdentifierNode((token as Token<'identifier'>).value);
     }
+    if (token.value === '(') {
+      this.advance();
+      const result = this.expr();
 
-    this.error();
+      if (this.token?.value !== ')') return this.expect("')'");
+
+      this.advance();
+      return result;
+    }
+    if (token.is('keyword', 'fn')) {
+      return this.funcDec();
+    }
+
+    this.expect(['number', 'identifier', '(', "'fn'"]);
+  }
+
+  funcDec(): FuncDefNode {
+    if (!this.token.is('keyword', 'fn')) return this.expect("'fn'");
+    this.advance();
+    if (!this.token.is('identifier')) return this.expect('identifier');
+    const name = (this.token as Token<'identifier'>).value;
+
+    this.advance();
+    // @ts-ignore
+    if (!this.token.is('parenthesis', '(')) return this.expect("'('");
+
+    const argNames: string[] = [];
+    this.advance();
+    // @ts-ignore
+    if (this.token.is('identifier')) {
+      argNames.push((this.token as Token<'identifier'>).value);
+      this.advance();
+      // @ts-ignore
+      while (this.token.is('operator', ',')) {
+        this.advance();
+        // @ts-ignore
+        if (!this.token.is('identifier')) return this.expect('identifier');
+
+        argNames.push((this.token as Token<'identifier'>).value);
+        this.advance();
+      }
+
+      // @ts-ignore
+      if (!this.token.is('parenthesis', ')'))
+        return this.expect(["','", "')'"]);
+    }
+
+    this.advance();
+    // @ts-ignore
+    if (!this.token.is('parenthesis', '{')) return this.expect("'{'");
+
+    this.advance();
+    const body = this.statements();
+
+    // @ts-ignore
+    if (!this.token.is('parenthesis', '}')) return this.expect("'}'");
+    this.advance();
+
+    return new FuncDefNode(name, argNames, body);
+  }
+
+  binaryOp(left: () => Node, operators: BinaryOp[], right = left) {
+    let result = left.call(this);
+
+    while (operators.includes((this.token as Token<'operator'>).value)) {
+      const { token } = this;
+      this.advance();
+      result = new BinaryOpNode(
+        result,
+        (token as Token<'operator'>).value,
+        right.call(this)
+      );
+    }
+
+    return result;
   }
 }

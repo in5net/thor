@@ -47,3 +47,41 @@ export class BinaryOpNode implements Node {
     return `(${this.left} ${this.operator} ${this.right})`;
   }
 }
+
+export class StatementsNode implements Node {
+  constructor(public nodes: Node[]) {}
+
+  toString() {
+    return `${this.nodes.join(',\n')}`;
+  }
+}
+
+export class FuncDefNode implements Node {
+  constructor(
+    public name: string,
+    public argNames: string[],
+    public body: StatementsNode
+  ) {}
+
+  toString() {
+    return `(fn ${this.name}(${this.argNames.join(', ')}) {
+  ${this.body}
+})`;
+  }
+}
+
+export class FuncCallNode implements Node {
+  constructor(public name: string, public args: Node[]) {}
+
+  toString() {
+    return `(${this.name}(${this.args.join(', ')}))`;
+  }
+}
+
+export class ReturnNode implements Node {
+  constructor(public node: Node) {}
+
+  toString() {
+    return `(return ${this.node})`;
+  }
+}

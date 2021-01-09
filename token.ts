@@ -1,7 +1,7 @@
 export type UnaryOp = '+' | '-';
-export type BinaryOp = UnaryOp | '*' | '/' | '^' | '=';
-export type Parenthesis = '(' | ')';
-export type Keyword = 'let';
+export type BinaryOp = UnaryOp | '*' | '/' | '^' | '=' | ',';
+export type Parenthesis = '(' | ')' | '{' | '}';
+export type Keyword = 'let' | 'fn' | 'return';
 
 interface TokenMap {
   number: number;
@@ -9,6 +9,7 @@ interface TokenMap {
   operator: UnaryOp | BinaryOp;
   parenthesis: Parenthesis;
   keyword: Keyword;
+  newline: undefined;
   eof: undefined;
 }
 
@@ -18,6 +19,7 @@ enum TokenName {
   operator = 'operator',
   parenthesis = 'parenthesis',
   keyword = 'keyword',
+  newline = 'newline',
   eof = '<eof>',
 }
 
@@ -40,6 +42,6 @@ export default class Token<
 
   toString() {
     const { type, value } = this;
-    return `${TokenName[type]}${value ? `: ${value}` : ''}`;
+    return `${TokenName[type]}${value ? `: '${value}'` : ''}`;
   }
 }

@@ -1,3 +1,6 @@
-pi = 3.14
-fav = 12
-12 * 2
+fn add(x, y) {
+    return x + y
+}
+
+let sum = add(2, 3)
+print(sum)
