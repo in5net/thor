@@ -26,8 +26,11 @@ atom:
 	(NUMBER | BOOLEAN | STRING | IDENTIFIER)
 	| '(' expr ')'
 	| '|' expr '|'
+	| list_expr
 	| if_expr
 	| func_def;
+
+list_expr: '[' (expr (',' expr)*)? ']';
 
 if_expr:
 	'if' expr ((':' statement) | ('{' statements '}')) else_expr?;

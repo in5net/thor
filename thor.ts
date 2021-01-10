@@ -2,12 +2,10 @@ import Interpreter from './interpreter.ts';
 import Lexer from './lexer.ts';
 import Parser from './parser.ts';
 import Scope from './scope.ts';
-import Value, { BuiltInFunction, Number } from './values.ts';
+import Value, { BuiltInFunction } from './values.ts';
 
 const globalScope = new Scope('<program>');
-globalScope.symbolTable.set('PI', new Number(Math.PI));
-globalScope.symbolTable.set('TAU', new Number(Math.PI * 2));
-globalScope.symbolTable.set('print', new BuiltInFunction('print'));
+BuiltInFunction.setupGlobalSymbolTable(globalScope.symbolTable);
 
 export default function run(
   text: string,

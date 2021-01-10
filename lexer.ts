@@ -62,6 +62,8 @@ export default class Lexer {
             continue;
           case '(':
           case ')':
+          case '[':
+          case ']':
           case '{':
           case '}':
           case '|':

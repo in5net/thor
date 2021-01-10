@@ -12,7 +12,7 @@ export type BinaryOp =
   | ','
   | ':';
 export type Operator = UnaryOp | BinaryOp;
-export type Parenthesis = '(' | ')' | '{' | '}' | '|';
+export type Parenthesis = '(' | ')' | '[' | ']' | '{' | '}' | '|';
 export type Keyword = 'let' | 'if' | 'else' | 'or' | 'fn' | 'return';
 
 interface TokenMap {

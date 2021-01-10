@@ -1,9 +1,7 @@
 import Interpreter from './interpreter.ts';
-import { StatementsNode } from './nodes.ts';
-import Scope from './scope.ts';
-import { BinaryOp, Operator, UnaryOp } from './token.ts';
-
-type Temp = Record<Operator, string>;
+import { ListNode } from './nodes.ts';
+import Scope, { SymbolTable } from './scope.ts';
+import { Operator } from './token.ts';
 
 export default class Value {
   scope?: Scope;
@@ -50,29 +48,29 @@ export class Number extends Value {
     return this.value.toString();
   }
 
-  '+'(other: Value) {
+  '+'(other?: Value) {
     if (other instanceof Number) return new Number(this.value + other.value);
     if (!other) return this;
     Value.illegalOperation('+', other);
   }
 
-  '-'(other: Value) {
+  '-'(other?: Value) {
     if (other instanceof Number) return new Number(this.value - other.value);
     if (!other) return new Number(-this.value);
     Value.illegalOperation('-', other);
   }
 
-  '*'(other: Value) {
+  '*'(other?: Value) {
     if (other instanceof Number) return new Number(this.value * other.value);
     Value.illegalOperation('*', other);
   }
 
-  '/'(other: Value) {
+  '/'(other?: Value) {
     if (other instanceof Number) return new Number(this.value / other.value);
     Value.illegalOperation('/', other);
   }
 
-  '^'(other: Value) {
+  '^'(other?: Value) {
     if (other instanceof Number) return new Number(this.value ** other.value);
     Value.illegalOperation('^', other);
   }
@@ -81,32 +79,32 @@ export class Number extends Value {
     return new Number(Math.abs(this.value));
   }
 
-  '=='(other: Value) {
+  '=='(other?: Value) {
     if (other instanceof Number) return new Boolean(this.value === other.value);
     Value.illegalOperation('==', other);
   }
 
-  '!='(other: Value) {
+  '!='(other?: Value) {
     if (other instanceof Number) return new Boolean(this.value !== other.value);
     Value.illegalOperation('!=', other);
   }
 
-  '>'(other: Value) {
+  '>'(other?: Value) {
     if (other instanceof Number) return new Boolean(this.value > other.value);
     Value.illegalOperation('>', other);
   }
 
-  '>='(other: Value) {
+  '>='(other?: Value) {
     if (other instanceof Number) return new Boolean(this.value >= other.value);
     Value.illegalOperation('>=', other);
   }
 
-  '<'(other: Value) {
+  '<'(other?: Value) {
     if (other instanceof Number) return new Boolean(this.value < other.value);
     Value.illegalOperation('<', other);
   }
 
-  '<='(other: Value) {
+  '<='(other?: Value) {
     if (other instanceof Number) return new Boolean(this.value <= other.value);
     Value.illegalOperation('<=', other);
   }
@@ -115,13 +113,13 @@ export class Number extends Value {
     return new Boolean(!this.value);
   }
 
-  and(other: Value) {
+  and(other?: Value) {
     if (other instanceof Number)
       return new Boolean(!!this.value && !!other.value);
     Value.illegalOperation('and', other);
   }
 
-  or(other: Value) {
+  or(other?: Value) {
     if (other instanceof Number)
       return new Boolean(!!this.value || !!other.value);
     Value.illegalOperation('or', other);
@@ -137,13 +135,13 @@ export class Boolean extends Value {
     return this.value.toString();
   }
 
-  '=='(other: Value) {
+  '=='(other?: Value) {
     if (other instanceof Boolean)
       return new Boolean(this.value === other.value);
     Value.illegalOperation('==', other);
   }
 
-  '!='(other: Value) {
+  '!='(other?: Value) {
     if (other instanceof Boolean)
       return new Boolean(this.value !== other.value);
     Value.illegalOperation('!=', other);
@@ -153,13 +151,13 @@ export class Boolean extends Value {
     return new Boolean(!this.value);
   }
 
-  and(other: Value) {
+  and(other?: Value) {
     if (other instanceof Boolean)
       return new Boolean(!!this.value && !!other.value);
     Value.illegalOperation('and', other);
   }
 
-  or(other: Value) {
+  or(other?: Value) {
     if (other instanceof Boolean)
       return new Boolean(!!this.value || !!other.value);
     Value.illegalOperation('or', other);
@@ -175,29 +173,29 @@ export class String extends Value {
     return this.value.toString();
   }
 
-  '+'(other: Value) {
+  '+'(other?: Value) {
     if (other instanceof String) return new String(this.value + other.value);
     if (!other) return new Number(+this.value);
     Value.illegalOperation('+', other);
   }
 
-  '*'(other: Value) {
+  '*'(other?: Value) {
     if (other instanceof Number)
       return new String(this.value.repeat(other.value));
     Value.illegalOperation('*', other);
   }
 
-  '=='(other: Value) {
+  '=='(other?: Value) {
     if (other instanceof String) return new Boolean(this.value === other.value);
     Value.illegalOperation('==', other);
   }
 
-  '!='(other: Value) {
+  '!='(other?: Value) {
     if (other instanceof String) return new Boolean(this.value !== other.value);
     Value.illegalOperation('!=', other);
   }
 
-  '>'(other: Value) {
+  '>'(other?: Value) {
     if (other instanceof String)
       return new Boolean(this.value.length > other.value.length);
     if (other instanceof Number)
@@ -205,7 +203,7 @@ export class String extends Value {
     Value.illegalOperation('>', other);
   }
 
-  '>='(other: Value) {
+  '>='(other?: Value) {
     if (other instanceof String)
       return new Boolean(this.value.length >= other.value.length);
     if (other instanceof Number)
@@ -213,7 +211,7 @@ export class String extends Value {
     Value.illegalOperation('>=', other);
   }
 
-  '<'(other: Value) {
+  '<'(other?: Value) {
     if (other instanceof String)
       return new Boolean(this.value.length < other.value.length);
     if (other instanceof Number)
@@ -221,7 +219,7 @@ export class String extends Value {
     Value.illegalOperation('<', other);
   }
 
-  '<='(other: Value) {
+  '<='(other?: Value) {
     if (other instanceof String)
       return new Boolean(this.value.length <= other.value.length);
     if (other instanceof Number)
@@ -233,16 +231,52 @@ export class String extends Value {
     return new Boolean(!this.value);
   }
 
-  and(other: Value) {
+  and(other?: Value) {
     if (other instanceof String)
       return new Boolean(!!this.value && !!other.value);
     Value.illegalOperation('and', other);
   }
 
-  or(other: Value) {
+  or(other?: Value) {
     if (other instanceof String)
       return new Boolean(!!this.value || !!other.value);
     Value.illegalOperation('or', other);
+  }
+}
+
+export class List extends Value {
+  constructor(public items: Value[]) {
+    super();
+  }
+
+  toString() {
+    return `[${this.items.join(', ')}]`;
+  }
+
+  '+'(other?: Value) {
+    if (other instanceof List) return new List([...this.items, ...other.items]);
+    if (other instanceof Value) return new List([...this.items, other]);
+    Value.illegalOperation('+', other);
+  }
+
+  '=='(other?: Value) {
+    if (other instanceof List)
+      return new Boolean(
+        this.items.every((value, index) => value === other.items[index])
+      );
+    Value.illegalOperation('==', other);
+  }
+
+  '!='(other?: Value) {
+    if (other instanceof List)
+      return new Boolean(
+        this.items.some((value, index) => value !== other.items[index])
+      );
+    Value.illegalOperation('!=', other);
+  }
+
+  not() {
+    return new Boolean(!this.items.length);
   }
 }
 
@@ -272,11 +306,7 @@ export class BaseFunction extends Value {
 }
 
 export class Function extends BaseFunction {
-  constructor(
-    name: string,
-    public argNames: string[],
-    public body: StatementsNode
-  ) {
+  constructor(name: string, public argNames: string[], public body: ListNode) {
     super(name);
   }
 
@@ -312,14 +342,29 @@ export class BuiltInFunction extends BaseFunction {
     return method.call(this, scope);
   }
 
+  static setupGlobalSymbolTable(symbolTable: SymbolTable) {
+    symbolTable.set('PI', new Number(Math.PI));
+    symbolTable.set('TAU', new Number(Math.PI * 2));
+
+    symbolTable.set('print', new BuiltInFunction('print'));
+    symbolTable.set('len', new BuiltInFunction('len'));
+  }
+
   noMethod(): never {
     throw `Error: Function ${this.name} is not defined`;
   }
 
   execute_print({ symbolTable }: Scope) {
-    const value = symbolTable.get('value');
-    console.log(`${value}`);
+    const message = symbolTable.get('message');
+    console.log(`${message}`);
     return new Number(0);
   }
-  print_argNames = ['value'];
+  print_argNames = ['message'];
+
+  execute_len({ symbolTable }: Scope) {
+    const list = symbolTable.get('list');
+    if (!(list instanceof List)) throw 'Error: len() must receive a list';
+    return new Number(list.items.length);
+  }
+  len_argNames = ['list'];
 }

@@ -7,9 +7,9 @@ import Node, {
   FuncDefNode,
   IdentifierNode,
   IfNode,
+  ListNode,
   NumberNode,
   ReturnNode,
-  StatementsNode,
   StringNode,
   UnaryOpNode,
 } from './nodes.ts';
@@ -75,7 +75,7 @@ export default class Parser {
     return result;
   }
 
-  statements(): StatementsNode {
+  statements(): ListNode {
     // '\n'* statement ('\n'+ statement)* '\n'*
     const statements: Node[] = [];
 
@@ -99,7 +99,7 @@ export default class Parser {
       statements.push(statement);
     }
 
-    return new StatementsNode(statements);
+    return new ListNode(statements);
   }
 
   statement(): Node {
@@ -209,7 +209,7 @@ export default class Parser {
   }
 
   atom(): Node {
-    // (NUMBER | BOOLEAN | STRING | IDENTIFIER) | '(' expr ')' | '|' expr '|' | if_expr | func_def
+    // (NUMBER | BOOLEAN | STRING | IDENTIFIER) | '(' expr ')' | '|' expr '|' | list_expr | if_expr | func_def
     const { token } = this;
 
     if (token.is('number')) {
@@ -246,10 +246,33 @@ export default class Parser {
       this.advance();
       return new AbsNode(expr);
     }
+    if (token.is('parenthesis', '[')) return this.listExpr();
     if (token.is('keyword', 'if')) return this.ifExpr();
     if (token.is('keyword', 'fn')) return this.funcDec();
 
     this.expect(['number', 'identifier', '(', "'if'", "'fn'"]);
+  }
+
+  listExpr(): ListNode {
+    // '[' (expr (',' expr)*)? ']'
+    if (!this.token.is('parenthesis', '[')) return this.expect("'['");
+    this.advance();
+
+    const nodes: Node[] = [];
+
+    if (!this.token.is('parenthesis', ']')) {
+      nodes.push(this.expr());
+
+      while ((this.token as Token).is('operator', ',')) {
+        this.advance();
+        nodes.push(this.expr());
+      }
+    }
+
+    if (!this.token.is('parenthesis', ']')) this.expect(["','", "']'"]);
+    this.advance();
+
+    return new ListNode(nodes);
   }
 
   ifExpr(): IfNode {

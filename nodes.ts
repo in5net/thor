@@ -28,11 +28,13 @@ export class StringNode implements Node {
   }
 }
 
-export class StatementsNode implements Node {
+export class ListNode implements Node {
   constructor(public nodes: Node[]) {}
 
   toString() {
-    return `${this.nodes.join(',\n')}`;
+    return `[
+  ${this.nodes.join(',\n  ')}
+]`;
   }
 }
 
@@ -101,7 +103,7 @@ export class FuncDefNode implements Node {
   constructor(
     public name: string,
     public argNames: string[],
-    public body: StatementsNode
+    public body: ListNode
   ) {}
 
   toString() {

@@ -7,9 +7,9 @@ import Node, {
   FuncDefNode,
   IdentifierNode,
   IfNode,
+  ListNode,
   NumberNode,
   ReturnNode,
-  StatementsNode,
   StringNode,
   UnaryOpNode,
 } from './nodes.ts';
@@ -17,6 +17,7 @@ import Value, {
   Boolean,
   BuiltInFunction,
   Function,
+  List,
   Number,
   String,
 } from './values.ts';
@@ -46,12 +47,14 @@ export default class Interpreter {
     return new String(value);
   }
 
-  visit_StatementsNode({ nodes }: StatementsNode, scope: Scope): Value {
+  visit_ListNode({ nodes }: ListNode, scope: Scope): Value {
+    const items = [];
     for (const node of nodes) {
       const value = this.visit(node, scope);
       if (node instanceof ReturnNode) return value;
+      items.push(value);
     }
-    return new Number(0);
+    return new List(items);
   }
 
   visit_IdentifierNode({ name }: IdentifierNode, scope: Scope): Value {
