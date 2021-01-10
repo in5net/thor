@@ -18,6 +18,7 @@ export type Keyword = 'let' | 'if' | 'else' | 'or' | 'fn' | 'return';
 interface TokenMap {
   number: number;
   boolean: boolean;
+  string: string;
   identifier: string;
   operator: Operator;
   parenthesis: Parenthesis;
@@ -29,6 +30,7 @@ interface TokenMap {
 enum TokenName {
   number = 'number',
   boolean = 'boolean',
+  string = 'string',
   identifier = 'identifier',
   operator = 'operator',
   parenthesis = 'parenthesis',

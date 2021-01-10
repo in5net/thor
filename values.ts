@@ -121,10 +121,6 @@ export class Number extends Value {
       return new Boolean(!!this.value || !!other.value);
     Value.illegalOperation('or', other);
   }
-
-  toBoolean(): Boolean {
-    return new Boolean(!!this.value);
-  }
 }
 
 export class Boolean extends Value {
@@ -160,6 +156,86 @@ export class Boolean extends Value {
 
   or(other: Value) {
     if (other instanceof Boolean)
+      return new Boolean(!!this.value || !!other.value);
+    Value.illegalOperation('or', other);
+  }
+}
+
+export class String extends Value {
+  constructor(public value: string) {
+    super();
+  }
+
+  toString() {
+    return this.value.toString();
+  }
+
+  '+'(other: Value) {
+    if (other instanceof String) return new String(this.value + other.value);
+    if (!other) return new Number(+this.value);
+    Value.illegalOperation('+', other);
+  }
+
+  '*'(other: Value) {
+    if (other instanceof Number)
+      return new String(this.value.repeat(other.value));
+    Value.illegalOperation('*', other);
+  }
+
+  '=='(other: Value) {
+    if (other instanceof String) return new Boolean(this.value === other.value);
+    Value.illegalOperation('==', other);
+  }
+
+  '!='(other: Value) {
+    if (other instanceof String) return new Boolean(this.value !== other.value);
+    Value.illegalOperation('!=', other);
+  }
+
+  '>'(other: Value) {
+    if (other instanceof String)
+      return new Boolean(this.value.length > other.value.length);
+    if (other instanceof Number)
+      return new Boolean(this.value.length > other.value);
+    Value.illegalOperation('>', other);
+  }
+
+  '>='(other: Value) {
+    if (other instanceof String)
+      return new Boolean(this.value.length >= other.value.length);
+    if (other instanceof Number)
+      return new Boolean(this.value.length >= other.value);
+    Value.illegalOperation('>=', other);
+  }
+
+  '<'(other: Value) {
+    if (other instanceof String)
+      return new Boolean(this.value.length < other.value.length);
+    if (other instanceof Number)
+      return new Boolean(this.value.length < other.value);
+    Value.illegalOperation('<', other);
+  }
+
+  '<='(other: Value) {
+    if (other instanceof String)
+      return new Boolean(this.value.length <= other.value.length);
+    if (other instanceof Number)
+      return new Boolean(this.value.length <= other.value);
+    Value.illegalOperation('<=', other);
+  }
+
+  not() {
+    return new Boolean(!this.value);
+  }
+
+  and(other: Value) {
+    if (other instanceof String)
+      return new Boolean(!!this.value && !!other.value);
+    Value.illegalOperation('and', other);
+  }
+
+  or(other: Value) {
+    if (other instanceof String)
       return new Boolean(!!this.value || !!other.value);
     Value.illegalOperation('or', other);
   }

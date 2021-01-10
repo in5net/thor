@@ -24,8 +24,9 @@ call: atom ('(' (expr (',' expr)*)? ')')?;
 
 atom:
 	NUMBER
-	| IDENTIFIER
 	| BOOLEAN
+	| STRING
+	| IDENTIFIER
 	| '(' expr ')'
 	| if_expr
 	| func_def;
@@ -40,4 +41,5 @@ func_def:
 
 NUMBER: [0-9]* '.' [0-9]*;
 BOOLEAN: 'true' | 'false';
+STRING: '"' .* '"';
 IDENTIFIER: [a-zA-Z] [a-zA-Z0-9_]*;

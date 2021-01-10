@@ -20,6 +20,14 @@ export class BooleanNode implements Node {
   }
 }
 
+export class StringNode implements Node {
+  constructor(public value: string) {}
+
+  toString() {
+    return `"${this.value}"`;
+  }
+}
+
 export class IdentifierNode implements Node {
   constructor(public name: string) {}
 

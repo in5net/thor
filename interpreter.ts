@@ -9,9 +9,16 @@ import Node, {
   NumberNode,
   ReturnNode,
   StatementsNode,
+  StringNode,
   UnaryOpNode,
 } from './nodes.ts';
-import Value, { Boolean, BuiltInFunction, Function, Number } from './values.ts';
+import Value, {
+  Boolean,
+  BuiltInFunction,
+  Function,
+  Number,
+  String,
+} from './values.ts';
 import Scope from './scope.ts';
 
 export default class Interpreter {
@@ -32,6 +39,10 @@ export default class Interpreter {
 
   visit_BooleanNode({ value }: BooleanNode, scope: Scope): Boolean {
     return new Boolean(value);
+  }
+
+  visit_StringNode({ value }: StringNode, scope: Scope): String {
+    return new String(value);
   }
 
   visit_StatementsNode({ nodes }: StatementsNode, scope: Scope): Value {

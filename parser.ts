@@ -9,6 +9,7 @@ import Node, {
   NumberNode,
   ReturnNode,
   StatementsNode,
+  StringNode,
   UnaryOpNode,
 } from './nodes.ts';
 import Token, { BinaryOp, UnaryOp } from './token.ts';
@@ -207,7 +208,7 @@ export default class Parser {
   }
 
   atom(): Node {
-    // NUMBER | IDENTIFIER | BOOLEAN | '(' expr ')' | if_expr | func_def
+    // NUMBER | BOOLEAN | STRING | IDENTIFIER | '(' expr ')' | if_expr | func_def
     const { token } = this;
 
     if (token.is('number')) {
@@ -217,6 +218,10 @@ export default class Parser {
     if (token.is('boolean')) {
       this.advance();
       return new BooleanNode(token.value);
+    }
+    if (token.is('string')) {
+      this.advance();
+      return new StringNode(token.value);
     }
     if (token.is('identifier')) {
       this.advance();
