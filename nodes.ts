@@ -64,6 +64,14 @@ export class BinaryOpNode implements Node {
   }
 }
 
+export class AbsNode implements Node {
+  constructor(public node: Node) {}
+
+  toString() {
+    return `|${this.node}|`;
+  }
+}
+
 export class StatementsNode implements Node {
   constructor(public nodes: Node[]) {}
 

@@ -23,11 +23,9 @@ power: call ('^' factor)*;
 call: atom ('(' (expr (',' expr)*)? ')')?;
 
 atom:
-	NUMBER
-	| BOOLEAN
-	| STRING
-	| IDENTIFIER
+	(NUMBER | BOOLEAN | STRING | IDENTIFIER)
 	| '(' expr ')'
+	| '|' expr '|'
 	| if_expr
 	| func_def;
 
@@ -41,5 +39,5 @@ func_def:
 
 NUMBER: [0-9]* '.' [0-9]*;
 BOOLEAN: 'true' | 'false';
-STRING: '"' .* '"';
+STRING: '"' (.)*? '"';
 IDENTIFIER: [a-zA-Z] [a-zA-Z0-9_]*;

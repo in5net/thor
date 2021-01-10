@@ -64,6 +64,7 @@ export default class Lexer {
           case ')':
           case '{':
           case '}':
+          case '|':
             yield new Token('parenthesis', char);
             this.advance();
             continue;
