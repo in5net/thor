@@ -1,15 +1,17 @@
 import Node, {
   AssignmentNode,
   BinaryOpNode,
+  BooleanNode,
   FuncCallNode,
   FuncDefNode,
   IdentifierNode,
+  IfNode,
   NumberNode,
   ReturnNode,
   StatementsNode,
   UnaryOpNode,
 } from './nodes.ts';
-import Value, { BuiltInFunction, Function, Number } from './values.ts';
+import Value, { Boolean, BuiltInFunction, Function, Number } from './values.ts';
 import Scope from './scope.ts';
 
 export default class Interpreter {
@@ -26,6 +28,10 @@ export default class Interpreter {
 
   visit_NumberNode({ value }: NumberNode, scope: Scope): Number {
     return new Number(value);
+  }
+
+  visit_BooleanNode({ value }: BooleanNode, scope: Scope): Boolean {
+    return new Boolean(value);
   }
 
   visit_StatementsNode({ nodes }: StatementsNode, scope: Scope): Value {
@@ -84,6 +90,13 @@ export default class Interpreter {
         value = 0;
     }
     return new Number(value);
+  }
+
+  visit_IfNode({ condition, body, elseCase }: IfNode, scope: Scope) {
+    // @ts-ignore
+    if ((this.visit(condition, scope) as NumberNode | BooleanNode).value)
+      this.visit(body, scope);
+    else if (elseCase) this.visit(elseCase, scope);
   }
 
   visit_FuncDefNode(

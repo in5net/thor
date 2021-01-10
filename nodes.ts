@@ -12,6 +12,14 @@ export class NumberNode implements Node {
   }
 }
 
+export class BooleanNode implements Node {
+  constructor(public value: boolean) {}
+
+  toString() {
+    return this.value.toString();
+  }
+}
+
 export class IdentifierNode implements Node {
   constructor(public name: string) {}
 
@@ -53,6 +61,23 @@ export class StatementsNode implements Node {
 
   toString() {
     return `${this.nodes.join(',\n')}`;
+  }
+}
+
+export class IfNode implements Node {
+  constructor(
+    public condition: Node,
+    public body: Node,
+    public elseCase?: Node
+  ) {}
+
+  toString() {
+    return `(if ${this.condition}: ${this.body}${
+      this.elseCase
+        ? `
+else ${this.elseCase}`
+        : ''
+    })`;
   }
 }
 

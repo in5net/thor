@@ -1,6 +1,6 @@
-fn add(x, y) {
-    return x + y
+if true {
+    print(69)
 }
-
-let sum = add(2, 3)
-print(sum)
+else {
+    print(101)
+}

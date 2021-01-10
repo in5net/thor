@@ -1,9 +1,11 @@
 import Node, {
   AssignmentNode,
   BinaryOpNode,
+  BooleanNode,
   FuncCallNode,
   FuncDefNode,
   IdentifierNode,
+  IfNode,
   NumberNode,
   ReturnNode,
   StatementsNode,
@@ -48,6 +50,15 @@ export default class Parser {
     this.token = this.tokens.next().value;
   }
 
+  skipNewlines() {
+    let newlines = 0;
+    while (this.token.is('newline')) {
+      this.advance();
+      newlines++;
+    }
+    return newlines;
+  }
+
   eof() {
     return this.token.type === 'eof';
   }
@@ -65,18 +76,14 @@ export default class Parser {
   statements(): StatementsNode {
     const statements: Node[] = [];
 
-    while (this.token.is('newline')) this.advance();
+    this.skipNewlines();
 
     statements.push(this.statement());
 
     let moreStatements = true;
 
     while (true) {
-      let newlines = 0;
-      while (this.token.is('newline')) {
-        this.advance();
-        newlines++;
-      }
+      let newlines = this.skipNewlines();
       if (newlines === 0) moreStatements = false;
 
       if (!moreStatements || this.token.is('parenthesis', '}')) break;
@@ -179,13 +186,17 @@ export default class Parser {
   atom(): Node {
     const { token } = this;
 
-    if (token.type === 'number') {
+    if (token.is('number')) {
       this.advance();
-      return new NumberNode((token as Token<'number'>).value);
+      return new NumberNode(token.value);
     }
-    if (token.type === 'identifier') {
+    if (token.is('boolean')) {
       this.advance();
-      return new IdentifierNode((token as Token<'identifier'>).value);
+      return new BooleanNode(token.value);
+    }
+    if (token.is('identifier')) {
+      this.advance();
+      return new IdentifierNode(token.value);
     }
     if (token.value === '(') {
       this.advance();
@@ -196,11 +207,57 @@ export default class Parser {
       this.advance();
       return result;
     }
-    if (token.is('keyword', 'fn')) {
-      return this.funcDec();
-    }
+    if (token.is('keyword', 'if')) return this.ifExpr();
+    if (token.is('keyword', 'fn')) return this.funcDec();
 
-    this.expect(['number', 'identifier', '(', "'fn'"]);
+    this.expect(['number', 'identifier', '(', "'if'", "'fn'"]);
+  }
+
+  ifExpr(): IfNode {
+    if (!this.token.is('keyword', 'if')) return this.expect("'if'");
+    this.advance();
+
+    const condition = this.expr();
+
+    let body: Node;
+
+    if (this.token.is('operator', ':')) {
+      this.advance();
+      body = this.statement();
+    } else if (this.token.is('parenthesis', '{')) {
+      this.advance();
+      body = this.statements();
+      if (!(this.token as Token).is('parenthesis', '}'))
+        return this.expect("'}'");
+      this.advance();
+    } else return this.expect(["':'", "'{'"]);
+
+    let elseCase: Node | undefined;
+
+    this.skipNewlines();
+    if ((this.token as Token).is('keyword', 'else')) elseCase = this.elseExpr();
+
+    return new IfNode(condition, body, elseCase);
+  }
+
+  elseExpr(): Node {
+    if (!this.token.is('keyword', 'else')) return this.expect("'else'");
+    this.advance();
+
+    let body: Node;
+
+    if (this.token.is('operator', ':')) {
+      this.advance();
+      body = this.statement();
+    } else if (this.token.is('parenthesis', '{')) {
+      this.advance();
+      body = this.statements();
+      if (!(this.token as Token).is('parenthesis', '}'))
+        return this.expect("'}'");
+      this.advance();
+    } else return this.expect(["':'", "'{'"]);
+
+    return body;
   }
 
   funcDec(): FuncDefNode {

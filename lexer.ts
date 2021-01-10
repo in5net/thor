@@ -1,9 +1,10 @@
-import Token, { Keyword } from './token.ts';
+import Token, { Boolean, Keyword } from './token.ts';
 
 const WHITESPACE = ' \t\r';
 const DIGITS = '0123456789';
 const LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_';
-const KEYWORDS: Keyword[] = ['let', 'fn', 'return'];
+const KEYWORDS: Keyword[] = ['let', 'if', 'else', 'fn', 'return'];
+const BOOLEANS: Boolean[] = ['true', 'false'];
 
 export default class Lexer {
   text: IterableIterator<string>;
@@ -46,6 +47,7 @@ export default class Lexer {
           case '^':
           case '=':
           case ',':
+          case ':':
             this.advance();
             yield new Token('operator', char);
             continue;
@@ -78,7 +80,7 @@ export default class Lexer {
     return new Token('number', parseFloat(str));
   }
 
-  identifier(): Token<'identifier' | 'keyword'> {
+  identifier(): Token<'identifier' | 'keyword' | 'boolean'> {
     let str = this.char;
     this.advance();
 
@@ -88,10 +90,15 @@ export default class Lexer {
     }
 
     if (isKeyword(str)) return new Token('keyword', str);
+    if (isBoolean(str)) return new Token('boolean', str === 'true');
     return new Token('identifier', str);
   }
 }
 
 function isKeyword(str: string): str is Keyword {
   return KEYWORDS.includes(str as Keyword);
+}
+
+function isBoolean(str: string): str is Boolean {
+  return BOOLEANS.includes(str as Boolean);
 }

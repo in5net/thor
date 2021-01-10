@@ -1,10 +1,12 @@
+export type Boolean = 'true' | 'false';
 export type UnaryOp = '+' | '-';
-export type BinaryOp = UnaryOp | '*' | '/' | '^' | '=' | ',';
+export type BinaryOp = UnaryOp | '*' | '/' | '^' | '=' | ',' | ':';
 export type Parenthesis = '(' | ')' | '{' | '}';
-export type Keyword = 'let' | 'fn' | 'return';
+export type Keyword = 'let' | 'if' | 'else' | 'fn' | 'return';
 
 interface TokenMap {
   number: number;
+  boolean: boolean;
   identifier: string;
   operator: UnaryOp | BinaryOp;
   parenthesis: Parenthesis;
@@ -15,6 +17,7 @@ interface TokenMap {
 
 enum TokenName {
   number = 'number',
+  boolean = 'boolean',
   identifier = 'identifier',
   operator = 'operator',
   parenthesis = 'parenthesis',

@@ -20,6 +20,16 @@ export class Number extends Value {
   }
 }
 
+export class Boolean extends Value {
+  constructor(public value: boolean) {
+    super();
+  }
+
+  toString() {
+    return this.value.toString();
+  }
+}
+
 export class BaseFunction extends Value {
   constructor(public name = '<anonymous>') {
     super();

@@ -11,13 +11,15 @@ if (Deno.args.length > 1) {
 
 function runFile(path: string): void {
   const text = Deno.readTextFileSync(path);
-  run(text);
+  run(text, { logTokens: true, logAST: true });
 }
 
 function runPrompt(): void {
   while (true) {
     const line = prompt('>');
-    if (line === null) break;
-    run(line);
+    if (line === null) continue;
+    const value = run(line);
+    if (!value) continue;
+    console.log(value.toString());
   }
 }
