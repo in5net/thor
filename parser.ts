@@ -1,4 +1,5 @@
 import Node, {
+  AbsNode,
   AssignmentNode,
   BinaryOpNode,
   BooleanNode,
@@ -208,7 +209,7 @@ export default class Parser {
   }
 
   atom(): Node {
-    // NUMBER | BOOLEAN | STRING | IDENTIFIER | '(' expr ')' | if_expr | func_def
+    // (NUMBER | BOOLEAN | STRING | IDENTIFIER) | '(' expr ')' | '|' expr '|' | if_expr | func_def
     const { token } = this;
 
     if (token.is('number')) {
@@ -235,6 +236,15 @@ export default class Parser {
 
       this.advance();
       return result;
+    }
+    if (token.value === '|') {
+      this.advance();
+      const expr = this.expr();
+
+      if (this.token?.value !== '|') return this.expect("'|'");
+
+      this.advance();
+      return new AbsNode(expr);
     }
     if (token.is('keyword', 'if')) return this.ifExpr();
     if (token.is('keyword', 'fn')) return this.funcDec();

@@ -19,12 +19,13 @@ export default class Value {
   }
 }
 
-([
+[
   '+',
   '-',
   '*',
   '/',
   '^',
+  '||',
   '==',
   '!=',
   '>',
@@ -34,7 +35,7 @@ export default class Value {
   'not',
   'and',
   'or',
-] as Operator[]).forEach(
+].forEach(
   op =>
     // @ts-ignore
     (Value.prototype[op] = Value.illegalOperation)
@@ -74,6 +75,10 @@ export class Number extends Value {
   '^'(other: Value) {
     if (other instanceof Number) return new Number(this.value ** other.value);
     Value.illegalOperation('^', other);
+  }
+
+  '||'() {
+    return new Number(Math.abs(this.value));
   }
 
   '=='(other: Value) {

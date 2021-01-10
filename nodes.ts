@@ -28,6 +28,14 @@ export class StringNode implements Node {
   }
 }
 
+export class StatementsNode implements Node {
+  constructor(public nodes: Node[]) {}
+
+  toString() {
+    return `${this.nodes.join(',\n')}`;
+  }
+}
+
 export class IdentifierNode implements Node {
   constructor(public name: string) {}
 
@@ -69,14 +77,6 @@ export class AbsNode implements Node {
 
   toString() {
     return `|${this.node}|`;
-  }
-}
-
-export class StatementsNode implements Node {
-  constructor(public nodes: Node[]) {}
-
-  toString() {
-    return `${this.nodes.join(',\n')}`;
   }
 }
 

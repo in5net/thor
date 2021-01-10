@@ -1,4 +1,5 @@
 import Node, {
+  AbsNode,
   AssignmentNode,
   BinaryOpNode,
   BooleanNode,
@@ -69,19 +70,25 @@ export default class Interpreter {
   }
 
   visit_UnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Value {
-    let rightNode = this.visit(node, scope);
+    let value = this.visit(node, scope);
     // @ts-ignore
-    return rightNode[operator]();
+    return value[operator]();
   }
 
   visit_BinaryOpNode(
     { left, operator, right }: BinaryOpNode,
     scope: Scope
   ): Value {
-    const leftNode = this.visit(left, scope);
-    const rightNode = this.visit(right, scope);
+    const leftValue = this.visit(left, scope);
+    const rightValue = this.visit(right, scope);
     // @ts-ignore
-    return leftNode[operator](rightNode);
+    return leftValue[operator](rightValue);
+  }
+
+  visit_AbsNode({ node }: AbsNode, scope: Scope): Value {
+    const value = this.visit(node, scope);
+    // @ts-ignore
+    return value['||']();
   }
 
   visit_IfNode({ condition, body, elseCase }: IfNode, scope: Scope) {
