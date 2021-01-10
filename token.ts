@@ -1,14 +1,25 @@
 export type Boolean = 'true' | 'false';
-export type UnaryOp = '+' | '-';
-export type BinaryOp = UnaryOp | '*' | '/' | '^' | '=' | ',' | ':';
+export type UnaryOp = '+' | '-' | 'not';
+export type CompareOp = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'and' | 'or';
+export type BinaryOp =
+  | CompareOp
+  | '+'
+  | '-'
+  | '*'
+  | '/'
+  | '^'
+  | '='
+  | ','
+  | ':';
+export type Operator = UnaryOp | BinaryOp;
 export type Parenthesis = '(' | ')' | '{' | '}';
-export type Keyword = 'let' | 'if' | 'else' | 'fn' | 'return';
+export type Keyword = 'let' | 'if' | 'else' | 'or' | 'fn' | 'return';
 
 interface TokenMap {
   number: number;
   boolean: boolean;
   identifier: string;
-  operator: UnaryOp | BinaryOp;
+  operator: Operator;
   parenthesis: Parenthesis;
   keyword: Keyword;
   newline: undefined;

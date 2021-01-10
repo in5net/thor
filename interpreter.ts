@@ -57,39 +57,20 @@ export default class Interpreter {
     return value;
   }
 
-  visit_UnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Number {
-    let value = (this.visit(node, scope) as Number).value;
-    if (operator === '-') value *= -1;
-    return new Number(value);
+  visit_UnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Value {
+    let rightNode = this.visit(node, scope);
+    // @ts-ignore
+    return rightNode[operator]();
   }
 
   visit_BinaryOpNode(
     { left, operator, right }: BinaryOpNode,
     scope: Scope
-  ): Number {
-    const leftValue = (this.visit(left, scope) as Number).value;
-    const rightValue = (this.visit(right, scope) as Number).value;
-    let value: number;
-    switch (operator) {
-      case '+':
-        value = leftValue + rightValue;
-        break;
-      case '-':
-        value = leftValue - rightValue;
-        break;
-      case '*':
-        value = leftValue * rightValue;
-        break;
-      case '/':
-        value = leftValue / rightValue;
-        break;
-      case '^':
-        value = leftValue ** rightValue;
-        break;
-      default:
-        value = 0;
-    }
-    return new Number(value);
+  ): Value {
+    const leftNode = this.visit(left, scope);
+    const rightNode = this.visit(right, scope);
+    // @ts-ignore
+    return leftNode[operator](rightNode);
   }
 
   visit_IfNode({ condition, body, elseCase }: IfNode, scope: Scope) {

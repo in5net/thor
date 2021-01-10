@@ -1,10 +1,12 @@
-import Token, { Boolean, Keyword } from './token.ts';
+import Token, { BinaryOp, Boolean, CompareOp, Keyword } from './token.ts';
 
 const WHITESPACE = ' \t\r';
 const DIGITS = '0123456789';
 const LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_';
 const KEYWORDS: Keyword[] = ['let', 'if', 'else', 'fn', 'return'];
 const BOOLEANS: Boolean[] = ['true', 'false'];
+const COMPARE_OPS = ['=', '<', '>'];
+const COMPARE_KEYWORDS = ['not', 'and', 'or'];
 
 export default class Lexer {
   text: IterableIterator<string>;
@@ -34,6 +36,7 @@ export default class Lexer {
       if (WHITESPACE.includes(char)) this.advance();
       else if ((DIGITS + '.').includes(char)) yield this.number();
       else if (LETTERS.includes(char)) yield this.identifier();
+      else if (COMPARE_OPS.includes(char)) yield this.compare();
       else
         switch (char) {
           case '\n':
@@ -45,7 +48,6 @@ export default class Lexer {
           case '*':
           case '/':
           case '^':
-          case '=':
           case ',':
           case ':':
             this.advance();
@@ -80,7 +82,7 @@ export default class Lexer {
     return new Token('number', parseFloat(str));
   }
 
-  identifier(): Token<'identifier' | 'keyword' | 'boolean'> {
+  identifier(): Token<'identifier' | 'keyword' | 'operator' | 'boolean'> {
     let str = this.char;
     this.advance();
 
@@ -91,7 +93,21 @@ export default class Lexer {
 
     if (isKeyword(str)) return new Token('keyword', str);
     if (isBoolean(str)) return new Token('boolean', str === 'true');
+    if (COMPARE_KEYWORDS.includes(str))
+      return new Token('operator', str as BinaryOp);
     return new Token('identifier', str);
+  }
+
+  compare(): Token<'operator'> {
+    let str = this.char;
+    this.advance();
+
+    if (this.char === '=') {
+      str += this.char;
+      this.advance();
+    }
+
+    return new Token('operator', str as BinaryOp);
   }
 }
 

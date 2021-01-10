@@ -75,7 +75,7 @@ export class IfNode implements Node {
     return `(if ${this.condition}: ${this.body}${
       this.elseCase
         ? `
-else ${this.elseCase}`
+else: ${this.elseCase}`
         : ''
     })`;
   }

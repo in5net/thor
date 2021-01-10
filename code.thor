@@ -1,6 +1,4 @@
-if true {
-    print(69)
-}
-else {
-    print(101)
-}
+let age = 12
+
+if age >= 13 + age < 18: print(age)
+else: print(0)

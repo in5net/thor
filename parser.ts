@@ -74,6 +74,7 @@ export default class Parser {
   }
 
   statements(): StatementsNode {
+    // '\n'* statement ('\n'+ statement)* '\n'*
     const statements: Node[] = [];
 
     this.skipNewlines();
@@ -100,6 +101,7 @@ export default class Parser {
   }
 
   statement(): Node {
+    // expr | 'return' expr?
     if (this.token.is('keyword', 'return' as const)) {
       this.advance();
       const node = this.expr();
@@ -111,6 +113,7 @@ export default class Parser {
   }
 
   expr(): Node {
+    // 'let' IDENTIFIER '=' expr
     if (this.token.is('keyword', 'let' as const)) {
       this.advance();
       if (!(this.token as Token).is('identifier'))
@@ -127,14 +130,33 @@ export default class Parser {
       return new AssignmentNode(identifier, node);
     }
 
+    // comp_expr (('and' | 'or') comp_expr)*
+    return this.binaryOp(this.compExpr, ['and', 'or']);
+  }
+
+  compExpr(): Node {
+    // 'not' comp_expr
+    if (this.token.is('operator', 'not')) {
+      this.advance();
+      return new UnaryOpNode(this.compExpr(), 'not');
+    }
+
+    // arith_expr (('==' | '<' | '<=' | '>' | '>=') arith_expr)*
+    return this.binaryOp(this.arithExpr, ['==', '<', '<=', '>', '>=']);
+  }
+
+  arithExpr(): Node {
+    // term (('+' | '-') term)*
     return this.binaryOp(this.term, ['+', '-']);
   }
 
   term(): Node {
+    // factor (('*' | '/') factor)*
     return this.binaryOp(this.factor, ['*', '/']);
   }
 
   factor(): Node {
+    // ('+' | '-') factor | power
     const { token } = this;
 
     if (
@@ -152,11 +174,12 @@ export default class Parser {
   }
 
   power(): Node {
+    // call ('^' factor)*
     return this.binaryOp(this.call, ['^'], this.factor);
   }
 
   call(): Node {
-    // call : atom ('(' (expr (',' expr)*)? ')')?;
+    // call : atom ('(' (expr (',' expr)*)? ')')?
     const atom = this.atom();
 
     if (this.token.is('parenthesis', '(')) {
@@ -184,6 +207,7 @@ export default class Parser {
   }
 
   atom(): Node {
+    // NUMBER | IDENTIFIER | BOOLEAN | '(' expr ')' | if_expr | func_def
     const { token } = this;
 
     if (token.is('number')) {
@@ -214,6 +238,7 @@ export default class Parser {
   }
 
   ifExpr(): IfNode {
+    // 'if' expr ((':' statement) | ('{' statements '}')) else_expr?
     if (!this.token.is('keyword', 'if')) return this.expect("'if'");
     this.advance();
 
@@ -241,6 +266,7 @@ export default class Parser {
   }
 
   elseExpr(): Node {
+    // 'else' (statement | ('{' statements '}'))
     if (!this.token.is('keyword', 'else')) return this.expect("'else'");
     this.advance();
 
@@ -261,6 +287,7 @@ export default class Parser {
   }
 
   funcDec(): FuncDefNode {
+    // 'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)* ')')? '{' statements '}'
     if (!this.token.is('keyword', 'fn')) return this.expect("'fn'");
     this.advance();
     if (!this.token.is('identifier')) return this.expect('identifier');
@@ -308,12 +335,14 @@ export default class Parser {
   binaryOp(left: () => Node, operators: BinaryOp[], right = left) {
     let result = left.call(this);
 
-    while (operators.includes((this.token as Token<'operator'>).value)) {
+    while (
+      operators.includes((this.token as Token<'operator', BinaryOp>).value)
+    ) {
       const { token } = this;
       this.advance();
       result = new BinaryOpNode(
         result,
-        (token as Token<'operator'>).value,
+        (token as Token<'operator', BinaryOp>).value,
         right.call(this)
       );
     }

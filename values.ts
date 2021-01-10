@@ -1,6 +1,9 @@
 import Interpreter from './interpreter.ts';
 import { StatementsNode } from './nodes.ts';
 import Scope from './scope.ts';
+import { BinaryOp, Operator, UnaryOp } from './token.ts';
+
+type Temp = Record<Operator, string>;
 
 export default class Value {
   scope?: Scope;
@@ -8,7 +11,34 @@ export default class Value {
   setScope(scope: Scope) {
     this.scope = scope;
   }
+
+  static illegalOperation(operator: Operator, other?: Value): never {
+    throw `Illegal operation: ${this.constructor.name} ${operator}${
+      other ? ` ${other.constructor.name}` : ''
+    }`;
+  }
 }
+
+([
+  '+',
+  '-',
+  '*',
+  '/',
+  '^',
+  '==',
+  '!=',
+  '>',
+  '>=',
+  '<',
+  '<=',
+  'not',
+  'and',
+  'or',
+] as Operator[]).forEach(
+  op =>
+    // @ts-ignore
+    (Value.prototype[op] = Value.illegalOperation)
+);
 
 export class Number extends Value {
   constructor(public value: number) {
@@ -17,6 +47,83 @@ export class Number extends Value {
 
   toString() {
     return this.value.toString();
+  }
+
+  '+'(other: Value) {
+    if (other instanceof Number) return new Number(this.value + other.value);
+    if (!other) return this;
+    Value.illegalOperation('+', other);
+  }
+
+  '-'(other: Value) {
+    if (other instanceof Number) return new Number(this.value - other.value);
+    if (!other) return new Number(-this.value);
+    Value.illegalOperation('-', other);
+  }
+
+  '*'(other: Value) {
+    if (other instanceof Number) return new Number(this.value * other.value);
+    Value.illegalOperation('*', other);
+  }
+
+  '/'(other: Value) {
+    if (other instanceof Number) return new Number(this.value / other.value);
+    Value.illegalOperation('/', other);
+  }
+
+  '^'(other: Value) {
+    if (other instanceof Number) return new Number(this.value ** other.value);
+    Value.illegalOperation('^', other);
+  }
+
+  '=='(other: Value) {
+    if (other instanceof Number) return new Boolean(this.value === other.value);
+    Value.illegalOperation('==', other);
+  }
+
+  '!='(other: Value) {
+    if (other instanceof Number) return new Boolean(this.value !== other.value);
+    Value.illegalOperation('!=', other);
+  }
+
+  '>'(other: Value) {
+    if (other instanceof Number) return new Boolean(this.value > other.value);
+    Value.illegalOperation('>', other);
+  }
+
+  '>='(other: Value) {
+    if (other instanceof Number) return new Boolean(this.value >= other.value);
+    Value.illegalOperation('>=', other);
+  }
+
+  '<'(other: Value) {
+    if (other instanceof Number) return new Boolean(this.value < other.value);
+    Value.illegalOperation('<', other);
+  }
+
+  '<='(other: Value) {
+    if (other instanceof Number) return new Boolean(this.value <= other.value);
+    Value.illegalOperation('<=', other);
+  }
+
+  not() {
+    return new Boolean(!this.value);
+  }
+
+  and(other: Value) {
+    if (other instanceof Number)
+      return new Boolean(!!this.value && !!other.value);
+    Value.illegalOperation('and', other);
+  }
+
+  or(other: Value) {
+    if (other instanceof Number)
+      return new Boolean(!!this.value || !!other.value);
+    Value.illegalOperation('or', other);
+  }
+
+  toBoolean(): Boolean {
+    return new Boolean(!!this.value);
   }
 }
 
@@ -27,6 +134,34 @@ export class Boolean extends Value {
 
   toString() {
     return this.value.toString();
+  }
+
+  '=='(other: Value) {
+    if (other instanceof Boolean)
+      return new Boolean(this.value === other.value);
+    Value.illegalOperation('==', other);
+  }
+
+  '!='(other: Value) {
+    if (other instanceof Boolean)
+      return new Boolean(this.value !== other.value);
+    Value.illegalOperation('!=', other);
+  }
+
+  not() {
+    return new Boolean(!this.value);
+  }
+
+  and(other: Value) {
+    if (other instanceof Boolean)
+      return new Boolean(!!this.value && !!other.value);
+    Value.illegalOperation('and', other);
+  }
+
+  or(other: Value) {
+    if (other instanceof Boolean)
+      return new Boolean(!!this.value || !!other.value);
+    Value.illegalOperation('or', other);
   }
 }
 

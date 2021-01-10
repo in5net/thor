@@ -1,37 +1,43 @@
 grammar Thor;
 
-statements  : newlines statement ('\n'+ statement)* newlines;
+statements: '\n'* statement ('\n'+ statement)* '\n'*;
 
-statement   : expr
-            | 'return' expr?;
+statement: expr | 'return' expr?;
 
-expr        : term (('+' | '-') term)*
-            | 'let' IDENTIFIER '=' expr;
+expr:
+	'let' IDENTIFIER '=' expr
+	| comp_expr (('and' | 'or') comp_expr)*;
 
-term        : factor (('*' | '/') factor)*;
+comp_expr:
+	'not' comp_expr
+	| arith_expr (('==' | '<' | '<=' | '>' | '>=') arith_expr)*;
 
-factor      : ('+' | '-') factor
-            | power;
+arith_expr: term (('+' | '-') term)*;
 
-power       : call ('^' factor)*;
+term: factor (('*' | '/') factor)*;
 
-call        : atom ('(' (expr (',' expr)*)? ')')?;
+factor: ('+' | '-') factor | power;
 
-atom        : NUMBER | IDENTIFIER | BOOLEAN
-            | '(' expr ')'
-            | if_expr
-            | func_def;
+power: call ('^' factor)*;
 
-if_expr     : 'if' expr ((':' statement) | ('{' statements '}')) else_expr?;
+call: atom ('(' (expr (',' expr)*)? ')')?;
 
-else_expr   : 'else' (statement | ('{' statements '}'));
+atom:
+	NUMBER
+	| IDENTIFIER
+	| BOOLEAN
+	| '(' expr ')'
+	| if_expr
+	| func_def;
 
-func_def    : 'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)* ')')? '{'
-            statements
-            '}';
+if_expr:
+	'if' expr ((':' statement) | ('{' statements '}')) else_expr?;
 
-NUMBER      : [0-9]* '.' [0-9]*;
-BOOLEAN     : 'true' | 'false';
-IDENTIFIER  : [a-zA-Z] [a-zA-Z0-9_]*;
+else_expr: 'else' (statement | ('{' statements '}'));
 
-newlines    : '\n'*;
+func_def:
+	'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)* ')')? '{' statements '}';
+
+NUMBER: [0-9]* '.' [0-9]*;
+BOOLEAN: 'true' | 'false';
+IDENTIFIER: [a-zA-Z] [a-zA-Z0-9_]*;
