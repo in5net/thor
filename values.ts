@@ -22,6 +22,7 @@ export default class Value {
   '-',
   '*',
   '/',
+  '%',
   '^',
   '||',
   '==',
@@ -67,6 +68,11 @@ export class Number extends Value {
 
   '/'(other?: Value) {
     if (other instanceof Number) return new Number(this.value / other.value);
+    Value.illegalOperation('/', other);
+  }
+
+  '%'(other?: Value) {
+    if (other instanceof Number) return new Number(this.value % other.value);
     Value.illegalOperation('/', other);
   }
 

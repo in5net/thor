@@ -157,8 +157,8 @@ export default class Parser {
   }
 
   term(): Node {
-    // factor (('*' | '/') factor)*
-    return this.binaryOp(this.factor, ['*', '/']);
+    // factor (('*' | '/' | '%') factor)*
+    return this.binaryOp(this.factor, ['*', '/', '%']);
   }
 
   factor(): Node {

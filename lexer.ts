@@ -63,6 +63,7 @@ export default class Lexer {
           case '-':
           case '*':
           case '/':
+          case '%':
           case '^':
           case ',':
           case ':':
