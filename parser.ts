@@ -3,6 +3,8 @@ import Node, {
   AssignmentNode,
   BinaryOpNode,
   BooleanNode,
+  DeclarationNode,
+  ForNode,
   FuncCallNode,
   FuncDefNode,
   IdentifierNode,
@@ -12,15 +14,15 @@ import Node, {
   ReturnNode,
   StringNode,
   UnaryOpNode,
+  WhileNode,
 } from './nodes.ts';
 import Token, { BinaryOp, UnaryOp } from './token.ts';
 
 export default class Parser {
-  tokens: IterableIterator<Token>;
+  index = -1;
   token!: Token;
 
-  constructor(tokens: Token[]) {
-    this.tokens = tokens[Symbol.iterator]();
+  constructor(private tokens: Token[]) {
     this.advance();
   }
 
@@ -49,7 +51,7 @@ export default class Parser {
   }
 
   advance() {
-    this.token = this.tokens.next().value;
+    this.token = this.tokens[++this.index];
   }
 
   skipNewlines() {
@@ -115,21 +117,23 @@ export default class Parser {
   }
 
   expr(): Node {
-    // 'let' IDENTIFIER '=' expr
-    if (this.token.is('keyword', 'let' as const)) {
-      this.advance();
+    // 'let'? IDENTIFIER '=' expr
+    const declaration = this.token.is('keyword', 'let');
+    if (declaration) this.advance();
+
+    if (declaration || this.tokens[this.index + 1].is('operator', '=')) {
       if (!(this.token as Token).is('identifier'))
         return this.expect('identifier');
-      const identifier = this.token.value as string;
-
+      const identifier = (this.token as unknown) as Token<'identifier'>;
       this.advance();
-      if (!(this.token as Token).is('operator', '=' as const))
-        return this.expect("'='");
 
+      if (!(this.token as Token).is('operator', '=')) return this.expect("'='");
       this.advance();
-      const node = this.expr();
 
-      return new AssignmentNode(identifier, node);
+      const expr = this.expr();
+
+      if (declaration) return new DeclarationNode(identifier, expr);
+      return new AssignmentNode(identifier, expr);
     }
 
     // comp_expr (('and' | 'or') comp_expr)*
@@ -248,9 +252,21 @@ export default class Parser {
     }
     if (token.is('parenthesis', '[')) return this.listExpr();
     if (token.is('keyword', 'if')) return this.ifExpr();
+    if (token.is('keyword', 'for')) return this.forExpr();
+    if (token.is('keyword', 'while')) return this.whileExpr();
     if (token.is('keyword', 'fn')) return this.funcDec();
 
-    this.expect(['number', 'identifier', '(', "'if'", "'fn'"]);
+    this.expect([
+      'number',
+      'identifier',
+      "'('",
+      "'|'",
+      "'['",
+      "'if'",
+      "'for'",
+      "'while'",
+      "'fn'",
+    ]);
   }
 
   listExpr(): ListNode {
@@ -310,10 +326,40 @@ export default class Parser {
 
     let body: Node;
 
-    if (this.token.is('operator', ':')) {
+    if (this.token.is('parenthesis', '{')) {
+      this.advance();
+      body = this.statements();
+      if (!(this.token as Token).is('parenthesis', '}'))
+        return this.expect("'}'");
+      this.advance();
+    } else {
       this.advance();
       body = this.statement();
-    } else if (this.token.is('parenthesis', '{')) {
+    }
+
+    return body;
+  }
+
+  forExpr(): ForNode {
+    // 'for' IDENTIFIER 'in' expr ((':' statement) | ('{' statements '}'))
+    if (!this.token.is('keyword', 'for')) return this.expect("'for'");
+    this.advance();
+
+    if (!this.token.is('identifier')) return this.expect('identifier');
+    const identifier = this.token as Token<'identifier'>;
+    this.advance();
+
+    if (!(this.token as Token).is('keyword', 'in')) return this.expect("'in'");
+    this.advance();
+
+    const iterable = this.expr();
+
+    let body: Node;
+
+    if ((this.token as Token).is('operator', ':')) {
+      this.advance();
+      body = this.statement();
+    } else if ((this.token as Token).is('parenthesis', '{')) {
       this.advance();
       body = this.statements();
       if (!(this.token as Token).is('parenthesis', '}'))
@@ -321,7 +367,30 @@ export default class Parser {
       this.advance();
     } else return this.expect(["':'", "'{'"]);
 
-    return body;
+    return new ForNode(identifier, iterable, body);
+  }
+
+  whileExpr(): WhileNode {
+    // 'while' expr ((':' statement) | ('{' statements '}'))
+    if (!this.token.is('keyword', 'while')) return this.expect("'while'");
+    this.advance();
+
+    const condition = this.expr();
+
+    let body: Node;
+
+    if ((this.token as Token).is('operator', ':')) {
+      this.advance();
+      body = this.statement();
+    } else if ((this.token as Token).is('parenthesis', '{')) {
+      this.advance();
+      body = this.statements();
+      if (!(this.token as Token).is('parenthesis', '}'))
+        return this.expect("'}'");
+      this.advance();
+    } else return this.expect(["':'", "'{'"]);
+
+    return new WhileNode(condition, body);
   }
 
   funcDec(): FuncDefNode {

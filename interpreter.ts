@@ -3,6 +3,8 @@ import Node, {
   AssignmentNode,
   BinaryOpNode,
   BooleanNode,
+  DeclarationNode,
+  ForNode,
   FuncCallNode,
   FuncDefNode,
   IdentifierNode,
@@ -12,6 +14,7 @@ import Node, {
   ReturnNode,
   StringNode,
   UnaryOpNode,
+  WhileNode,
 } from './nodes.ts';
 import Value, {
   Boolean,
@@ -63,12 +66,21 @@ export default class Interpreter {
     return value;
   }
 
+  visit_DeclarationNode(
+    { identifier, node }: DeclarationNode,
+    scope: Scope
+  ): Value {
+    const value = this.visit(node, scope);
+    scope.symbolTable.set(identifier.value, value);
+    return value;
+  }
+
   visit_AssignmentNode(
     { identifier, node }: AssignmentNode,
     scope: Scope
   ): Value {
     const value = this.visit(node, scope);
-    scope.symbolTable.set(identifier, value);
+    scope.symbolTable.set(identifier.value, value);
     return value;
   }
 
@@ -99,6 +111,22 @@ export default class Interpreter {
     if ((this.visit(condition, scope) as NumberNode | BooleanNode).value)
       this.visit(body, scope);
     else if (elseCase) this.visit(elseCase, scope);
+  }
+
+  visit_ForNode({ identifier, iterable, body }: ForNode, scope: Scope) {
+    const iterableValue = this.visit(iterable, scope);
+    if (iterableValue instanceof List) {
+      for (const item of iterableValue.items) {
+        scope.symbolTable.set(identifier.value, item);
+        this.visit(body, scope);
+      }
+    }
+  }
+
+  visit_WhileNode({ condition, body }: WhileNode, scope: Scope) {
+    // @ts-ignore
+    while ((this.visit(condition, scope) as NumberNode | BooleanNode).value)
+      this.visit(body, scope);
   }
 
   visit_FuncDefNode(

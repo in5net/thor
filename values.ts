@@ -174,7 +174,12 @@ export class String extends Value {
   }
 
   '+'(other?: Value) {
-    if (other instanceof String) return new String(this.value + other.value);
+    if (
+      other instanceof String ||
+      other instanceof Number ||
+      other instanceof Boolean
+    )
+      return new String(this.value + other.value);
     if (!other) return new Number(+this.value);
     Value.illegalOperation('+', other);
   }

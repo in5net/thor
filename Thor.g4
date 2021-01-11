@@ -5,7 +5,7 @@ statements: '\n'* statement ('\n'+ statement)* '\n'*;
 statement: expr | 'return' expr?;
 
 expr:
-	'let' IDENTIFIER '=' expr
+	'let'? IDENTIFIER '=' expr
 	| comp_expr (('and' | 'or') comp_expr)*;
 
 comp_expr:
@@ -28,6 +28,8 @@ atom:
 	| '|' expr '|'
 	| list_expr
 	| if_expr
+	| for_expr
+	| while_expr
 	| func_def;
 
 list_expr: '[' (expr (',' expr)*)? ']';
@@ -36,6 +38,15 @@ if_expr:
 	'if' expr ((':' statement) | ('{' statements '}')) else_expr?;
 
 else_expr: 'else' (statement | ('{' statements '}'));
+
+for_expr:
+	'for' IDENTIFIER 'in' expr (
+		(':' statement)
+		| ('{' statements '}')
+	);
+
+while_expr:
+	'while' expr ((':' statement) | ('{' statements '}'));
 
 func_def:
 	'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)* ')')? '{' statements '}';

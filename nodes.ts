@@ -1,4 +1,4 @@
-import { BinaryOp, UnaryOp } from './token.ts';
+import Token, { BinaryOp, UnaryOp } from './token.ts';
 
 export default abstract class Node {
   abstract toString(): string;
@@ -38,6 +38,7 @@ export class ListNode implements Node {
   }
 }
 
+// TODO: make an IdentifierOpNode for 'let', '=', '+=', '-=', '++', ...
 export class IdentifierNode implements Node {
   constructor(public name: string) {}
 
@@ -46,11 +47,19 @@ export class IdentifierNode implements Node {
   }
 }
 
-export class AssignmentNode implements Node {
-  constructor(public identifier: string, public node: Node) {}
+export class DeclarationNode implements Node {
+  constructor(public identifier: Token<'identifier'>, public node: Node) {}
 
   toString() {
-    return `(${this.identifier} = ${this.node})`;
+    return `(let ${this.identifier.value} = ${this.node})`;
+  }
+}
+
+export class AssignmentNode implements Node {
+  constructor(public identifier: Token<'identifier'>, public node: Node) {}
+
+  toString() {
+    return `(${this.identifier.value} = ${this.node})`;
   }
 }
 
@@ -96,6 +105,26 @@ export class IfNode implements Node {
 else: ${this.elseCase}`
         : ''
     })`;
+  }
+}
+
+export class ForNode implements Node {
+  constructor(
+    public identifier: Token<'identifier'>,
+    public iterable: Node,
+    public body: Node
+  ) {}
+
+  toString() {
+    return `(for ${this.identifier.value} in ${this.iterable}: ${this.body})`;
+  }
+}
+
+export class WhileNode implements Node {
+  constructor(public condition: Node, public body: Node) {}
+
+  toString() {
+    return `(while ${this.condition}: ${this.body})`;
   }
 }
 

@@ -13,7 +13,15 @@ export type BinaryOp =
   | ':';
 export type Operator = UnaryOp | BinaryOp;
 export type Parenthesis = '(' | ')' | '[' | ']' | '{' | '}' | '|';
-export type Keyword = 'let' | 'if' | 'else' | 'or' | 'fn' | 'return';
+export type Keyword =
+  | 'let'
+  | 'if'
+  | 'else'
+  | 'for'
+  | 'while'
+  | 'in'
+  | 'fn'
+  | 'return';
 
 interface TokenMap {
   number: number;

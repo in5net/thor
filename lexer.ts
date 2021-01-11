@@ -1,4 +1,4 @@
-import Token, { BinaryOp, Boolean, CompareOp, Keyword } from './token.ts';
+import Token, { BinaryOp, Boolean, Keyword } from './token.ts';
 
 const WHITESPACE = ' \t\r';
 const DIGITS = '0123456789';
@@ -8,7 +8,16 @@ const ESCAPE_CHARS: Record<string, string | undefined> = {
   n: '\n',
   t: '\t',
 };
-const KEYWORDS: Keyword[] = ['let', 'if', 'else', 'fn', 'return'];
+const KEYWORDS: Keyword[] = [
+  'let',
+  'if',
+  'else',
+  'for',
+  'while',
+  'in',
+  'fn',
+  'return',
+];
 const BOOLEANS: Boolean[] = ['true', 'false'];
 const COMPARE_OPS = ['=', '!', '<', '>'];
 const COMPARE_KEYWORDS = ['not', 'and', 'or'];
