@@ -67,12 +67,12 @@ export default class Parser {
     return this.token.type === 'eof';
   }
 
-  parse() {
-    if (this.eof()) return;
+  parse(): ListNode {
+    if (this.eof()) return new ListNode([]);
 
     const result = this.statements();
 
-    if (!this.eof()) return this.expect('<eof>');
+    if (!this.eof()) this.expect('<eof>');
 
     return result;
   }
