@@ -147,8 +147,8 @@ export default class Parser {
       return new UnaryOpNode(this.compExpr(), 'not');
     }
 
-    // arith_expr (('==' | '<' | '<=' | '>' | '>=') arith_expr)*
-    return this.binaryOp(this.arithExpr, ['==', '<', '<=', '>', '>=']);
+    // arith_expr (('==' | '!=' | '<' | '<=' | '>' | '>=') arith_expr)*
+    return this.binaryOp(this.arithExpr, ['==', '!=', '<', '<=', '>', '>=']);
   }
 
   arithExpr(): Node {

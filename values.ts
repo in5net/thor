@@ -273,7 +273,8 @@ export class List extends Value {
   '=='(other?: Value) {
     if (other instanceof List)
       return new Boolean(
-        this.items.every((value, index) => value === other.items[index])
+        this.items.length === other.items.length &&
+          this.items.every((value, index) => value === other.items[index])
       );
     Value.illegalOperation('==', other);
   }

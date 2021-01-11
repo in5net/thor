@@ -1,9 +1,4 @@
-let nums = [1, 2, 3]
+numbers = [3,5,6,4,2]
+moreNumbers = numbers
 
-for n in nums: print("n: " + n)
-
-x = 0
-while x < 10 {
-    print("x: " + x)
-    x = x + 1
-}
+print(numbers != moreNumbers)

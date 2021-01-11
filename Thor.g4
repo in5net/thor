@@ -10,7 +10,9 @@ expr:
 
 comp_expr:
 	'not' comp_expr
-	| arith_expr (('==' | '<' | '<=' | '>' | '>=') arith_expr)*;
+	| arith_expr (
+		('==' | '!=' | '<' | '<=' | '>' | '>=') arith_expr
+	)*;
 
 arith_expr: term (('+' | '-') term)*;
 
@@ -49,7 +51,7 @@ while_expr:
 	'while' expr ((':' statement) | ('{' statements '}'));
 
 func_def:
-	'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)* ')')? '{' statements '}';
+	'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)*)? ')' '{' statements '}';
 
 NUMBER: [0-9]* '.' [0-9]*;
 BOOLEAN: 'true' | 'false';
