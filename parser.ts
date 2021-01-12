@@ -157,7 +157,23 @@ export default class Parser {
   }
 
   term(): Node {
-    // factor (('*' | '/' | '%') factor)*
+    // factor (('*' | '/' | '%') factor)* | NUMBER IDENTIFIER
+    if (
+      this.token.is('number') &&
+      this.tokens[this.index + 1].is('identifier')
+    ) {
+      const number = this.token;
+      this.advance();
+
+      const identifier = (this.token as unknown) as Token<'identifier'>;
+      this.advance();
+
+      return new BinaryOpNode(
+        new NumberNode(number.value),
+        '*',
+        new IdentifierNode(identifier.value)
+      );
+    }
     return this.binaryOp(this.factor, ['*', '/', '%']);
   }
 
@@ -185,7 +201,7 @@ export default class Parser {
   }
 
   call(): Node {
-    // call : atom ('(' (expr (',' expr)*)? ')')?
+    // atom ('(' (expr (',' expr)*)? ')')?
     const atom = this.atom();
 
     if (this.token.is('parenthesis', '(')) {
@@ -232,7 +248,7 @@ export default class Parser {
       this.advance();
       return new IdentifierNode(token.value);
     }
-    if (token.value === '(') {
+    if (token.is('parenthesis', '(')) {
       this.advance();
       const result = this.expr();
 
@@ -241,7 +257,7 @@ export default class Parser {
       this.advance();
       return result;
     }
-    if (token.value === '|') {
+    if (token.is('parenthesis', '|')) {
       this.advance();
       const expr = this.expr();
 

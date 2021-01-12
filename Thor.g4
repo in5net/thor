@@ -16,7 +16,7 @@ comp_expr:
 
 arith_expr: term (('+' | '-') term)*;
 
-term: factor (('*' | '/' | '%') factor)*;
+term: factor (('*' | '/' | '%') factor)* | NUMBER IDENTIFIER;
 
 factor: ('+' | '-') factor | power;
 

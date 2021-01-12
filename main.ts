@@ -12,14 +12,14 @@ else runPrompt();
 
 function runFile(path: string): void {
   const text = Deno.readTextFileSync(path);
-  run(text);
+  run(text, { logTokens: true, logAST: true });
 }
 
 function runPrompt(): void {
   while (true) {
     const line = prompt('>');
     if (line === null) continue;
-    const value = run(line, { repl: true, logAST: true });
+    const value = run(line, { repl: true });
     if (!value) continue;
     console.log(value.toString());
   }
