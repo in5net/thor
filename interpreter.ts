@@ -16,17 +16,37 @@ import Node, {
   UnaryOpNode,
   WhileNode,
 } from './nodes.ts';
-import Value, {
-  Boolean,
-  BuiltInFunction,
-  Function,
-  List,
-  Number,
-  String,
-} from './values.ts';
 import Scope from './scope.ts';
+import Boolean from './values/boolean.ts';
+import List from './values/list.ts';
+import Number from './values/number.ts';
+import String from './values/string.ts';
+import Value from './values/mod.ts';
+import { Function, BuiltInFunction } from './values/function.ts';
 
-export default class Interpreter {
+type NodeName =
+  | 'AbsNode'
+  | 'AssignmentNode'
+  | 'BinaryOpNode'
+  | 'BooleanNode'
+  | 'DeclarationNode'
+  | 'ForNode'
+  | 'FuncCallNode'
+  | 'FuncDefNode'
+  | 'IdentifierNode'
+  | 'IfNode'
+  | 'ListNode'
+  | 'NumberNode'
+  | 'ReturnNode'
+  | 'StringNode'
+  | 'UnaryOpNode'
+  | 'WhileNode';
+type NodeIndex = `visit_${NodeName}`;
+type ExecuteIndex = {
+  [index in NodeIndex]: (node: any, scope: Scope) => Value | void;
+};
+
+export default class Interpreter implements ExecuteIndex {
   visit(node: Node, scope: Scope): Value {
     const methodName = `visit_${node.constructor.name}`;
     // @ts-ignore
@@ -87,7 +107,9 @@ export default class Interpreter {
   visit_UnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Value {
     let value = this.visit(node, scope);
     // @ts-ignore
-    return value[operator]();
+    const returnValue = value[operator]();
+    if (!returnValue) Value.illegalUnaryOp(value, operator);
+    return returnValue;
   }
 
   visit_BinaryOpNode(
@@ -97,7 +119,9 @@ export default class Interpreter {
     const leftValue = this.visit(left, scope);
     const rightValue = this.visit(right, scope);
     // @ts-ignore
-    return leftValue[operator](rightValue);
+    const value = leftValue[operator](rightValue);
+    if (!value) Value.illegalBinaryOp(leftValue, operator, rightValue);
+    return value;
   }
 
   visit_AbsNode({ node }: AbsNode, scope: Scope): Value {

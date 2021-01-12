@@ -1,4 +1,4 @@
-import Value from './values.ts';
+import Value from './values/mod.ts';
 
 export default class Scope {
   symbolTable = new SymbolTable();

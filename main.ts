@@ -2,7 +2,8 @@ import Interpreter from './interpreter.ts';
 import Lexer from './lexer.ts';
 import Parser from './parser.ts';
 import Scope from './scope.ts';
-import Value, { BuiltInFunction } from './values.ts';
+import { BuiltInFunction } from './values/function.ts';
+import Value from './values/mod.ts';
 
 if (Deno.args.length > 1) {
   console.log('Usage: thor [path]');
