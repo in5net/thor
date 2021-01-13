@@ -1,7 +1,14 @@
 import Scope from '../scope.ts';
-import { Operator } from '../token.ts';
+import { BinaryOp, GroupingOp, UnaryOp } from '../token.ts';
 
-export default class Value {
+type UnaryOpIndex = {
+  [index in UnaryOp | GroupingOp]?: () => Value | void;
+};
+type BinaryOpIndex = {
+  [index in BinaryOp]?: (other: Value) => Value | void;
+};
+
+export default class Value implements UnaryOpIndex, BinaryOpIndex {
   scope?: Scope;
 
   setScope(scope: Scope) {
@@ -9,11 +16,43 @@ export default class Value {
     return this;
   }
 
-  static illegalUnaryOp(value: Value, operator: Operator): never {
+  static illegalUnaryOp(value: Value, operator: UnaryOp | GroupingOp): never {
     throw `Illegal operation: ${operator}${value.constructor.name}`;
   }
 
-  static illegalBinaryOp(left: Value, operator: Operator, right: Value): never {
+  static illegalBinaryOp(left: Value, operator: BinaryOp, right: Value): never {
     throw `Illegal operation: ${left.constructor.name} ${operator} ${right.constructor.name}`;
   }
+
+  '+'(other?: Value) {}
+  '-'(other?: Value) {}
+  '√'() {}
+  '∛'() {}
+  '∜'() {}
+  '!'() {}
+  not() {}
+
+  '()'() {}
+  '[]'() {}
+  '{}'() {}
+  '||'() {}
+  '⌊⌋'() {}
+  '⌈⌉'() {}
+
+  '*'(other: Value) {}
+  '/'(other: Value) {}
+  '%'(other: Value) {}
+  '^'(other: Value) {}
+  '='(other: Value) {}
+  ','(other: Value) {}
+  ':'(other: Value) {}
+
+  '=='(other: Value) {}
+  '!='(other: Value) {}
+  '<'(other: Value) {}
+  '<='(other: Value) {}
+  '>'(other: Value) {}
+  '>='(other: Value) {}
+  and(other: Value) {}
+  or(other: Value) {}
 }

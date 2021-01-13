@@ -17,7 +17,7 @@ import Node, {
   WhileNode
 } from './nodes.ts';
 import Scope from './scope.ts';
-import { Operator } from './token.ts';
+import { GroupingOp, Operator } from './token.ts';
 import Value, {
   Boolean,
   BuiltInFunction,
@@ -108,9 +108,11 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   visit_UnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Value {
-    let value = this.visit(node, scope);
-    // @ts-ignore
-    const returnValue = value[operator]();
+    const value = this.visit(node, scope);
+
+    const func = value[operator];
+    if (!func) Value.illegalUnaryOp(value, operator);
+    const returnValue = func.call(value) as Value | undefined;
     if (!returnValue) Value.illegalUnaryOp(value, operator);
     return returnValue;
   }
@@ -121,8 +123,10 @@ export default class Interpreter implements ExecuteIndex {
   ): Value {
     const leftValue = this.visit(left, scope);
     const rightValue = this.visit(right, scope);
-    // @ts-ignore
-    const value = leftValue[operator](rightValue);
+
+    const func = leftValue[operator];
+    if (!func) Value.illegalBinaryOp(leftValue, operator, rightValue);
+    const value = func.call(leftValue, rightValue) as Value | undefined;
     if (!value) Value.illegalBinaryOp(leftValue, operator, rightValue);
     return value;
   }
@@ -176,10 +180,12 @@ export default class Interpreter implements ExecuteIndex {
     scope: Scope
   ): Value {
     const value = this.visit(node, scope);
-    const operator = left + right;
-    // @ts-ignore
-    const returnValue = value[operator]();
-    if (!returnValue) Value.illegalUnaryOp(returnValue, operator as Operator);
+    const operator = (left + right) as GroupingOp;
+
+    const func = value[operator];
+    if (!func) Value.illegalUnaryOp(value, operator);
+    const returnValue = func.call(value) as Value | undefined;
+    if (!returnValue) Value.illegalUnaryOp(value, operator);
     return returnValue;
   }
 }

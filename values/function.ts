@@ -82,8 +82,10 @@ export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
     return new Number(0);
   }
 
-  execute_len([list]: Value[]) {
-    if (!(list instanceof List)) throw 'Error: len() must receive a list';
-    return new Number(list.items.length);
+  execute_len([value]: Value[]) {
+    if (value instanceof List) return new Number(value.items.length);
+    if (value instanceof Complex)
+      return new Number(Math.hypot(value.r, value.i));
+    throw 'Error: len() must receive a list or complex number';
   }
 }

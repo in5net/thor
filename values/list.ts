@@ -15,7 +15,7 @@ export default class List extends Value {
     if (other instanceof Value) return new List([...this.items, other]);
   }
 
-  '=='(other?: Value) {
+  '=='(other: Value) {
     if (other instanceof List)
       return new Boolean(
         this.items.length === other.items.length &&
@@ -23,7 +23,7 @@ export default class List extends Value {
       );
   }
 
-  '!='(other?: Value) {
+  '!='(other: Value) {
     if (other instanceof List)
       return new Boolean(
         this.items.some((value, index) => value !== other.items[index])

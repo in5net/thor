@@ -18,25 +18,24 @@ export default class Number extends Value {
   }
 
   '-'(other?: Value) {
-    if (other instanceof Number) return new Number(this.value - other.value);
-    if (other instanceof Complex) return other['-']()?.['+'](this);
+    if (other) (other['-']() as Value | undefined)?.['+'](this);
     if (!other) return new Number(-this.value);
   }
 
-  '*'(other?: Value) {
+  '*'(other: Value) {
     if (other instanceof Number) return new Number(this.value * other.value);
     if (other instanceof Complex) return other['*'](this);
   }
 
-  '/'(other?: Value) {
+  '/'(other: Value) {
     if (other instanceof Number) return new Number(this.value / other.value);
   }
 
-  '%'(other?: Value) {
+  '%'(other: Value) {
     if (other instanceof Number) return new Number(this.value % other.value);
   }
 
-  '^'(other?: Value) {
+  '^'(other: Value) {
     if (other instanceof Number) return new Number(this.value ** other.value);
   }
 
@@ -52,27 +51,27 @@ export default class Number extends Value {
     return new Number(Math.ceil(this.value));
   }
 
-  '=='(other?: Value) {
+  '=='(other: Value) {
     if (other instanceof Number) return new Boolean(this.value === other.value);
   }
 
-  '!='(other?: Value) {
-    if (other instanceof Number) return new Boolean(this.value !== other.value);
+  '!='(other: Value) {
+    return this['=='](other);
   }
 
-  '>'(other?: Value) {
+  '>'(other: Value) {
     if (other instanceof Number) return new Boolean(this.value > other.value);
   }
 
-  '>='(other?: Value) {
+  '>='(other: Value) {
     if (other instanceof Number) return new Boolean(this.value >= other.value);
   }
 
-  '<'(other?: Value) {
+  '<'(other: Value) {
     if (other instanceof Number) return new Boolean(this.value < other.value);
   }
 
-  '<='(other?: Value) {
+  '<='(other: Value) {
     if (other instanceof Number) return new Boolean(this.value <= other.value);
   }
 
@@ -80,12 +79,12 @@ export default class Number extends Value {
     return new Boolean(!this.value);
   }
 
-  and(other?: Value) {
+  and(other: Value) {
     if (other instanceof Number)
       return new Boolean(!!this.value && !!other.value);
   }
 
-  or(other?: Value) {
+  or(other: Value) {
     if (other instanceof Number)
       return new Boolean(!!this.value || !!other.value);
   }

@@ -21,41 +21,41 @@ export default class String extends Value {
     if (!other) return new Number(+this.value);
   }
 
-  '*'(other?: Value) {
+  '*'(other: Value) {
     if (other instanceof Number)
       return new String(this.value.repeat(other.value));
   }
 
-  '=='(other?: Value) {
+  '=='(other: Value) {
     if (other instanceof String) return new Boolean(this.value === other.value);
   }
 
-  '!='(other?: Value) {
+  '!='(other: Value) {
     if (other instanceof String) return new Boolean(this.value !== other.value);
   }
 
-  '>'(other?: Value) {
+  '>'(other: Value) {
     if (other instanceof String)
       return new Boolean(this.value.length > other.value.length);
     if (other instanceof Number)
       return new Boolean(this.value.length > other.value);
   }
 
-  '>='(other?: Value) {
+  '>='(other: Value) {
     if (other instanceof String)
       return new Boolean(this.value.length >= other.value.length);
     if (other instanceof Number)
       return new Boolean(this.value.length >= other.value);
   }
 
-  '<'(other?: Value) {
+  '<'(other: Value) {
     if (other instanceof String)
       return new Boolean(this.value.length < other.value.length);
     if (other instanceof Number)
       return new Boolean(this.value.length < other.value);
   }
 
-  '<='(other?: Value) {
+  '<='(other: Value) {
     if (other instanceof String)
       return new Boolean(this.value.length <= other.value.length);
     if (other instanceof Number)
@@ -66,12 +66,12 @@ export default class String extends Value {
     return new Boolean(!this.value);
   }
 
-  and(other?: Value) {
+  and(other: Value) {
     if (other instanceof String)
       return new Boolean(!!this.value && !!other.value);
   }
 
-  or(other?: Value) {
+  or(other: Value) {
     if (other instanceof String)
       return new Boolean(!!this.value || !!other.value);
   }

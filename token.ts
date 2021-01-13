@@ -11,7 +11,6 @@ export const compareOps = [
   'or'
 ] as const;
 export const binaryOps = [
-  ...compareOps,
   '+',
   '-',
   '*',
@@ -20,7 +19,8 @@ export const binaryOps = [
   '^',
   '=',
   ',',
-  ':'
+  ':',
+  ...compareOps
 ] as const;
 export const operators = [...unaryOps, ...binaryOps] as const;
 export const groupings = {
@@ -50,6 +50,7 @@ export type Operator = typeof operators[number];
 export type LeftGrouping = keyof typeof groupings;
 export type RightGrouping = typeof groupings[LeftGrouping];
 export type Grouping = LeftGrouping | RightGrouping;
+export type GroupingOp = '()' | '[]' | '{}' | '||' | '⌊⌋' | '⌈⌉';
 export type Keyword = typeof keywords[number];
 
 interface TokenMap {

@@ -9,12 +9,12 @@ export default class Boolean extends Value {
     return this.value.toString();
   }
 
-  '=='(other?: Value) {
+  '=='(other: Value) {
     if (other instanceof Boolean)
       return new Boolean(this.value === other.value);
   }
 
-  '!='(other?: Value) {
+  '!='(other: Value) {
     if (other instanceof Boolean)
       return new Boolean(this.value !== other.value);
   }
@@ -23,12 +23,12 @@ export default class Boolean extends Value {
     return new Boolean(!this.value);
   }
 
-  and(other?: Value) {
+  and(other: Value) {
     if (other instanceof Boolean)
       return new Boolean(this.value && !!other.value);
   }
 
-  or(other?: Value) {
+  or(other: Value) {
     if (other instanceof Boolean)
       return new Boolean(this.value || !!other.value);
   }
