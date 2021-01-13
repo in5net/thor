@@ -1,6 +1,3 @@
-age = 17
+num = 0.9
 
-if age >= 18: print("adult")
-else if age >= 60: print("old")
-else if age >= 100: print("dead")
-else: print("child")
+print(⌈num⌉)

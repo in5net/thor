@@ -1,4 +1,9 @@
-import Token, { BinaryOp, UnaryOp } from './token.ts';
+import Token, {
+  BinaryOp,
+  LeftGrouping,
+  RightGrouping,
+  UnaryOp
+} from './token.ts';
 
 export default abstract class Node {
   abstract toString(): string;
@@ -83,14 +88,6 @@ export class BinaryOpNode implements Node {
   }
 }
 
-export class AbsNode implements Node {
-  constructor(public node: Node) {}
-
-  toString() {
-    return `|${this.node}|`;
-  }
-}
-
 export class IfNode implements Node {
   constructor(
     public condition: Node,
@@ -155,5 +152,17 @@ export class ReturnNode implements Node {
 
   toString() {
     return `(return ${this.node})`;
+  }
+}
+
+export class GroupingNode implements Node {
+  constructor(
+    public node: Node,
+    public groupings: [LeftGrouping, RightGrouping]
+  ) {}
+
+  toString() {
+    const [l, r] = this.groupings;
+    return `${l}${this.node}${r}`;
   }
 }

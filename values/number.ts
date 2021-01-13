@@ -44,6 +44,14 @@ export default class Number extends Value {
     return new Number(Math.abs(this.value));
   }
 
+  '⌊⌋'() {
+    return new Number(Math.floor(this.value));
+  }
+
+  '⌈⌉'() {
+    return new Number(Math.ceil(this.value));
+  }
+
   '=='(other?: Value) {
     if (other instanceof Number) return new Boolean(this.value === other.value);
   }

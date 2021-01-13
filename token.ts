@@ -1,28 +1,56 @@
-export type Boolean = 'true' | 'false';
-export type UnaryOp = '+' | '-' | 'not';
-export type CompareOp = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'and' | 'or';
-export type BinaryOp =
-  | CompareOp
-  | '+'
-  | '-'
-  | '*'
-  | '/'
-  | '%'
-  | '^'
-  | '='
-  | ','
-  | ':';
-export type Operator = UnaryOp | BinaryOp;
-export type Parenthesis = '(' | ')' | '[' | ']' | '{' | '}' | '|';
-export type Keyword =
-  | 'let'
-  | 'if'
-  | 'else'
-  | 'for'
-  | 'while'
-  | 'in'
-  | 'fn'
-  | 'return';
+export const booleans = ['true', 'false'] as const;
+export const unaryOps = ['+', '-', '√', '∛', '∜', '!', 'not'] as const;
+export const compareOps = [
+  '==',
+  '!=',
+  '<',
+  '<=',
+  '>',
+  '>=',
+  'and',
+  'or'
+] as const;
+export const binaryOps = [
+  ...compareOps,
+  '+',
+  '-',
+  '*',
+  '/',
+  '%',
+  '^',
+  '=',
+  ',',
+  ':'
+] as const;
+export const operators = [...unaryOps, ...binaryOps] as const;
+export const groupings = {
+  '(': ')',
+  '[': ']',
+  '{': '}',
+  '|': '|',
+  '⌊': '⌋',
+  '⌈': '⌉'
+} as const;
+export const keywords = [
+  'let',
+  'if',
+  'else',
+  'for',
+  'while',
+  'in',
+  'fn',
+  'return'
+] as const;
+
+export type Boolean = typeof booleans[number];
+export type UnaryOp = typeof unaryOps[number];
+export type CompareOp = typeof compareOps[number];
+export type BinaryOp = typeof binaryOps[number];
+export type Operator = typeof operators[number];
+export type LeftGrouping = keyof typeof groupings;
+export type RightGrouping = typeof groupings[LeftGrouping];
+export type Grouping = LeftGrouping | RightGrouping;
+export type Keyword = typeof keywords[number];
 
 interface TokenMap {
   number: number;
@@ -30,7 +58,7 @@ interface TokenMap {
   string: string;
   identifier: string;
   operator: Operator;
-  parenthesis: Parenthesis;
+  grouping: Grouping;
   keyword: Keyword;
   newline: undefined;
   eof: undefined;
@@ -42,10 +70,10 @@ enum TokenName {
   string = 'string',
   identifier = 'identifier',
   operator = 'operator',
-  parenthesis = 'parenthesis',
+  grouping = 'grouping',
   keyword = 'keyword',
   newline = 'newline',
-  eof = '<eof>',
+  eof = '<eof>'
 }
 
 export default class Token<

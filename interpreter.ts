@@ -1,5 +1,4 @@
 import Node, {
-  AbsNode,
   AssignmentNode,
   BinaryOpNode,
   BooleanNode,
@@ -7,6 +6,7 @@ import Node, {
   ForNode,
   FuncCallNode,
   FuncDefNode,
+  GroupingNode,
   IdentifierNode,
   IfNode,
   ListNode,
@@ -14,7 +14,7 @@ import Node, {
   ReturnNode,
   StringNode,
   UnaryOpNode,
-  WhileNode,
+  WhileNode
 } from './nodes.ts';
 import Scope from './scope.ts';
 import Boolean from './values/boolean.ts';
@@ -23,9 +23,9 @@ import Number from './values/number.ts';
 import String from './values/string.ts';
 import Value from './values/mod.ts';
 import { Function, BuiltInFunction } from './values/function.ts';
+import { Operator } from './token.ts';
 
 type NodeName =
-  | 'AbsNode'
   | 'AssignmentNode'
   | 'BinaryOpNode'
   | 'BooleanNode'
@@ -33,6 +33,7 @@ type NodeName =
   | 'ForNode'
   | 'FuncCallNode'
   | 'FuncDefNode'
+  | 'GroupingNode'
   | 'IdentifierNode'
   | 'IfNode'
   | 'ListNode'
@@ -124,15 +125,9 @@ export default class Interpreter implements ExecuteIndex {
     return value;
   }
 
-  visit_AbsNode({ node }: AbsNode, scope: Scope): Value {
-    const value = this.visit(node, scope);
-    // @ts-ignore
-    return value['||']();
-  }
-
   visit_IfNode({ condition, body, elseCase }: IfNode, scope: Scope) {
     // @ts-ignore
-    if ((this.visit(condition, scope) as NumberNode | BooleanNode).value)
+    if ((this.visit(condition, scope) as Number | Boolean).value)
       this.visit(body, scope);
     else if (elseCase) this.visit(elseCase, scope);
   }
@@ -149,7 +144,7 @@ export default class Interpreter implements ExecuteIndex {
 
   visit_WhileNode({ condition, body }: WhileNode, scope: Scope) {
     // @ts-ignore
-    while ((this.visit(condition, scope) as NumberNode | BooleanNode).value)
+    while ((this.visit(condition, scope) as Number | Boolean).value)
       this.visit(body, scope);
   }
 
@@ -172,5 +167,17 @@ export default class Interpreter implements ExecuteIndex {
   visit_ReturnNode({ node }: ReturnNode, scope: Scope): Value {
     const value = this.visit(node, scope);
     return value ?? new Number(0);
+  }
+
+  visit_GroupingNode(
+    { node, groupings: [left, right] }: GroupingNode,
+    scope: Scope
+  ): Value {
+    const value = this.visit(node, scope);
+    const operator = left + right;
+    // @ts-ignore
+    const returnValue = value[operator]();
+    if (!returnValue) Value.illegalUnaryOp(returnValue, operator as Operator);
+    return returnValue;
   }
 }

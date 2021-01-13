@@ -1,5 +1,4 @@
 import Node, {
-  AbsNode,
   AssignmentNode,
   BinaryOpNode,
   BooleanNode,
@@ -7,6 +6,7 @@ import Node, {
   ForNode,
   FuncCallNode,
   FuncDefNode,
+  GroupingNode,
   IdentifierNode,
   IfNode,
   ListNode,
@@ -14,9 +14,19 @@ import Node, {
   ReturnNode,
   StringNode,
   UnaryOpNode,
-  WhileNode,
+  WhileNode
 } from './nodes.ts';
-import Token, { BinaryOp, UnaryOp } from './token.ts';
+import Token, {
+  BinaryOp,
+  compareOps,
+  groupings,
+  LeftGrouping,
+  UnaryOp,
+  unaryOps
+} from './token.ts';
+
+const SYMBOL_COMPARE_OPS = compareOps.filter(op => !['and', 'or'].includes(op));
+const WORD_COMPARE_OPS = compareOps.filter(op => ['and', 'or'].includes(op));
 
 export default class Parser {
   index = -1;
@@ -91,7 +101,7 @@ export default class Parser {
       let newlines = this.skipNewlines();
       if (newlines === 0) moreStatements = false;
 
-      if (!moreStatements || this.token.is('parenthesis', '}')) break;
+      if (!moreStatements || this.token.is('grouping', '}')) break;
 
       const statement = this.statement();
       if (!statement) {
@@ -137,7 +147,7 @@ export default class Parser {
     }
 
     // comp_expr (('and' | 'or') comp_expr)*
-    return this.binaryOp(this.compExpr, ['and', 'or']);
+    return this.binaryOp(this.compExpr, WORD_COMPARE_OPS);
   }
 
   compExpr(): Node {
@@ -148,7 +158,7 @@ export default class Parser {
     }
 
     // arith_expr (('==' | '!=' | '<' | '<=' | '>' | '>=') arith_expr)*
-    return this.binaryOp(this.arithExpr, ['==', '!=', '<', '<=', '>', '>=']);
+    return this.binaryOp(this.arithExpr, SYMBOL_COMPARE_OPS);
   }
 
   arithExpr(): Node {
@@ -183,7 +193,9 @@ export default class Parser {
 
     if (
       token.type === 'operator' &&
-      ['+', '-'].includes((token as Token<'operator'>).value)
+      unaryOps
+        .filter(op => op !== 'not')
+        .includes((token as Token<'operator', UnaryOp>).value)
     ) {
       this.advance();
       return new UnaryOpNode(
@@ -204,11 +216,11 @@ export default class Parser {
     // atom ('(' (expr (',' expr)*)? ')')?
     const atom = this.atom();
 
-    if (this.token.is('parenthesis', '(')) {
+    if (this.token.is('grouping', '(')) {
       this.advance();
       const args: Node[] = [];
 
-      if (this.token.is('parenthesis', ')')) this.advance();
+      if (this.token.is('grouping', ')')) this.advance();
       else {
         args.push(this.expr());
 
@@ -217,7 +229,7 @@ export default class Parser {
           args.push(this.expr());
         }
 
-        if (!(this.token as Token).is('parenthesis', ')'))
+        if (!(this.token as Token).is('grouping', ')'))
           return this.expect(["','", "')'"]);
         this.advance();
       }
@@ -248,51 +260,56 @@ export default class Parser {
       this.advance();
       return new IdentifierNode(token.value);
     }
-    if (token.is('parenthesis', '(')) {
+    if (token.is('grouping', '(')) {
       this.advance();
-      const result = this.expr();
 
-      if (this.token?.value !== ')') return this.expect("')'");
-
-      this.advance();
-      return result;
-    }
-    if (token.is('parenthesis', '|')) {
-      this.advance();
       const expr = this.expr();
 
-      if (this.token?.value !== '|') return this.expect("'|'");
-
+      if (!this.token.is('grouping', ')')) return this.expect("')'");
       this.advance();
-      return new AbsNode(expr);
+
+      return expr;
     }
-    if (token.is('parenthesis', '[')) return this.listExpr();
     if (token.is('keyword', 'if')) return this.ifExpr();
     if (token.is('keyword', 'for')) return this.forExpr();
     if (token.is('keyword', 'while')) return this.whileExpr();
     if (token.is('keyword', 'fn')) return this.funcDec();
+    if (token.is('grouping', '[')) return this.listExpr();
+    if (token.is('grouping')) {
+      const leftGrouping = token.value as LeftGrouping;
+      if (!leftGrouping)
+        return this.expect(Object.keys(groupings).map(char => `'${char}'`));
+      this.advance();
+
+      const expr = this.expr();
+
+      const rightGrouping = groupings[leftGrouping];
+      if (!this.token.is('grouping', rightGrouping))
+        return this.expect(`'${rightGrouping}'`);
+      this.advance();
+
+      return new GroupingNode(expr, [leftGrouping, rightGrouping]);
+    }
 
     this.expect([
       'number',
       'identifier',
-      "'('",
-      "'|'",
-      "'['",
       "'if'",
       "'for'",
       "'while'",
       "'fn'",
+      ...Object.keys(groupings).map(char => `'${char}'`)
     ]);
   }
 
   listExpr(): ListNode {
     // '[' (expr (',' expr)*)? ']'
-    if (!this.token.is('parenthesis', '[')) return this.expect("'['");
+    if (!this.token.is('grouping', '[')) return this.expect("'['");
     this.advance();
 
     const nodes: Node[] = [];
 
-    if (!this.token.is('parenthesis', ']')) {
+    if (!this.token.is('grouping', ']')) {
       nodes.push(this.expr());
 
       while ((this.token as Token).is('operator', ',')) {
@@ -301,7 +318,7 @@ export default class Parser {
       }
     }
 
-    if (!this.token.is('parenthesis', ']')) this.expect(["','", "']'"]);
+    if (!this.token.is('grouping', ']')) this.expect(["','", "']'"]);
     this.advance();
 
     return new ListNode(nodes);
@@ -319,11 +336,10 @@ export default class Parser {
     if (this.token.is('operator', ':')) {
       this.advance();
       body = this.statement();
-    } else if (this.token.is('parenthesis', '{')) {
+    } else if (this.token.is('grouping', '{')) {
       this.advance();
       body = this.statements();
-      if (!(this.token as Token).is('parenthesis', '}'))
-        return this.expect("'}'");
+      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
       this.advance();
     } else return this.expect(["':'", "'{'"]);
 
@@ -344,11 +360,10 @@ export default class Parser {
 
     let body: Node;
 
-    if (this.token.is('parenthesis', '{')) {
+    if (this.token.is('grouping', '{')) {
       this.advance();
       body = this.statements();
-      if (!(this.token as Token).is('parenthesis', '}'))
-        return this.expect("'}'");
+      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
       this.advance();
     } else if (this.token.is('keyword', 'if')) body = this.ifExpr();
     else {
@@ -377,11 +392,10 @@ export default class Parser {
     if ((this.token as Token).is('operator', ':')) {
       this.advance();
       body = this.statement();
-    } else if ((this.token as Token).is('parenthesis', '{')) {
+    } else if ((this.token as Token).is('grouping', '{')) {
       this.advance();
       body = this.statements();
-      if (!(this.token as Token).is('parenthesis', '}'))
-        return this.expect("'}'");
+      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
       this.advance();
     } else return this.expect(["':'", "'{'"]);
 
@@ -400,11 +414,10 @@ export default class Parser {
     if ((this.token as Token).is('operator', ':')) {
       this.advance();
       body = this.statement();
-    } else if ((this.token as Token).is('parenthesis', '{')) {
+    } else if ((this.token as Token).is('grouping', '{')) {
       this.advance();
       body = this.statements();
-      if (!(this.token as Token).is('parenthesis', '}'))
-        return this.expect("'}'");
+      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
       this.advance();
     } else return this.expect(["':'", "'{'"]);
 
@@ -420,7 +433,7 @@ export default class Parser {
 
     this.advance();
     // @ts-ignore
-    if (!this.token.is('parenthesis', '(')) return this.expect("'('");
+    if (!this.token.is('grouping', '(')) return this.expect("'('");
 
     const argNames: string[] = [];
     this.advance();
@@ -439,19 +452,18 @@ export default class Parser {
       }
 
       // @ts-ignore
-      if (!this.token.is('parenthesis', ')'))
-        return this.expect(["','", "')'"]);
+      if (!this.token.is('grouping', ')')) return this.expect(["','", "')'"]);
     }
 
     this.advance();
     // @ts-ignore
-    if (!this.token.is('parenthesis', '{')) return this.expect("'{'");
+    if (!this.token.is('grouping', '{')) return this.expect("'{'");
 
     this.advance();
     const body = this.statements();
 
     // @ts-ignore
-    if (!this.token.is('parenthesis', '}')) return this.expect("'}'");
+    if (!this.token.is('grouping', '}')) return this.expect("'}'");
     this.advance();
 
     return new FuncDefNode(name, argNames, body);
