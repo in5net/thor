@@ -39,7 +39,8 @@ list_expr: '[' (expr (',' expr)*)? ']';
 if_expr:
 	'if' expr ((':' statement) | ('{' statements '}')) else_expr?;
 
-else_expr: 'else' (statement | ('{' statements '}'));
+else_expr:
+	'else' ':'? (statement | ('{' statements '}') | if_expr);
 
 for_expr:
 	'for' IDENTIFIER 'in' expr (

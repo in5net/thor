@@ -157,7 +157,7 @@ export default class Interpreter implements ExecuteIndex {
     { name, argNames, body }: FuncDefNode,
     scope: Scope
   ): Function {
-    const value = new Function(name, argNames, body);
+    const value = new Function(name, argNames, body).setScope(scope);
     scope.symbolTable.set(name, value);
     return value;
   }

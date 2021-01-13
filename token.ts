@@ -54,19 +54,19 @@ export default class Token<
 > {
   constructor(public type: T, public value: V) {}
 
-  is<T_ extends keyof TokenMap, V_ = TokenMap[T_]>(
-    this: Token,
-    type: T_,
-    value?: V_
-  ): this is Token<T_, V_> {
+  toString() {
+    const { type, value } = this;
+    return `${TokenName[type]}${value ? `: '${value}'` : ''}`;
+  }
+
+  is<Type extends keyof TokenMap, Value = TokenMap[Type]>(
+    type: Type,
+    value?: Value
+  ): this is Token<Type, NonNullable<Value>> {
+    // @ts-ignore
     if (this.type !== type) return false;
     if (value === undefined) return true;
     // @ts-ignore
     return this.value === value;
-  }
-
-  toString() {
-    const { type, value } = this;
-    return `${TokenName[type]}${value ? `: '${value}'` : ''}`;
   }
 }

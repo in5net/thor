@@ -6,6 +6,7 @@ export default class Value {
 
   setScope(scope: Scope) {
     this.scope = scope;
+    return this;
   }
 
   static illegalUnaryOp(value: Value, operator: Operator): never {

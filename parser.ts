@@ -336,9 +336,11 @@ export default class Parser {
   }
 
   elseExpr(): Node {
-    // 'else' (statement | ('{' statements '}'))
+    // 'else' ':'? (statement | ('{' statements '}') | if_expr)
     if (!this.token.is('keyword', 'else')) return this.expect("'else'");
     this.advance();
+
+    if (this.token.is('operator', ':')) this.advance();
 
     let body: Node;
 
@@ -348,8 +350,8 @@ export default class Parser {
       if (!(this.token as Token).is('parenthesis', '}'))
         return this.expect("'}'");
       this.advance();
-    } else {
-      this.advance();
+    } else if (this.token.is('keyword', 'if')) body = this.ifExpr();
+    else {
       body = this.statement();
     }
 

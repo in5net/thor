@@ -77,8 +77,8 @@ export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
     throw `Error: Built-in function '${this.name}' is not defined`;
   }
 
-  execute_print([message]: Value[]) {
-    console.log(`${message}`);
+  execute_print(messages: Value[]) {
+    console.log(messages.join(' '));
     return new Number(0);
   }
 
