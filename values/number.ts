@@ -1,6 +1,6 @@
 import Boolean from './boolean.ts';
 import Complex from './complex.ts';
-import Value from './mod.ts';
+import Value from './value.ts';
 
 export default class Number extends Value {
   constructor(public value: number) {

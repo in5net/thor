@@ -4,7 +4,7 @@ import Scope, { SymbolTable } from '../scope.ts';
 import Complex from './complex.ts';
 import List from './list.ts';
 import Number from './number.ts';
-import Value from './mod.ts';
+import Value from './value.ts';
 
 export class BaseFunction extends Value {
   constructor(public name = '<anonymous>') {

@@ -17,13 +17,15 @@ import Node, {
   WhileNode
 } from './nodes.ts';
 import Scope from './scope.ts';
-import Boolean from './values/boolean.ts';
-import List from './values/list.ts';
-import Number from './values/number.ts';
-import String from './values/string.ts';
-import Value from './values/mod.ts';
-import { Function, BuiltInFunction } from './values/function.ts';
 import { Operator } from './token.ts';
+import Value, {
+  Boolean,
+  BuiltInFunction,
+  Function,
+  List,
+  Number,
+  String
+} from './values/mod.ts';
 
 type NodeName =
   | 'AssignmentNode'

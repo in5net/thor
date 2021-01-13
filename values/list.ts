@@ -1,5 +1,5 @@
 import Boolean from './boolean.ts';
-import Value from './mod.ts';
+import Value from './value.ts';
 
 export default class List extends Value {
   constructor(public items: Value[]) {

@@ -1,19 +1,10 @@
-import Scope from '../scope.ts';
-import { Operator } from '../token.ts';
+import Value from './value.ts';
+export default Value;
 
-export default class Value {
-  scope?: Scope;
+export { default as Number } from './number.ts';
+export { default as Boolean } from './boolean.ts';
+export { default as String } from './string.ts';
+export { default as List } from './list.ts';
+export * from './function.ts';
 
-  setScope(scope: Scope) {
-    this.scope = scope;
-    return this;
-  }
-
-  static illegalUnaryOp(value: Value, operator: Operator): never {
-    throw `Illegal operation: ${operator}${value.constructor.name}`;
-  }
-
-  static illegalBinaryOp(left: Value, operator: Operator, right: Value): never {
-    throw `Illegal operation: ${left.constructor.name} ${operator} ${right.constructor.name}`;
-  }
-}
+export { default as Complex } from './complex.ts';

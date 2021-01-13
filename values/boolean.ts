@@ -1,4 +1,4 @@
-import Value from './mod.ts';
+import Value from './value.ts';
 
 export default class Boolean extends Value {
   constructor(public value: boolean) {
@@ -25,11 +25,11 @@ export default class Boolean extends Value {
 
   and(other?: Value) {
     if (other instanceof Boolean)
-      return new Boolean(!!this.value && !!other.value);
+      return new Boolean(this.value && !!other.value);
   }
 
   or(other?: Value) {
     if (other instanceof Boolean)
-      return new Boolean(!!this.value || !!other.value);
+      return new Boolean(this.value || !!other.value);
   }
 }

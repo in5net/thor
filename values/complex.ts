@@ -1,5 +1,5 @@
 import Number from './number.ts';
-import Value from './mod.ts';
+import Value from './value.ts';
 
 export default class Complex extends Value {
   constructor(public r: number, public i: number) {
