@@ -1,5 +1,5 @@
 import Interpreter from '../interpreter.ts';
-import { ListNode } from '../nodes.ts';
+import Node from '../nodes.ts';
 import Scope, { SymbolTable } from '../scope.ts';
 import Complex from './complex.ts';
 import List from './list.ts';
@@ -32,7 +32,7 @@ export class BaseFunction extends Value {
 }
 
 export class Function extends BaseFunction {
-  constructor(name: string, public argNames: string[], public body: ListNode) {
+  constructor(name: string, public argNames: string[], public body: Node) {
     super(name);
   }
 

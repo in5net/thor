@@ -6,5 +6,6 @@ export { default as Boolean } from './boolean.ts';
 export { default as String } from './string.ts';
 export { default as List } from './list.ts';
 export * from './function.ts';
+export { default as Iterator } from './iterator.ts';
 
 export { default as Complex } from './complex.ts';

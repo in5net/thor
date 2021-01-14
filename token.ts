@@ -59,6 +59,7 @@ interface TokenMap {
   string: string;
   identifier: string;
   operator: Operator;
+  arrow: undefined;
   grouping: Grouping;
   keyword: Keyword;
   newline: undefined;
@@ -71,6 +72,7 @@ enum TokenName {
   string = 'string',
   identifier = 'identifier',
   operator = 'operator',
+  arrow = 'arrow',
   grouping = 'grouping',
   keyword = 'keyword',
   newline = 'newline',

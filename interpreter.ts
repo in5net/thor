@@ -17,11 +17,12 @@ import Node, {
   WhileNode
 } from './nodes.ts';
 import Scope from './scope.ts';
-import { GroupingOp, Operator } from './token.ts';
+import { GroupingOp } from './token.ts';
 import Value, {
   Boolean,
   BuiltInFunction,
   Function,
+  Iterator,
   List,
   Number,
   String
@@ -143,6 +144,11 @@ export default class Interpreter implements ExecuteIndex {
     if (iterableValue instanceof List) {
       for (const item of iterableValue.items) {
         scope.symbolTable.set(identifier.value, item);
+        this.visit(body, scope);
+      }
+    } else if (iterableValue instanceof Iterator) {
+      for (const value of iterableValue.generator) {
+        scope.symbolTable.set(identifier.value, value);
         this.visit(body, scope);
       }
     }

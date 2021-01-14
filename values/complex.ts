@@ -20,7 +20,10 @@ export default class Complex extends Value {
   }
 
   '-'(other?: Value) {
-    if (other) (other['-']() as Value | undefined)?.['+'](this);
+    if (other instanceof Complex)
+      return new Complex(this.r - other.r, this.i - other.i);
+    if (other instanceof Number)
+      return new Complex(this.r - other.value, this.i);
     return new Complex(-this.r, -this.i);
   }
 

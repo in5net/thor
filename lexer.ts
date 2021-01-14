@@ -23,16 +23,21 @@ const COMPARE_OPS = ['=', '!', '<', '>'];
 const EOF = '<eof>';
 
 export default class Lexer {
-  text: IterableIterator<string>;
+  index = -1;
   char!: string;
 
-  constructor(text: string) {
-    this.text = text[Symbol.iterator]();
+  constructor(private text: string) {
     this.advance();
   }
 
   lex(): Token[] {
-    const tokens = [...this.generateTokens()];
+    const tokens: Token[] = [];
+    let token = this.nextToken();
+    while (!token.is('eof')) {
+      tokens.push(token);
+      token = this.nextToken();
+    }
+    tokens.push(token);
     return tokens;
   }
 
@@ -41,33 +46,40 @@ export default class Lexer {
   }
 
   advance(): void {
-    this.char = this.text.next().value || EOF;
+    this.char = this.text[++this.index] || EOF;
   }
 
-  *generateTokens(): Generator<Token> {
+  nextToken(): Token {
     while (!this.eof()) {
       const { char } = this;
       if (WHITESPACE.includes(char)) this.advance();
       else if ('\n;'.includes(char)) {
-        yield new Token('newline', undefined);
         this.advance();
-      } else if ((DIGITS + '.').includes(char)) yield this.number();
-      else if (char === '"') yield this.string();
-      else if (LETTERS.includes(char)) yield this.word();
-      else if (COMPARE_OPS.includes(char)) yield this.compare();
-      else if (operators.includes(char as Operator)) {
-        yield new Token('operator', char);
+        return new Token('newline', undefined);
+      } else if ((DIGITS + '.').includes(char)) return this.number();
+      else if (char === '"') return this.string();
+      else if (LETTERS.includes(char)) return this.word();
+      else if (COMPARE_OPS.includes(char)) return this.compare();
+      else if (char === '-') {
         this.advance();
+        if (this.char === '>') {
+          this.advance();
+          return new Token('arrow', undefined);
+        }
+        return new Token('operator', '-');
+      } else if (operators.includes(char as Operator)) {
+        this.advance();
+        return new Token('operator', char);
       } else if (
         Object.entries(groupings)
           .flat()
           .includes(char as Grouping)
       ) {
-        yield new Token('grouping', char);
         this.advance();
+        return new Token('grouping', char);
       } else throw `Illegal character '${char}'`;
     }
-    yield new Token('eof', undefined);
+    return new Token('eof', undefined);
   }
 
   number(): Token<'number'> {

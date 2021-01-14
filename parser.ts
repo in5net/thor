@@ -146,8 +146,8 @@ export default class Parser {
       return new AssignmentNode(identifier, expr);
     }
 
-    // comp_expr (('and' | 'or') comp_expr)*
-    return this.binaryOp(this.compExpr, WORD_COMPARE_OPS);
+    // comp_expr (('and' | 'or' | ':') comp_expr)*
+    return this.binaryOp(this.compExpr, [...WORD_COMPARE_OPS, ':']);
   }
 
   compExpr(): Node {
@@ -425,18 +425,19 @@ export default class Parser {
   }
 
   funcDec(): FuncDefNode {
-    // 'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)* ')')? '{' statements '}'
+    // 'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)* ')')? (('->' statement) | ('{' statements '}'))
     if (!this.token.is('keyword', 'fn')) return this.expect("'fn'");
     this.advance();
+
     if (!this.token.is('identifier')) return this.expect('identifier');
     const name = (this.token as Token<'identifier'>).value;
-
     this.advance();
+
     // @ts-ignore
     if (!this.token.is('grouping', '(')) return this.expect("'('");
+    this.advance();
 
     const argNames: string[] = [];
-    this.advance();
     // @ts-ignore
     if (this.token.is('identifier')) {
       argNames.push((this.token as Token<'identifier'>).value);
@@ -454,19 +455,23 @@ export default class Parser {
       // @ts-ignore
       if (!this.token.is('grouping', ')')) return this.expect(["','", "')'"]);
     }
-
-    this.advance();
-    // @ts-ignore
-    if (!this.token.is('grouping', '{')) return this.expect("'{'");
-
-    this.advance();
-    const body = this.statements();
-
-    // @ts-ignore
-    if (!this.token.is('grouping', '}')) return this.expect("'}'");
     this.advance();
 
-    return new FuncDefNode(name, argNames, body);
+    let body: Node;
+    let arrow = false;
+
+    if ((this.token as Token).is('arrow')) {
+      arrow = true;
+      this.advance();
+      body = this.statement();
+    } else if ((this.token as Token).is('grouping', '{')) {
+      this.advance();
+      body = this.statements();
+      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
+      this.advance();
+    } else return this.expect(["'->'", "'{'"]);
+
+    return new FuncDefNode(name, argNames, body, arrow);
   }
 
   binaryOp(left: () => Node, operators: BinaryOp[], right = left) {

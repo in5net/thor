@@ -129,13 +129,14 @@ export class FuncDefNode implements Node {
   constructor(
     public name: string,
     public argNames: string[],
-    public body: ListNode
+    public body: Node,
+    public arrow = false
   ) {}
 
   toString() {
-    return `(fn ${this.name}(${this.argNames.join(', ')}) {
-  ${this.body}
-})`;
+    return `(fn ${this.name}(${this.argNames.join(', ')})${
+      this.arrow ? ' ->' : ':'
+    } ${this.body})`;
   }
 }
 
