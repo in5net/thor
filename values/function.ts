@@ -66,7 +66,10 @@ export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
 
   static setupGlobalSymbolTable(symbolTable: SymbolTable) {
     symbolTable.set('PI', new Number(Math.PI));
+    symbolTable.set('π', new Number(Math.PI));
     symbolTable.set('TAU', new Number(Math.PI * 2));
+    symbolTable.set('τ', new Number(Math.PI * 2));
+    symbolTable.set('∞', new Number(Infinity));
     symbolTable.set('i', new Complex(0, 1));
 
     symbolTable.set('print', new BuiltInFunction('print'));
