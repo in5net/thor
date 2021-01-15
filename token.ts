@@ -1,5 +1,5 @@
 export const booleans = ['true', 'false'] as const;
-export const unaryOps = ['+', '-', '√', '∛', '∜', '!', 'not'] as const;
+export const unaryOps = ['+', '-', '√', '∛', '∜', '!', '∑', 'not'] as const;
 export const compareOps = [
   '==',
   '!=',

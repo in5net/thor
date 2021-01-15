@@ -30,6 +30,7 @@ export default class Value implements UnaryOpIndex, BinaryOpIndex {
   '∛'() {}
   '∜'() {}
   '!'() {}
+  '∑'() {}
   not() {}
 
   '()'() {}

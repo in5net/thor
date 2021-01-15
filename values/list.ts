@@ -1,4 +1,5 @@
 import Boolean from './boolean.ts';
+import Number from './number.ts';
 import Value from './value.ts';
 
 export default class List extends Value {
@@ -13,6 +14,14 @@ export default class List extends Value {
   '+'(other?: Value) {
     if (other instanceof List) return new List([...this.items, ...other.items]);
     if (other instanceof Value) return new List([...this.items, other]);
+  }
+
+  '∑'() {
+    let sum = 0;
+    for (const item of this.items) {
+      if (item instanceof Number) sum += item.value;
+    }
+    return new Number(sum);
   }
 
   '=='(other: Value) {

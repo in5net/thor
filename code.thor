@@ -1,3 +1,3 @@
-fn double(x) -> 2x
+nums = [1,2,3]
 
-print(double(3))
+print(∑nums)
