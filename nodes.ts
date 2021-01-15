@@ -69,9 +69,14 @@ export class AssignmentNode implements Node {
 }
 
 export class UnaryOpNode implements Node {
-  constructor(public node: Node, public operator: UnaryOp) {}
+  constructor(
+    public node: Node,
+    public operator: UnaryOp,
+    public postfix = false
+  ) {}
 
   toString() {
+    if (this.postfix) return `(${this.node}${this.operator})`;
     return `(${this.operator}${this.node})`;
   }
 }

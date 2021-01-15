@@ -208,8 +208,18 @@ export default class Parser {
   }
 
   power(): Node {
-    // call ('^' factor)*
-    return this.binaryOp(this.call, ['^'], this.factor);
+    // factorial ('^' factor)*
+    return this.binaryOp(this.factorial, ['^'], this.factor);
+  }
+
+  factorial(): Node {
+    // call '!'?
+    const call = this.call();
+    if (this.token.is('operator', '!')) {
+      this.advance();
+      return new UnaryOpNode(call, '!', true);
+    }
+    return call;
   }
 
   call(): Node {

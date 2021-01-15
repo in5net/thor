@@ -20,7 +20,9 @@ term: factor (('*' | '/' | '%') factor)* | NUMBER IDENTIFIER;
 
 factor: ('+' | '-') factor | power;
 
-power: call ('^' factor)*;
+power: factorial ('^' factor)*;
+
+factorial: call '!'?;
 
 call: atom ('(' (expr (',' expr)*)? ')')?;
 

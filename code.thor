@@ -1,3 +1,3 @@
-nums = [1,2,3]
+num = 10
 
-print(∑nums)
+print(num!)

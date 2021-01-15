@@ -41,6 +41,10 @@ export default class Number extends Value {
     if (other instanceof Number) return new Number(this.value ** other.value);
   }
 
+  '!'() {
+    return new Number(factorial(this.value));
+  }
+
   '||'() {
     return new Number(Math.abs(this.value));
   }
@@ -101,4 +105,9 @@ export default class Number extends Value {
     if (other instanceof Number)
       return new Boolean(!!this.value || !!other.value);
   }
+}
+
+function factorial(x: number): number {
+  if (x <= 1) return 1;
+  return x * factorial(x - 1);
 }
