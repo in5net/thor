@@ -175,8 +175,7 @@ export default class Parser {
 
       // IDENTIFIER ('++' | '--')
       let expr: Node | undefined;
-      if (!['++', '--'].includes((operator as unknown) as '++' | '--'))
-        expr = this.expr();
+      if (!['++', '--'].includes(operator.value)) expr = this.expr();
 
       return new AssignmentNode(identifier, operator.value, expr);
     }
