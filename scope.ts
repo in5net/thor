@@ -14,7 +14,7 @@ export class SymbolTable {
   constructor(public parent?: SymbolTable) {}
 
   get(name: string): Value | undefined {
-    let value = this.symbols.get(name);
+    const value = this.symbols.get(name);
     if (!value && this.parent) return this.parent.get(name);
     return value;
   }

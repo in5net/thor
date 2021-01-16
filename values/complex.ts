@@ -1,4 +1,5 @@
 import Boolean from './boolean.ts';
+import List from './list.ts';
 import Number from './number.ts';
 import Value from './value.ts';
 
@@ -24,7 +25,11 @@ export default class Complex extends Value {
       return new Complex(this.r - other.r, this.i - other.i);
     if (other instanceof Number)
       return new Complex(this.r - other.value, this.i);
-    return new Complex(-this.r, -this.i);
+    if (!other) return new Complex(-this.r, -this.i);
+  }
+
+  '±'() {
+    return new List([this, this['-']()!]);
   }
 
   '*'(other: Value) {
@@ -61,6 +66,6 @@ export default class Complex extends Value {
   }
 
   '!='(other: Value) {
-    return !this['=='](other);
+    return new Boolean(!this['=='](other));
   }
 }

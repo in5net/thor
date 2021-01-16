@@ -21,6 +21,9 @@ import Token, {
   compareOps,
   groupings,
   LeftGrouping,
+  PostfixUnaryOp,
+  postfixUnaryOps,
+  RightGrouping,
   UnaryOp,
   unaryOps
 } from './token.ts';
@@ -62,6 +65,10 @@ export default class Parser {
 
   advance() {
     this.token = this.tokens[++this.index];
+  }
+
+  get nextToken(): Token {
+    return this.tokens[this.index + 1] || new Token('eof', undefined);
   }
 
   skipNewlines() {
@@ -131,7 +138,7 @@ export default class Parser {
     const declaration = this.token.is('keyword', 'let');
     if (declaration) this.advance();
 
-    if (declaration || this.tokens[this.index + 1].is('operator', '=')) {
+    if (declaration || this.nextToken.is('operator', '=')) {
       if (!(this.token as Token).is('identifier'))
         return this.expect('identifier');
       const identifier = (this.token as unknown) as Token<'identifier'>;
@@ -167,22 +174,18 @@ export default class Parser {
   }
 
   term(): Node {
-    // factor (('*' | '/' | '%') factor)* | NUMBER IDENTIFIER
+    // factor (('*' | '/' | '%') factor)* | NUMBER postfix
     if (
       this.token.is('number') &&
-      this.tokens[this.index + 1].is('identifier')
+      !['operator', 'newline', 'eof'].includes(this.nextToken.type) &&
+      !Object.values(groupings).includes(this.nextToken.value as RightGrouping)
     ) {
       const number = this.token;
       this.advance();
 
-      const identifier = (this.token as unknown) as Token<'identifier'>;
-      this.advance();
+      const postfix = this.postfix();
 
-      return new BinaryOpNode(
-        new NumberNode(number.value),
-        '*',
-        new IdentifierNode(identifier.value)
-      );
+      return new BinaryOpNode(new NumberNode(number.value), '*', postfix);
     }
     return this.binaryOp(this.factor, ['*', '/', '%']);
   }
@@ -208,16 +211,24 @@ export default class Parser {
   }
 
   power(): Node {
-    // factorial ('^' factor)*
-    return this.binaryOp(this.factorial, ['^'], this.factor);
+    // postfix ('^' factor)*
+    return this.binaryOp(this.postfix, ['^'], this.factor);
   }
 
-  factorial(): Node {
-    // call '!'?
+  postfix(): Node {
+    // call POSTFIX_UNARY_OP?
     const call = this.call();
-    if (this.token.is('operator', '!')) {
-      this.advance();
-      return new UnaryOpNode(call, '!', true);
+    if (this.token.is('operator')) {
+      const number = '⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(this.token.value);
+      if (number >= 0) {
+        this.advance();
+        return new BinaryOpNode(call, '^', new NumberNode(number));
+      }
+      if (postfixUnaryOps.includes(this.token.value as PostfixUnaryOp)) {
+        const operator = this.token.value as PostfixUnaryOp;
+        this.advance();
+        return new UnaryOpNode(call, operator, true);
+      }
     }
     return call;
   }
@@ -443,20 +454,17 @@ export default class Parser {
     const name = (this.token as Token<'identifier'>).value;
     this.advance();
 
-    // @ts-ignore
-    if (!this.token.is('grouping', '(')) return this.expect("'('");
+    if (!(this.token as Token).is('grouping', '(')) return this.expect("'('");
     this.advance();
 
     const argNames: string[] = [];
-    // @ts-ignore
-    if (this.token.is('identifier')) {
+    if ((this.token as Token).is('identifier')) {
       argNames.push((this.token as Token<'identifier'>).value);
       this.advance();
-      // @ts-ignore
-      while (this.token.is('operator', ',')) {
+      while ((this.token as Token).is('operator', ',')) {
         this.advance();
-        // @ts-ignore
-        if (!this.token.is('identifier')) return this.expect('identifier');
+        if (!(this.token as Token).is('identifier'))
+          return this.expect('identifier');
 
         argNames.push((this.token as Token<'identifier'>).value);
         this.advance();

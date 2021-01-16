@@ -1,3 +1,3 @@
-num = 10
+fn f(x) -> 3(x² - 1)
 
-print(num!)
+print(f(2))

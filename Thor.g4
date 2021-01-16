@@ -16,18 +16,19 @@ comp_expr:
 
 arith_expr: term (('+' | '-') term)*;
 
-term: factor (('*' | '/' | '%') factor)* | NUMBER IDENTIFIER;
+term: factor (('*' | '/' | '%') factor)*;
 
 factor: ('+' | '-') factor | power;
 
-power: factorial ('^' factor)*;
+power: postfix ('^' factor)*;
 
-factorial: call '!'?;
+postfix: call '!'?;
 
 call: atom ('(' (expr (',' expr)*)? ')')?;
 
 atom:
 	(NUMBER | BOOLEAN | STRING | IDENTIFIER)
+	| NUMBER postfix
 	| '(' expr ')'
 	| '|' expr '|'
 	| list_expr

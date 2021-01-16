@@ -1,5 +1,28 @@
 export const booleans = ['true', 'false'] as const;
-export const unaryOps = ['+', '-', '√', '∛', '∜', '!', '∑', 'not'] as const;
+export const prefixUnaryOps = [
+  '+',
+  '-',
+  '±',
+  '√',
+  '∛',
+  '∜',
+  '∑',
+  'not'
+] as const;
+export const postfixUnaryOps = [
+  '⁰',
+  '¹',
+  '²',
+  '³',
+  '⁴',
+  '⁵',
+  '⁶',
+  '⁷',
+  '⁸',
+  '⁹',
+  '!'
+] as const;
+export const unaryOps = [...prefixUnaryOps, ...postfixUnaryOps] as const;
 export const compareOps = [
   '==',
   '!=',
@@ -43,6 +66,8 @@ export const keywords = [
 ] as const;
 
 export type Boolean = typeof booleans[number];
+export type PrefixUnaryOp = typeof prefixUnaryOps[number];
+export type PostfixUnaryOp = typeof postfixUnaryOps[number];
 export type UnaryOp = typeof unaryOps[number];
 export type CompareOp = typeof compareOps[number];
 export type BinaryOp = typeof binaryOps[number];
