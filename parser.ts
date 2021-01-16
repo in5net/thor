@@ -18,18 +18,24 @@ import Node, {
 } from './nodes.ts';
 import Token, {
   BinaryOp,
+  binaryOps,
   compareOps,
   groupings,
+  IdentifierOp,
+  identifierOps,
   LeftGrouping,
   PostfixUnaryOp,
   postfixUnaryOps,
+  PrefixUnaryOp,
+  prefixUnaryOps,
   RightGrouping,
-  UnaryOp,
-  unaryOps
+  UnaryOp
 } from './token.ts';
 
 const SYMBOL_COMPARE_OPS = compareOps.filter(op => !['and', 'or'].includes(op));
 const WORD_COMPARE_OPS = compareOps.filter(op => ['and', 'or'].includes(op));
+
+const EOF = new Token('eof', undefined);
 
 export default class Parser {
   index = -1;
@@ -64,11 +70,11 @@ export default class Parser {
   }
 
   advance() {
-    this.token = this.tokens[++this.index];
+    this.token = this.tokens[++this.index] || EOF;
   }
 
   get nextToken(): Token {
-    return this.tokens[this.index + 1] || new Token('eof', undefined);
+    return this.tokens[this.index + 1] || EOF;
   }
 
   skipNewlines() {
@@ -134,11 +140,9 @@ export default class Parser {
   }
 
   expr(): Node {
-    // 'let'? IDENTIFIER '=' expr
-    const declaration = this.token.is('keyword', 'let');
-    if (declaration) this.advance();
-
-    if (declaration || this.nextToken.is('operator', '=')) {
+    // 'let' IDENTIFIER '=' expr
+    if (this.token.is('keyword', 'let')) {
+      this.advance();
       if (!(this.token as Token).is('identifier'))
         return this.expect('identifier');
       const identifier = (this.token as unknown) as Token<'identifier'>;
@@ -149,8 +153,32 @@ export default class Parser {
 
       const expr = this.expr();
 
-      if (declaration) return new DeclarationNode(identifier, expr);
-      return new AssignmentNode(identifier, expr);
+      return new DeclarationNode(identifier, expr);
+    }
+
+    // IDENTIFIER ('=' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=') expr
+    if (
+      this.token.is('identifier') &&
+      (this.nextToken as Token).is('operator') &&
+      identifierOps.includes(
+        ((this.nextToken as unknown) as Token<'operator', IdentifierOp>).value
+      )
+    ) {
+      const identifier = (this.token as unknown) as Token<'identifier'>;
+      this.advance();
+
+      const operator = (this.token as unknown) as Token<
+        'operator',
+        IdentifierOp
+      >;
+      this.advance();
+
+      // IDENTIFIER ('++' | '--')
+      let expr: Node | undefined;
+      if (!['++', '--'].includes((operator as unknown) as '++' | '--'))
+        expr = this.expr();
+
+      return new AssignmentNode(identifier, operator.value, expr);
     }
 
     // comp_expr (('and' | 'or' | ':') comp_expr)*
@@ -174,18 +202,21 @@ export default class Parser {
   }
 
   term(): Node {
-    // factor (('*' | '/' | '%') factor)* | NUMBER postfix
+    // factor (('*' | '/' | '%') factor)* | NUMBER !BINARY_OP term
     if (
       this.token.is('number') &&
-      !['operator', 'newline', 'eof'].includes(this.nextToken.type) &&
+      !['newline', 'eof'].includes(this.nextToken.type) &&
+      (this.nextToken.is('operator')
+        ? !binaryOps.includes(this.nextToken.value as BinaryOp)
+        : true) &&
       !Object.values(groupings).includes(this.nextToken.value as RightGrouping)
     ) {
       const number = this.token;
       this.advance();
 
-      const postfix = this.postfix();
+      const term = this.term();
 
-      return new BinaryOpNode(new NumberNode(number.value), '*', postfix);
+      return new BinaryOpNode(new NumberNode(number.value), '*', term);
     }
     return this.binaryOp(this.factor, ['*', '/', '%']);
   }
@@ -196,9 +227,9 @@ export default class Parser {
 
     if (
       token.type === 'operator' &&
-      unaryOps
+      prefixUnaryOps
         .filter(op => op !== 'not')
-        .includes((token as Token<'operator', UnaryOp>).value)
+        .includes((token as Token<'operator', PrefixUnaryOp>).value)
     ) {
       this.advance();
       return new UnaryOpNode(

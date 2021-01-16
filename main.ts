@@ -53,6 +53,6 @@ export default function run(
     const value = interpreter.visit(repl ? ast.nodes[0] : ast, globalScope);
     return value;
   } catch (e) {
-    console.error('Error:', e);
+    console.error(e);
   }
 }

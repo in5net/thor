@@ -86,7 +86,7 @@ export default class Interpreter implements ExecuteIndex {
 
   visit_IdentifierNode({ name }: IdentifierNode, scope: Scope): Value {
     const value = scope.symbolTable.get(name);
-    if (!value) this.error(`${name} is not defined`);
+    if (!value) this.error(`'${name}' is not defined`);
     return value;
   }
 
@@ -100,12 +100,74 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   visit_AssignmentNode(
-    { identifier, node }: AssignmentNode,
+    { identifier, operator, node }: AssignmentNode,
     scope: Scope
   ): Value {
-    const value = this.visit(node, scope);
-    scope.symbolTable.set(identifier.value, value);
-    return value;
+    let returnValue: Value | undefined;
+    const right = node ? this.visit(node, scope) : undefined;
+    if (operator === '=') {
+      scope.symbolTable.set(identifier.value, right!);
+      return right!;
+    }
+
+    const left = this.visit(new IdentifierNode(identifier.value), scope);
+
+    switch (operator) {
+      case '+=': {
+        const value = (left['+'](
+          (right as unknown) as Value
+        ) as unknown) as Value;
+        scope.symbolTable.set(identifier.value, value);
+        break;
+      }
+      case '-=': {
+        const value = (left['-'](
+          (right as unknown) as Value
+        ) as unknown) as Value;
+        scope.symbolTable.set(identifier.value, value);
+        break;
+      }
+      case '++': {
+        const value = (left['+'](new Number(1)) as unknown) as Value;
+        scope.symbolTable.set(identifier.value, value);
+        returnValue = left;
+        break;
+      }
+      case '--': {
+        const value = (left['-'](new Number(1)) as unknown) as Value;
+        scope.symbolTable.set(identifier.value, value);
+        returnValue = left;
+        break;
+      }
+      case '*=': {
+        const value = (left['*'](
+          (right as unknown) as Value
+        ) as unknown) as Value;
+        scope.symbolTable.set(identifier.value, value);
+        break;
+      }
+      case '/=': {
+        const value = (left['/'](
+          (right as unknown) as Value
+        ) as unknown) as Value;
+        scope.symbolTable.set(identifier.value, value);
+        break;
+      }
+      case '%=': {
+        const value = (left['%'](
+          (right as unknown) as Value
+        ) as unknown) as Value;
+        scope.symbolTable.set(identifier.value, value);
+        break;
+      }
+      case '^=': {
+        const value = (left['^'](
+          (right as unknown) as Value
+        ) as unknown) as Value;
+        scope.symbolTable.set(identifier.value, value);
+      }
+    }
+    return (right || returnValue) as Value;
   }
 
   visit_UnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Value {

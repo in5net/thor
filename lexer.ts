@@ -1,5 +1,4 @@
 import Token, {
-  BinaryOp,
   Boolean,
   booleans,
   Grouping,
@@ -18,7 +17,6 @@ const ESCAPE_CHARS: Record<string, string | undefined> = {
   n: '\n',
   t: '\t'
 };
-const COMPARE_OPS = ['=', '!', '<', '>'];
 
 const EOF = '<eof>';
 
@@ -49,6 +47,10 @@ export default class Lexer {
     this.char = this.text[++this.index] || EOF;
   }
 
+  get nextChar(): string {
+    return this.text[this.index + 1] || EOF;
+  }
+
   nextToken(): Token {
     while (!this.eof()) {
       const { char } = this;
@@ -59,18 +61,12 @@ export default class Lexer {
       } else if ((DIGITS + '.').includes(char)) return this.number();
       else if (char === '"') return this.string();
       else if (LETTERS.includes(char)) return this.word();
-      else if (COMPARE_OPS.includes(char)) return this.compare();
-      else if (char === '-') {
+      else if (char === '-' && this.nextChar === '>') {
         this.advance();
-        if (this.char === '>') {
-          this.advance();
-          return new Token('arrow', undefined);
-        }
-        return new Token('operator', '-');
-      } else if (operators.includes(char as Operator)) {
         this.advance();
-        return new Token('operator', char);
-      } else if (
+        return new Token('arrow', undefined);
+      } else if (operators.includes(char as Operator)) return this.operator();
+      else if (
         Object.entries(groupings)
           .flat()
           .includes(char as Grouping)
@@ -132,15 +128,15 @@ export default class Lexer {
     return new Token('identifier', str);
   }
 
-  compare(): Token<'operator'> {
+  operator(): Token<'operator'> {
     let str = this.char;
     this.advance();
 
-    if (this.char === '=') {
+    if (['=', '+', '-'].includes(this.char)) {
       str += this.char;
       this.advance();
     }
 
-    return new Token('operator', str as BinaryOp);
+    return new Token('operator', str as Operator);
   }
 }

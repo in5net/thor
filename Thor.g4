@@ -5,7 +5,19 @@ statements: '\n'* statement ('\n'+ statement)* '\n'*;
 statement: expr | 'return' expr?;
 
 expr:
-	'let'? IDENTIFIER '=' expr
+	('let' IDENTIFIER '=' expr)
+	| (
+		IDENTIFIER (
+			'='
+			| '+='
+			| '-='
+			| '*='
+			| '/='
+			| '%='
+			| '^='
+		) expr
+	)
+	| (IDENTIFIER ('++' | '--'))
 	| comp_expr (('and' | 'or' | ':') comp_expr)*;
 
 comp_expr:
@@ -16,7 +28,7 @@ comp_expr:
 
 arith_expr: term (('+' | '-') term)*;
 
-term: factor (('*' | '/' | '%') factor)*;
+term: factor (('*' | '/' | '%') factor)* | NUMBER term;
 
 factor: ('+' | '-') factor | power;
 

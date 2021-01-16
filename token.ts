@@ -33,6 +33,17 @@ export const compareOps = [
   'and',
   'or'
 ] as const;
+export const identifierOps = [
+  '=',
+  '+=',
+  '-=',
+  '++',
+  '--',
+  '*=',
+  '/=',
+  '%=',
+  '^='
+] as const;
 export const binaryOps = [
   '+',
   '-',
@@ -40,10 +51,10 @@ export const binaryOps = [
   '/',
   '%',
   '^',
-  '=',
   ',',
   ':',
-  ...compareOps
+  ...compareOps,
+  ...identifierOps
 ] as const;
 export const operators = [...unaryOps, ...binaryOps] as const;
 export const groupings = {
@@ -70,6 +81,7 @@ export type PrefixUnaryOp = typeof prefixUnaryOps[number];
 export type PostfixUnaryOp = typeof postfixUnaryOps[number];
 export type UnaryOp = typeof unaryOps[number];
 export type CompareOp = typeof compareOps[number];
+export type IdentifierOp = typeof identifierOps[number];
 export type BinaryOp = typeof binaryOps[number];
 export type Operator = typeof operators[number];
 export type LeftGrouping = keyof typeof groupings;

@@ -46,6 +46,10 @@ export default class Number extends Value {
     if (other instanceof Number) return new Number(this.value ** other.value);
   }
 
+  '√'() {
+    return new Number(Math.sqrt(this.value));
+  }
+
   '!'() {
     return new Number(factorial(this.value));
   }

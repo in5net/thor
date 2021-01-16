@@ -1,5 +1,6 @@
 import Token, {
   BinaryOp,
+  IdentifierOp,
   LeftGrouping,
   RightGrouping,
   UnaryOp
@@ -61,10 +62,16 @@ export class DeclarationNode implements Node {
 }
 
 export class AssignmentNode implements Node {
-  constructor(public identifier: Token<'identifier'>, public node: Node) {}
+  constructor(
+    public identifier: Token<'identifier'>,
+    public operator: IdentifierOp,
+    public node?: Node
+  ) {}
 
   toString() {
-    return `(${this.identifier.value} = ${this.node})`;
+    if (this.node)
+      return `(${this.identifier.value} ${this.operator} ${this.node})`;
+    return `(${this.identifier.value}${this.operator})`;
   }
 }
 
