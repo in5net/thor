@@ -305,7 +305,14 @@ export default class Parser {
     }
     if (token.is('string')) {
       this.advance();
-      return new StringNode(token.value);
+      return new StringNode(
+        token.value.map(x => {
+          if (typeof x === 'string') return x;
+          console.log(x);
+          const parser = new Parser(x);
+          return parser.expr();
+        })
+      );
     }
     if (token.is('identifier')) {
       this.advance();

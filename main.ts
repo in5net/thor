@@ -9,7 +9,7 @@ if (Deno.args.length > 1) {
   console.log('Usage: thor [path]');
   Deno.exit(64);
 } else if (Deno.args.length === 1) runFile(Deno.args[0]);
-else runPrompt();
+// else runPrompt();
 
 function runFile(path: string): void {
   const text = Deno.readTextFileSync(path);

@@ -1,3 +1,5 @@
+import { green } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
+
 export const booleans = ['true', 'false'] as const;
 export const prefixUnaryOps = [
   '+',
@@ -77,6 +79,7 @@ export const keywords = [
 ] as const;
 
 export type Boolean = typeof booleans[number];
+export type String = (string | Token[])[];
 export type PrefixUnaryOp = typeof prefixUnaryOps[number];
 export type PostfixUnaryOp = typeof postfixUnaryOps[number];
 export type UnaryOp = typeof unaryOps[number];
@@ -93,7 +96,7 @@ export type Keyword = typeof keywords[number];
 interface TokenMap {
   number: number;
   boolean: boolean;
-  string: string;
+  string: String;
   identifier: string;
   operator: Operator;
   arrow: undefined;
@@ -124,7 +127,7 @@ export default class Token<
 
   toString() {
     const { type, value } = this;
-    return `${TokenName[type]}${value ? `: '${value}'` : ''}`;
+    return `${TokenName[type]}${value ? `: ${green(`'${value}'`)}` : ''}`;
   }
 
   is<Type extends keyof TokenMap, Value = TokenMap[Type]>(

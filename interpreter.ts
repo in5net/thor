@@ -70,8 +70,12 @@ export default class Interpreter implements ExecuteIndex {
     return new Boolean(value);
   }
 
-  visit_StringNode({ value }: StringNode, scope: Scope): String {
-    return new String(value);
+  visit_StringNode({ fragments }: StringNode, scope: Scope): String {
+    return new String(
+      fragments
+        .map(x => (typeof x === 'string' ? x : this.visit(x, scope)))
+        .join('')
+    );
   }
 
   visit_ListNode({ nodes }: ListNode, scope: Scope): Value {

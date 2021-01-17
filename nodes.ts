@@ -1,3 +1,11 @@
+import {
+  cyan,
+  green,
+  magenta,
+  rgb24,
+  white,
+  yellow
+} from 'https://deno.land/std@0.83.0/fmt/colors.ts';
 import Token, {
   BinaryOp,
   IdentifierOp,
@@ -14,7 +22,7 @@ export class NumberNode implements Node {
   constructor(public value: number) {}
 
   toString() {
-    return this.value.toString();
+    return rgb24(this.value.toString(), 0xffa01c);
   }
 }
 
@@ -27,10 +35,14 @@ export class BooleanNode implements Node {
 }
 
 export class StringNode implements Node {
-  constructor(public value: string) {}
+  constructor(public fragments: (string | Node)[]) {}
 
   toString() {
-    return `"${this.value}"`;
+    return green(
+      `"${this.fragments
+        .map(x => (typeof x === 'string' ? x : white(`{${x}}`)))
+        .join('')}"`
+    );
   }
 }
 
@@ -44,12 +56,11 @@ export class ListNode implements Node {
   }
 }
 
-// TODO: make an IdentifierOpNode for 'let', '=', '+=', '-=', '++', ...
 export class IdentifierNode implements Node {
   constructor(public name: string) {}
 
   toString() {
-    return this.name;
+    return magenta(this.name);
   }
 }
 
@@ -57,7 +68,9 @@ export class DeclarationNode implements Node {
   constructor(public identifier: Token<'identifier'>, public node: Node) {}
 
   toString() {
-    return `(let ${this.identifier.value} = ${this.node})`;
+    return `(${yellow('let')} ${magenta(this.identifier.value)} = ${
+      this.node
+    })`;
   }
 }
 
@@ -70,8 +83,10 @@ export class AssignmentNode implements Node {
 
   toString() {
     if (this.node)
-      return `(${this.identifier.value} ${this.operator} ${this.node})`;
-    return `(${this.identifier.value}${this.operator})`;
+      return `(${magenta(this.identifier.value)} ${this.operator} ${
+        this.node
+      })`;
+    return `(${magenta(this.identifier.value)}${this.operator})`;
   }
 }
 
@@ -83,8 +98,9 @@ export class UnaryOpNode implements Node {
   ) {}
 
   toString() {
-    if (this.postfix) return `(${this.node}${this.operator})`;
-    return `(${this.operator}${this.node})`;
+    const operatorStr = yellow(this.operator);
+    if (this.postfix) return `(${this.node}${operatorStr})`;
+    return `(${operatorStr}${this.node})`;
   }
 }
 
@@ -96,7 +112,7 @@ export class BinaryOpNode implements Node {
   ) {}
 
   toString() {
-    return `(${this.left} ${this.operator} ${this.right})`;
+    return `(${this.left} ${yellow(this.operator)} ${this.right})`;
   }
 }
 
@@ -108,10 +124,10 @@ export class IfNode implements Node {
   ) {}
 
   toString() {
-    return `(if ${this.condition}: ${this.body}${
+    return `(${yellow('if')} ${this.condition}: ${this.body}${
       this.elseCase
         ? `
-else: ${this.elseCase}`
+${yellow('else')}: ${this.elseCase}`
         : ''
     })`;
   }
@@ -125,7 +141,9 @@ export class ForNode implements Node {
   ) {}
 
   toString() {
-    return `(for ${this.identifier.value} in ${this.iterable}: ${this.body})`;
+    return `(${yellow('for')} ${magenta(this.identifier.value)} ${yellow(
+      'in'
+    )} ${this.iterable}: ${this.body})`;
   }
 }
 
@@ -133,7 +151,7 @@ export class WhileNode implements Node {
   constructor(public condition: Node, public body: Node) {}
 
   toString() {
-    return `(while ${this.condition}: ${this.body})`;
+    return `(${yellow('while')} ${this.condition}: ${this.body})`;
   }
 }
 
@@ -146,9 +164,9 @@ export class FuncDefNode implements Node {
   ) {}
 
   toString() {
-    return `(fn ${this.name}(${this.argNames.join(', ')})${
-      this.arrow ? ' ->' : ':'
-    } ${this.body})`;
+    return `(${yellow('fn')} ${this.name}(${this.argNames
+      .map(magenta)
+      .join(', ')})${this.arrow ? ' ->' : ':'} ${this.body})`;
   }
 }
 
@@ -156,7 +174,7 @@ export class FuncCallNode implements Node {
   constructor(public name: string, public args: Node[]) {}
 
   toString() {
-    return `(${this.name}(${this.args.join(', ')}))`;
+    return `(${cyan(this.name)}(${this.args.join(', ')}))`;
   }
 }
 
@@ -164,7 +182,7 @@ export class ReturnNode implements Node {
   constructor(public node: Node) {}
 
   toString() {
-    return `(return ${this.node})`;
+    return `(${yellow('return')} ${this.node})`;
   }
 }
 

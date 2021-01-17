@@ -6,15 +6,18 @@ import Token, {
   Keyword,
   keywords,
   Operator,
-  operators
+  operators,
+  String
 } from './token.ts';
 
-const WHITESPACE = ' \t\r';
-const DIGITS = '0123456789';
-const LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_';
+const WHITESPACE = /[ \t\r]/;
+const DIGITS = /[0-9]/;
+// letters, underscore, & greek letters
+const LETTERS = /[a-zA-Z_\u0391-\u03C9]/;
 const ESCAPE_CHARS: Record<string, string | undefined> = {
   '\\': '\\',
   n: '\n',
+  r: '\r',
   t: '\t'
 };
 
@@ -54,13 +57,13 @@ export default class Lexer {
   nextToken(): Token {
     while (!this.eof()) {
       const { char } = this;
-      if (WHITESPACE.includes(char)) this.advance();
-      else if ('\n;'.includes(char)) {
+      if (WHITESPACE.test(char)) this.advance();
+      else if (/[\n;]/.test(char)) {
         this.advance();
         return new Token('newline', undefined);
-      } else if ((DIGITS + '.').includes(char)) return this.number();
+      } else if (DIGITS.test(char) || char === '.') return this.number();
       else if (char === '"') return this.string();
-      else if (LETTERS.includes(char)) return this.word();
+      else if (LETTERS.test(char)) return this.word();
       else if (char === '-' && this.nextChar === '>') {
         this.advance();
         this.advance();
@@ -83,7 +86,7 @@ export default class Lexer {
     let decimals = 0;
     this.advance();
 
-    while ((DIGITS + '.').includes(this.char)) {
+    while (DIGITS.test(this.char) || this.char === '.') {
       if (this.char === '.' && ++decimals > 1) break;
 
       str += this.char;
@@ -94,28 +97,44 @@ export default class Lexer {
   }
 
   string(): Token<'string'> {
+    this.advance();
+    let fragments: String = [];
     let str = '';
     let escapeCharacter = false;
-    this.advance();
 
     while (!this.eof() && (this.char !== '"' || escapeCharacter)) {
-      if (escapeCharacter) str += ESCAPE_CHARS[this.char] || this.char;
-      else if (this.char === '\\') escapeCharacter = true;
-      else str += this.char;
+      if (escapeCharacter) {
+        str += ESCAPE_CHARS[this.char] || this.char;
+        escapeCharacter = false;
+      } else if (this.char === '\\') escapeCharacter = true;
+      else if (this.char === '{') {
+        fragments.push(str);
+        str = '';
+        this.advance();
+
+        const tokens: Token[] = [];
+        let token = this.nextToken();
+        while (!this.eof() && (this.char as string) !== '}') {
+          tokens.push(token);
+          token = this.nextToken();
+        }
+        tokens.push(token);
+        if ((this.char as string) !== '}') throw "Expected '}' in string";
+        fragments.push(tokens);
+      } else str += this.char;
 
       this.advance();
-      escapeCharacter = false;
     }
 
     this.advance();
-    return new Token('string', str);
+    return new Token('string', fragments);
   }
 
   word(): Token<'keyword' | 'boolean' | 'operator' | 'identifier'> {
     let str = this.char;
     this.advance();
 
-    while ((LETTERS + DIGITS).includes(this.char)) {
+    while ([LETTERS, DIGITS].some(regex => regex.test(this.char))) {
       str += this.char;
       this.advance();
     }
