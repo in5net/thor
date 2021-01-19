@@ -308,7 +308,6 @@ export default class Parser {
       return new StringNode(
         token.value.map(x => {
           if (typeof x === 'string') return x;
-          console.log(x);
           const parser = new Parser(x);
           return parser.expr();
         })

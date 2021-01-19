@@ -5,35 +5,35 @@ import Scope from './scope.ts';
 import { BuiltInFunction } from './values/function.ts';
 import Value from './values/mod.ts';
 
-if (Deno.args.length > 1) {
-  console.log('Usage: thor [path]');
-  Deno.exit(64);
-} else if (Deno.args.length === 1) runFile(Deno.args[0]);
-// else runPrompt();
+let log = false;
+
+if (Deno.args[0] === 'help') console.log('Usage: thor [path?] [--log?]');
+else if (Deno.args.length === 0) runPrompt();
+else {
+  if (Deno.args[1] === '--log') log = true;
+  runFile(Deno.args[0]);
+}
 
 function runFile(path: string): void {
   const text = Deno.readTextFileSync(path);
-  run(text, { logTokens: true, logAST: true });
+  run(text);
 }
 
 function runPrompt(): void {
   while (true) {
     const line = prompt('>');
     if (line === null) continue;
-    const value = run(line, { repl: true });
+    const value = run(line, true);
     if (!value) continue;
     console.log(value.toString());
   }
 }
 
-export default function run(
-  text: string,
-  { repl = false, logTokens = false, logAST = false } = {}
-): Value | undefined {
+export default function run(text: string, repl = false): Value | undefined {
   try {
     const lexer = new Lexer(text);
     const tokens = lexer.lex();
-    if (logTokens)
+    if (log)
       console.log(
         'tokens:',
         `[
@@ -44,8 +44,7 @@ export default function run(
 
     const parser = new Parser(tokens);
     const ast = parser.parse();
-    if (!ast) return;
-    if (logAST) console.log('ast:', ast.toString(), '\n');
+    if (log) console.log('ast:', ast.toString(), '\n');
 
     const interpreter = new Interpreter();
     const globalScope = new Scope('<program>');
