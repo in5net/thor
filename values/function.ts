@@ -47,7 +47,8 @@ export class Function extends BaseFunction {
   }
 }
 
-type BuiltInFunctionName = 'print' | 'len';
+const builtInFunctionNames = ['print', 'len', 'min', 'max', 'random'] as const;
+type BuiltInFunctionName = typeof builtInFunctionNames[number];
 type ExecuteIndex = {
   [index in BuiltInFunctionName]: (args: Value[]) => Value;
 };
@@ -68,8 +69,7 @@ export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
     set('∞', new Number(Infinity));
     set('i', new Complex(0, 1));
 
-    set('print', new BuiltInFunction('print'));
-    set('len', new BuiltInFunction('len'));
+    builtInFunctionNames.forEach(name => set(name, new BuiltInFunction(name)));
   }
 
   execute(args: Value[]): Value {
@@ -87,6 +87,50 @@ export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
     if (value instanceof List) return new Number(value.items.length);
     if (value instanceof Complex)
       return new Number(Math.hypot(value.r, value.i));
-    throw 'Error: len() must receive a list or complex number';
+    throw 'len() must receive a list or complex number';
   }
+
+  min(nums: Value[]) {
+    if (nums[0] instanceof List) return min((nums[0] as List).items);
+    return min(nums);
+  }
+
+  max(nums: Value[]) {
+    if (nums[0] instanceof List) return max((nums[0] as List).items);
+    return max(nums);
+  }
+
+  random([min, max]: Value[]) {
+    switch (arguments.length) {
+      case 0:
+        return new Number(Math.random());
+      case 1:
+        if (min instanceof Number) return new Number(Math.random() * min.value);
+        if (min instanceof List)
+          return min.items[Math.floor(Math.random() * min.items.length)];
+        break;
+      case 2:
+        if (min instanceof Number && max instanceof Number)
+          return new Number(
+            Math.random() * (max.value - min.value) + min.value
+          );
+    }
+    throw `random() must receive up to 2 numbers or a list`;
+  }
+}
+
+function min(array: Value[]): Number {
+  let min = Infinity;
+  for (const value of array) {
+    if (value instanceof Number && value.value < min) min = value.value;
+  }
+  return new Number(min);
+}
+
+function max(array: Value[]): Number {
+  let max = -Infinity;
+  for (const value of array) {
+    if (value instanceof Number && value.value > max) max = value.value;
+  }
+  return new Number(max);
 }

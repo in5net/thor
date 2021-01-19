@@ -1,9 +1,8 @@
 nums = [1, 2, 3]
-x = 2
 
 print("nums: {nums}")
-print("is {x} in nums? {x in nums}")
+print(max(1,5,4,6))
 
-for a in 0:10 {
-    print(a)
+for a in 0:100 {
+    random(a)
 }
