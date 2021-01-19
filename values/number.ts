@@ -114,6 +114,15 @@ export default class Number extends Value {
     if (other instanceof Number)
       return new Boolean(!!this.value || !!other.value);
   }
+
+  in(other: Value) {
+    if (other instanceof List)
+      return new Boolean(
+        other.items.some(
+          value => value instanceof Number && this.value === value.value
+        )
+      );
+  }
 }
 
 function factorial(x: number): number {

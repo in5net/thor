@@ -77,4 +77,5 @@ export default class Value implements UnaryOpIndex, BinaryOpIndex {
   '>='(other: Value) {}
   and(other: Value) {}
   or(other: Value) {}
+  in(other: Value) {}
 }

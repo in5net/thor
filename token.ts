@@ -33,7 +33,8 @@ export const compareOps = [
   '>',
   '>=',
   'and',
-  'or'
+  'or',
+  'in'
 ] as const;
 export const identifierOps = [
   '=',
@@ -73,7 +74,6 @@ export const keywords = [
   'else',
   'for',
   'while',
-  'in',
   'fn',
   'return'
 ] as const;

@@ -60,7 +60,7 @@ export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
 
   execute(args: Value[]): Value {
     const methodName = `execute_${this.name}` as BuiltInFunctionIndex;
-    const method = this[methodName];
+    const method = this[methodName] || this.noMethod;
     return method.call(this, args);
   }
 

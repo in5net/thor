@@ -8,4 +8,4 @@ fn chudnovsky(iters) {
     return 426880 √10005 / sum
 }
 
-print(chudnovsky(2))
+print("π = {chudnovsky(2)}")

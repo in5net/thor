@@ -121,7 +121,6 @@ export default class Lexer {
         tokens.push(token);
         if ((this.char as string) !== '}') throw "Expected '}' in string";
         fragments.push(tokens);
-        console.log({ fragments });
       } else str += this.char;
 
       this.advance();

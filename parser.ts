@@ -32,8 +32,8 @@ import Token, {
   UnaryOp
 } from './token.ts';
 
-const SYMBOL_COMPARE_OPS = compareOps.filter(op => !['and', 'or'].includes(op));
-const WORD_COMPARE_OPS = compareOps.filter(op => ['and', 'or'].includes(op));
+const SYMBOL_COMPARE_OPS = compareOps.filter(op => !/[a-z]/.test(op));
+const WORD_COMPARE_OPS = compareOps.filter(op => /[a-z]/.test(op));
 
 const EOF = new Token('eof', undefined);
 
@@ -180,7 +180,7 @@ export default class Parser {
       return new AssignmentNode(identifier, operator.value, expr);
     }
 
-    // comp_expr (('and' | 'or' | ':') comp_expr)*
+    // comp_expr (('and' | 'or' | 'in | ':') comp_expr)*
     return this.binaryOp(this.compExpr, [...WORD_COMPARE_OPS, ':']);
   }
 
