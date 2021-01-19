@@ -99,7 +99,7 @@ export default class Interpreter implements ExecuteIndex {
     scope: Scope
   ): Value {
     const value = this.visit(node, scope);
-    scope.symbolTable.set(identifier.value, value);
+    scope.symbolTable.add(identifier.value, value);
     return value;
   }
 
