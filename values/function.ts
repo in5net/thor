@@ -4,6 +4,7 @@ import Scope, { SymbolTable } from '../scope.ts';
 import Complex from './complex.ts';
 import List from './list.ts';
 import Number from './number.ts';
+import String from './string.ts';
 import Value from './value.ts';
 
 export class BaseFunction extends Value {
@@ -47,7 +48,14 @@ export class Function extends BaseFunction {
   }
 }
 
-const builtInFunctionNames = ['print', 'len', 'min', 'max', 'random'] as const;
+const builtInFunctionNames = [
+  'print',
+  'input',
+  'len',
+  'min',
+  'max',
+  'random'
+] as const;
 type BuiltInFunctionName = typeof builtInFunctionNames[number];
 type ExecuteIndex = {
   [index in BuiltInFunctionName]: (args: Value[]) => Value;
@@ -81,6 +89,12 @@ export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
   print(messages: Value[]) {
     console.log(messages.join(' '));
     return new Number(0);
+  }
+
+  input([message]: Value[]) {
+    if (message instanceof String)
+      return new String(prompt(message.value) || '');
+    return new String(prompt() || '');
   }
 
   len([value]: Value[]) {
