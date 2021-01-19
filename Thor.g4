@@ -18,12 +18,12 @@ expr:
 		) expr
 	)
 	| (IDENTIFIER ('++' | '--'))
-	| comp_expr (('and' | 'or' | 'in' | ':') comp_expr)*;
+	| comp_expr (('and' | 'or' | 'in') comp_expr)*;
 
 comp_expr:
 	'not' comp_expr
 	| arith_expr (
-		('==' | '!=' | '<' | '<=' | '>' | '>=') arith_expr
+		('==' | '!=' | '<' | '<=' | '>' | '>=' | ':') arith_expr
 	)*;
 
 arith_expr: term (('+' | '-') term)*;

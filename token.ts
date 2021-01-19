@@ -9,6 +9,8 @@ export const prefixUnaryOps = [
   '∛',
   '∜',
   '∑',
+  '∏',
+  '°',
   'not'
 ] as const;
 export const postfixUnaryOps = [
@@ -127,7 +129,9 @@ export default class Token<
 
   toString() {
     const { type, value } = this;
-    return `${TokenName[type]}${value ? `: ${green(`'${value}'`)}` : ''}`;
+    return `${TokenName[type]}${
+      value !== undefined ? `: ${green(`'${value}'`)}` : ''
+    }`;
   }
 
   is<Type extends keyof TokenMap, Value = TokenMap[Type]>(

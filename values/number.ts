@@ -54,6 +54,10 @@ export default class Number extends Value {
     return new Number(factorial(this.value));
   }
 
+  '°'() {
+    return new Number(this.value * (Math.PI / 180));
+  }
+
   '||'() {
     return new Number(Math.abs(this.value));
   }

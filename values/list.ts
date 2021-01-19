@@ -24,6 +24,15 @@ export default class List extends Value {
     return new Number(sum);
   }
 
+  '∏'() {
+    if (this.items.length === 0) return new Number(0);
+    let product = 1;
+    for (const item of this.items) {
+      if (item instanceof Number) product *= item.value;
+    }
+    return new Number(product);
+  }
+
   '=='(other: Value) {
     if (other instanceof List)
       return new Boolean(

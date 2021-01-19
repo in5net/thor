@@ -180,8 +180,8 @@ export default class Parser {
       return new AssignmentNode(identifier, operator.value, expr);
     }
 
-    // comp_expr (('and' | 'or' | 'in | ':') comp_expr)*
-    return this.binaryOp(this.compExpr, [...WORD_COMPARE_OPS, ':']);
+    // comp_expr (('and' | 'or' | 'in') comp_expr)*
+    return this.binaryOp(this.compExpr, WORD_COMPARE_OPS);
   }
 
   compExpr(): Node {
@@ -191,8 +191,8 @@ export default class Parser {
       return new UnaryOpNode(this.compExpr(), 'not');
     }
 
-    // arith_expr (('==' | '!=' | '<' | '<=' | '>' | '>=') arith_expr)*
-    return this.binaryOp(this.arithExpr, SYMBOL_COMPARE_OPS);
+    // arith_expr (('==' | '!=' | '<' | '<=' | '>' | '>=' | ':') arith_expr)*
+    return this.binaryOp(this.arithExpr, [...SYMBOL_COMPARE_OPS, ':']);
   }
 
   arithExpr(): Node {
@@ -201,14 +201,17 @@ export default class Parser {
   }
 
   term(): Node {
-    // factor (('*' | '/' | '%') factor)* | NUMBER !BINARY_OP term
+    // factor (('*' | '/' | '%') factor)* | NUMBER (!BINARY_OP)? term
     if (
       this.token.is('number') &&
       !['newline', 'eof'].includes(this.nextToken.type) &&
       (this.nextToken.is('operator')
         ? !binaryOps.includes(this.nextToken.value as BinaryOp)
         : true) &&
-      !Object.values(groupings).includes(this.nextToken.value as RightGrouping)
+      !Object.values(groupings).includes(
+        this.nextToken.value as RightGrouping
+      ) &&
+      !this.nextToken.is('grouping', '{')
     ) {
       const number = this.token;
       this.advance();
@@ -351,6 +354,8 @@ export default class Parser {
     this.expect([
       'number',
       'identifier',
+      'boolean',
+      'string',
       "'if'",
       "'for'",
       "'while'",
@@ -439,7 +444,7 @@ export default class Parser {
     const identifier = this.token as Token<'identifier'>;
     this.advance();
 
-    if (!(this.token as Token).is('keyword', 'in')) return this.expect("'in'");
+    if (!(this.token as Token).is('operator', 'in')) return this.expect("'in'");
     this.advance();
 
     const iterable = this.expr();
