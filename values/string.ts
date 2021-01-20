@@ -1,4 +1,5 @@
 import Boolean from './boolean.ts';
+import List from './list.ts';
 import Number from './number.ts';
 import Value from './value.ts';
 
@@ -18,6 +19,7 @@ export default class String extends Value {
       other instanceof Boolean
     )
       return new String(this.value + other.value);
+    if (other instanceof List) return new String(this.value + other.toString());
     if (!other) return new Number(+this.value);
   }
 

@@ -13,7 +13,7 @@ import Token, {
 const WHITESPACE = /[ \t\r]/;
 const DIGITS = /[0-9]/;
 // letters, underscore, & greek letters
-const LETTERS = /[a-zA-Z_\u0391-\u03C9]/;
+const LETTERS = /[a-zA-Z_\u0391-\u03C9∞]/;
 const ESCAPE_CHARS: Record<string, string | undefined> = {
   '\\': '\\',
   n: '\n',

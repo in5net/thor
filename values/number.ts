@@ -2,6 +2,7 @@ import Boolean from './boolean.ts';
 import Complex from './complex.ts';
 import Iterator from './iterator.ts';
 import List from './list.ts';
+import String from './string.ts';
 import Value from './value.ts';
 
 export default class Number extends Value {
@@ -33,6 +34,7 @@ export default class Number extends Value {
   '*'(other: Value) {
     if (other instanceof Number) return new Number(this.value * other.value);
     if (other instanceof Complex) return other['*'](this);
+    if (other instanceof String) return other['*'](this);
   }
 
   '/'(other: Value) {
@@ -48,7 +50,8 @@ export default class Number extends Value {
   }
 
   '√'() {
-    return new Number(Math.sqrt(this.value));
+    if (this.value >= 0) return new Number(Math.sqrt(this.value));
+    else return new Complex(0, Math.sqrt(-this.value));
   }
 
   '!'() {
