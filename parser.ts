@@ -197,7 +197,7 @@ export default class Parser {
 
   arithExpr(): Node {
     // term (('+' | '-') term)*
-    return this.binaryOp(this.term, ['+', '-']);
+    return this.binaryOp(this.term, ['+', '-', '±']);
   }
 
   term(): Node {

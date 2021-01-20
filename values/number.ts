@@ -25,8 +25,9 @@ export default class Number extends Value {
     if (!other) return new Number(-this.value);
   }
 
-  '±'() {
-    return new List([this, this['-']()!]);
+  '±'(other?: Value) {
+    if (other instanceof Number)
+      return new List([this['+'](other)!, this['-'](other)!]);
   }
 
   '*'(other: Value) {

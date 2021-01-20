@@ -1,10 +1,8 @@
-nums = [1, 2, 3]
-
-print("nums: {nums}")
-print(max(1,5,4,6))
-
-for a in 0:100 {
-    random(a)
+fn intercepts(a, b, c) {
+    p = √(b² - 4a * c)
+    print(p)
+    x = (-b ± p) / (2a)
+    return x
 }
 
-print(input("name:"))
+print(intercepts(1, 0, -1))
