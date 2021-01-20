@@ -2,7 +2,7 @@ fn mandelbrot(c, max_iters) {
     z = 0 + 0i
     iters = 0
 
-    while len(z) <= 4 and iters < max_iters {
+    while len(z) <= 2 and iters < max_iters {
         z = z² + c
         iters++
     }
