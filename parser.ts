@@ -197,11 +197,11 @@ export default class Parser {
 
   arithExpr(): Node {
     // term (('+' | '-') term)*
-    return this.binaryOp(this.term, ['+', '-', '±']);
+    return this.binaryOp(this.term, ['+', '-', '±', '∓']);
   }
 
   term(): Node {
-    // factor (('*' | '/' | '%') factor)* | NUMBER (!BINARY_OP)? term
+    // factor (('*' | '×' | '/' | '%') factor)* | NUMBER (!BINARY_OP)? term
     if (
       this.token.is('number') &&
       !['newline', 'eof'].includes(this.nextToken.type) &&
@@ -220,7 +220,7 @@ export default class Parser {
 
       return new BinaryOpNode(new NumberNode(number.value), '*', term);
     }
-    return this.binaryOp(this.factor, ['*', '/', '%']);
+    return this.binaryOp(this.factor, ['*', '×', '/', '%']);
   }
 
   factor(): Node {

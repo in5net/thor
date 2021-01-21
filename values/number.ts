@@ -27,14 +27,22 @@ export default class Number extends Value {
   }
 
   '±'(other?: Value) {
-    if (other instanceof Number)
-      return new List([this['+'](other)!, this['-'](other)!]);
+    if (other) return new List([this['+'](other)!, this['-'](other)!]);
+    if (!other) return new List([this, this['-']()!]);
+  }
+
+  '∓'(other?: Value) {
+    return new List(this['±'](other)!.items.reverse());
   }
 
   '*'(other: Value) {
     if (other instanceof Number) return new Number(this.value * other.value);
     if (other instanceof Complex) return other['*'](this);
     if (other instanceof String) return other['*'](this);
+  }
+
+  '×'(other: Value) {
+    return this['*'](other);
   }
 
   '/'(other: Value) {

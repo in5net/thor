@@ -4,6 +4,7 @@ export const booleans = ['true', 'false'] as const;
 export const prefixUnaryOps = [
   '+',
   '-',
+  '±',
   '√',
   '∛',
   '∜',
@@ -52,7 +53,9 @@ export const binaryOps = [
   '+',
   '-',
   '±',
+  '∓',
   '*',
+  '×',
   '/',
   '%',
   '^',

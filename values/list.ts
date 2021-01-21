@@ -16,6 +16,18 @@ export default class List extends Value {
     if (other instanceof Value) return new List([...this.items, other]);
   }
 
+  '*'(other?: Value) {
+    if (other instanceof List || other instanceof Number)
+      return new List(
+        this.items.map(
+          (value, i) =>
+            (value['*'](
+              other instanceof List ? other.items[i] : other
+            ) as unknown) as Value
+        )
+      );
+  }
+
   '/'(other?: Value) {
     if (other instanceof List || other instanceof Number)
       return new List(

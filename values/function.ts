@@ -69,13 +69,19 @@ export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
   static setupGlobalSymbolTable(symbolTable: SymbolTable) {
     const set = symbolTable.set.bind(symbolTable);
 
-    set('PI', new Number(Math.PI));
-    set('π', new Number(Math.PI));
-    set('TAU', new Number(Math.PI * 2));
-    set('τ', new Number(Math.PI * 2));
-    set('e', new Number(Math.E));
     set('∞', new Number(Infinity));
     set('i', new Complex(0, 1));
+
+    const pi = new Number(Math.PI);
+    set('π', pi);
+    set('PI', pi);
+    const tau = new Number(Math.PI * 2);
+    set('τ', tau);
+    set('TAU', tau);
+    set('e', new Number(Math.E));
+    const phi = new Number((1 + Math.sqrt(5)) / 2);
+    set('Φ', phi);
+    set('PHI', phi);
 
     builtInFunctionNames.forEach(name => set(name, new BuiltInFunction(name)));
   }

@@ -28,8 +28,13 @@ export default class Complex extends Value {
     if (!other) return new Complex(-this.r, -this.i);
   }
 
-  '±'() {
-    return new List([this, this['-']()!]);
+  '±'(other?: Value) {
+    if (other) return new List([this['+'](other)!, this['-'](other)!]);
+    if (!other) return new List([this, this['-']()!]);
+  }
+
+  '∓'(other?: Value) {
+    return new List(this['±'](other)!.items.reverse());
   }
 
   '*'(other: Value) {

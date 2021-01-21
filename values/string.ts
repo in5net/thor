@@ -28,6 +28,10 @@ export default class String extends Value {
       return new String(this.value.repeat(other.value));
   }
 
+  '×'(other: Value) {
+    return this['*'](other);
+  }
+
   '=='(other: Value) {
     if (other instanceof String) return new Boolean(this.value === other.value);
   }
