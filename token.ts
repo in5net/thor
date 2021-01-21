@@ -80,7 +80,8 @@ export const keywords = [
   'for',
   'while',
   'fn',
-  'return'
+  'return',
+  'import'
 ] as const;
 
 export type Boolean = typeof booleans[number];

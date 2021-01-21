@@ -1,0 +1,3 @@
+import physics
+
+print(g)

@@ -1,8 +1,9 @@
 import Interpreter from './interpreter.ts';
 import Lexer from './lexer.ts';
+import { ImportNode } from './nodes.ts';
 import Parser from './parser.ts';
 import Scope from './scope.ts';
-import { BuiltInFunction } from './values/function.ts';
+import Token from './token.ts';
 import Value from './values/mod.ts';
 
 let log = false;
@@ -48,7 +49,10 @@ export default function run(text: string, repl = false): Value | undefined {
 
     const interpreter = new Interpreter();
     const globalScope = new Scope('<program>');
-    BuiltInFunction.setupGlobalSymbolTable(globalScope.symbolTable);
+    interpreter.visit_ImportNode(
+      new ImportNode(new Token('identifier', 'std')),
+      globalScope
+    );
     const value = interpreter.visit(repl ? ast.nodes[0] : ast, globalScope);
     return value;
   } catch (e) {

@@ -1,10 +1,6 @@
 import Interpreter from '../interpreter.ts';
 import Node from '../nodes.ts';
-import Scope, { SymbolTable } from '../scope.ts';
-import Complex from './complex.ts';
-import List from './list.ts';
-import Number from './number.ts';
-import String from './string.ts';
+import Scope from '../scope.ts';
 import Value from './value.ts';
 
 export class BaseFunction extends Value {
@@ -13,9 +9,7 @@ export class BaseFunction extends Value {
   }
 
   toString() {
-    return `<${this instanceof BuiltInFunction ? 'built-in ' : ''}function ${
-      this.name
-    }>`;
+    return `<function ${this.name}>`;
   }
 
   generateScope(): Scope {
@@ -46,111 +40,4 @@ export class Function extends BaseFunction {
     const value = interpreter.visit(this.body, scope);
     return value;
   }
-}
-
-const builtInFunctionNames = [
-  'print',
-  'input',
-  'len',
-  'min',
-  'max',
-  'random'
-] as const;
-type BuiltInFunctionName = typeof builtInFunctionNames[number];
-type ExecuteIndex = {
-  [index in BuiltInFunctionName]: (args: Value[]) => Value;
-};
-
-export class BuiltInFunction extends BaseFunction implements ExecuteIndex {
-  constructor(public name: BuiltInFunctionName) {
-    super(name);
-  }
-
-  static setupGlobalSymbolTable(symbolTable: SymbolTable) {
-    const set = symbolTable.set.bind(symbolTable);
-
-    set('∞', new Number(Infinity));
-    set('i', new Complex(0, 1));
-
-    const pi = new Number(Math.PI);
-    set('π', pi);
-    set('PI', pi);
-    const tau = new Number(Math.PI * 2);
-    set('τ', tau);
-    set('TAU', tau);
-    set('e', new Number(Math.E));
-    const phi = new Number((1 + Math.sqrt(5)) / 2);
-    set('Φ', phi);
-    set('PHI', phi);
-
-    builtInFunctionNames.forEach(name => set(name, new BuiltInFunction(name)));
-  }
-
-  execute(args: Value[]): Value {
-    const method = this[this.name];
-    if (!method) throw `Built-in function ${this.name} is not defined`;
-    return method(args);
-  }
-
-  print(messages: Value[]) {
-    console.log(messages.join(' '));
-    return new Number(0);
-  }
-
-  input([message]: Value[]) {
-    if (message instanceof String)
-      return new String(prompt(message.value) || '');
-    return new String(prompt() || '');
-  }
-
-  len([value]: Value[]) {
-    if (value instanceof List) return new Number(value.items.length);
-    if (value instanceof Complex)
-      return new Number(Math.hypot(value.r, value.i));
-    throw 'len() must receive a list or complex number';
-  }
-
-  min(nums: Value[]) {
-    if (nums[0] instanceof List) return min((nums[0] as List).items);
-    return min(nums);
-  }
-
-  max(nums: Value[]) {
-    if (nums[0] instanceof List) return max((nums[0] as List).items);
-    return max(nums);
-  }
-
-  random([min, max]: Value[]) {
-    switch (arguments.length) {
-      case 0:
-        return new Number(Math.random());
-      case 1:
-        if (min instanceof Number) return new Number(Math.random() * min.value);
-        if (min instanceof List)
-          return min.items[Math.floor(Math.random() * min.items.length)];
-        break;
-      case 2:
-        if (min instanceof Number && max instanceof Number)
-          return new Number(
-            Math.random() * (max.value - min.value) + min.value
-          );
-    }
-    throw `random() must receive up to 2 numbers or a list`;
-  }
-}
-
-function min(array: Value[]): Number {
-  let min = Infinity;
-  for (const value of array) {
-    if (value instanceof Number && value.value < min) min = value.value;
-  }
-  return new Number(min);
-}
-
-function max(array: Value[]): Number {
-  let max = -Infinity;
-  for (const value of array) {
-    if (value instanceof Number && value.value > max) max = value.value;
-  }
-  return new Number(max);
 }

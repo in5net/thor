@@ -197,3 +197,11 @@ export class GroupingNode implements Node {
     return `${l}${this.node}${r}`;
   }
 }
+
+export class ImportNode implements Node {
+  constructor(public identifier: Token<'identifier'>) {}
+
+  toString() {
+    return `(${yellow('import')} ${this.identifier.value})`;
+  }
+}

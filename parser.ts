@@ -9,6 +9,7 @@ import Node, {
   GroupingNode,
   IdentifierNode,
   IfNode,
+  ImportNode,
   ListNode,
   NumberNode,
   ReturnNode,
@@ -128,14 +129,26 @@ export default class Parser {
   }
 
   statement(): Node {
-    // expr | 'return' expr?
-    if (this.token.is('keyword', 'return' as const)) {
+    // 'return' expr?
+    if (this.token.is('keyword', 'return')) {
       this.advance();
       const node = this.expr();
 
       return new ReturnNode(node);
     }
 
+    // 'import' IDENTIFIER
+    if (this.token.is('keyword', 'import')) {
+      this.advance();
+
+      if (!this.token.is('identifier')) this.expect('identifier');
+      const identifier = this.token as Token<'identifier'>;
+      this.advance();
+
+      return new ImportNode(identifier);
+    }
+
+    // expr
     return this.expr();
   }
 

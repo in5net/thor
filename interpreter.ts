@@ -9,6 +9,7 @@ import Node, {
   GroupingNode,
   IdentifierNode,
   IfNode,
+  ImportNode,
   ListNode,
   NumberNode,
   ReturnNode,
@@ -20,13 +21,15 @@ import Scope from './scope.ts';
 import { GroupingOp } from './token.ts';
 import Value, {
   Boolean,
-  BuiltInFunction,
   Function,
   Iterator,
   List,
   Number,
   String
 } from './values/mod.ts';
+
+import * as std from './modules/std/mod.ts';
+import * as physics from './modules/physics/mod.ts';
 
 type NodeName =
   | 'AssignmentNode'
@@ -44,7 +47,8 @@ type NodeName =
   | 'ReturnNode'
   | 'StringNode'
   | 'UnaryOpNode'
-  | 'WhileNode';
+  | 'WhileNode'
+  | 'ImportNode';
 type NodeIndex = `visit_${NodeName}`;
 type ExecuteIndex = {
   [index in NodeIndex]: (node: any, scope: Scope) => Value | void;
@@ -81,7 +85,7 @@ export default class Interpreter implements ExecuteIndex {
   visit_ListNode({ nodes }: ListNode, scope: Scope): Value {
     const items = [];
     for (const node of nodes) {
-      const value = this.visit(node, scope);
+      let value = this.visit(node, scope);
       if (node instanceof ReturnNode) return value;
       items.push(value);
     }
@@ -236,9 +240,12 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   visit_FuncCallNode({ name, args }: FuncCallNode, scope: Scope): Value {
-    const func = scope.symbolTable.get(name) as Function | BuiltInFunction;
+    const func = scope.symbolTable.get(name) as
+      | Function
+      | ((values: Value[]) => Value);
     const argValues = args.map(arg => this.visit(arg, scope));
-    const value = func.execute(argValues);
+    const value =
+      func instanceof Function ? func.execute(argValues) : func(argValues);
     return value;
   }
 
@@ -259,5 +266,25 @@ export default class Interpreter implements ExecuteIndex {
     const returnValue = func.call(value) as Value | undefined;
     if (!returnValue) Value.illegalUnaryOp(value, operator);
     return returnValue;
+  }
+
+  visit_ImportNode({ identifier: { value } }: ImportNode, scope: Scope): Value {
+    let mod: any;
+    switch (value) {
+      case 'std':
+        mod = std;
+        break;
+      case 'physics':
+        mod = physics;
+        break;
+    }
+    Object.entries(mod).forEach(([name, value]) => {
+      if (name === 'default')
+        Object.entries(mod.default).forEach(([dname, dvalue]) =>
+          scope.symbolTable.set(dname, dvalue as Value)
+        );
+      scope.symbolTable.set(name, value as Value);
+    });
+    return new Number(0);
   }
 }
