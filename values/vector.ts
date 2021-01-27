@@ -1,5 +1,4 @@
 import Boolean from './boolean.ts';
-import Complex from './complex.ts';
 import List from './list.ts';
 import Number from './number.ts';
 import Value from './value.ts';
@@ -10,7 +9,7 @@ export default class Vector extends Value {
   }
 
   toString() {
-    return `<${this.components.join(', ')}>`;
+    return `vec${this.components.length} <${this.components.join(', ')}>`;
   }
 
   '+'(other?: Value) {
@@ -39,12 +38,37 @@ export default class Vector extends Value {
 
   '*'(other: Value) {
     if (other instanceof Vector)
+      return new Vector(
+        this.components.map((x, i) => x * (other.components[i] || 0))
+      );
+    if (other instanceof Number)
+      return new Vector(this.components.map(x => x * other.value));
+  }
+
+  '∙'(other: Value) {
+    if (other instanceof Vector)
       return new Number(
         this.components.reduce(
           (sum, x, i) => sum + x * (other.components[i] || 0),
           0
         )
       );
+  }
+
+  '×'(other: Value) {
+    if (this.components.length !== 3)
+      throw 'Cross product of 2 vectors must both have lengths of 3';
+    if (other instanceof Vector) {
+      if (other.components.length !== 3)
+        throw 'Cross product of 2 vectors must both have lengths of 3';
+      const [x1, y1, z1] = this.components;
+      const [x2, y2, z2] = other.components;
+      return new Vector([
+        y1 * z2 - z1 * y2,
+        z1 * x2 - x1 * z2,
+        x1 * y2 - y1 * x2
+      ]);
+    }
   }
 
   '||'() {
@@ -72,9 +96,4 @@ export default class Vector extends Value {
   '!='(other: Value) {
     return new Boolean(!this['=='](other));
   }
-}
-
-function factorial(x: number): number {
-  if (x <= 1) return 1;
-  return x * factorial(x - 1);
 }

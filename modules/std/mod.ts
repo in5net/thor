@@ -1,4 +1,10 @@
-import Value, { Complex, List, Number, String } from '../../values/mod.ts';
+import Value, {
+  Complex,
+  List,
+  Number,
+  String,
+  Vector
+} from '../../values/mod.ts';
 
 export default { '∞': new Number(Infinity) };
 export const i = new Complex(0, 1);
@@ -67,4 +73,9 @@ function _max(array: Value[]): Number {
     if (value instanceof Number && value.value > max) max = value.value;
   }
   return new Number(max);
+}
+
+export function vec(nums: Value[]) {
+  if (nums.some(x => !(x instanceof Number))) return;
+  return new Vector((nums as Number[]).map(x => x.value));
 }

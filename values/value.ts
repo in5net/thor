@@ -56,6 +56,7 @@ export default class Value implements UnaryOpIndex, BinaryOpIndex {
   '⌈⌉'() {}
 
   '*'(other: Value) {}
+  '∙'(other: Value) {}
   '×'(other: Value) {}
   '/'(other: Value) {}
   '%'(other: Value) {}
