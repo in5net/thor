@@ -1,0 +1,25 @@
+{
+    "name": "thor",
+    "displayName": "Thor",
+    "description": "Thor: the math-based language",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.52.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "thor",
+            "aliases": ["Thor", "thor"],
+            "extensions": [".thor"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "thor",
+            "scopeName": "source.thor",
+            "path": "./syntaxes/thor.tmLanguage.json"
+        }]
+    }
+}
