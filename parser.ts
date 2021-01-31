@@ -218,9 +218,7 @@ export default class Parser {
     if (
       this.token.is('number') &&
       !['newline', 'eof'].includes(this.nextToken.type) &&
-      (this.nextToken.is('operator')
-        ? !binaryOps.includes(this.nextToken.value as BinaryOp)
-        : true) &&
+      !this.nextToken.is('operator') &&
       !Object.values(groupings).includes(
         this.nextToken.value as RightGrouping
       ) &&

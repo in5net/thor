@@ -243,10 +243,10 @@ export default class Interpreter implements ExecuteIndex {
   visit_FuncCallNode({ name, args }: FuncCallNode, scope: Scope): Value {
     const func = scope.symbolTable.get(name) as
       | Function
-      | ((values: Value[]) => Value);
+      | ((...values: Value[]) => Value);
     const argValues = args.map(arg => this.visit(arg, scope));
     const value =
-      func instanceof Function ? func.execute(argValues) : func(argValues);
+      func instanceof Function ? func.execute(argValues) : func(...argValues);
     return value;
   }
 

@@ -6,7 +6,9 @@ import Value, {
   Vector
 } from '../../values/mod.ts';
 
-export default { '∞': new Number(Infinity) };
+import funcs from './trigonometry.ts';
+
+export default { '∞': new Number(Infinity), ...funcs };
 export const i = new Complex(0, 1);
 
 export const π = new Number(Math.PI);
@@ -17,33 +19,33 @@ export const e = new Number(Math.E);
 export const Φ = new Number((1 + Math.sqrt(5)) / 2);
 export const PHI = Φ;
 
-export function print(messages: Value[]) {
+export function print(...messages: Value[]) {
   console.log(messages.join(' '));
   return new Number(0);
 }
 
-export function input([message]: Value[]) {
+export function input(message?: Value) {
   if (message instanceof String) return new String(prompt(message.value) || '');
   return new String(prompt() || '');
 }
 
-export function len([value]: Value[]) {
+export function len(value?: Value) {
   if (value instanceof List) return new Number(value.items.length);
   if (value instanceof Complex) return new Number(Math.hypot(value.r, value.i));
   throw 'len() must receive a list or complex number';
 }
 
-export function min(nums: Value[]) {
+export function min(...nums: Value[]) {
   if (nums[0] instanceof List) return _min((nums[0] as List).items);
   return _min(nums);
 }
 
-export function max(nums: Value[]) {
+export function max(...nums: Value[]) {
   if (nums[0] instanceof List) return _max((nums[0] as List).items);
   return _max(nums);
 }
 
-export function random([min, max]: Value[]) {
+export function random(min?: Value, max?: Value) {
   switch (arguments.length) {
     case 0:
       return new Number(Math.random());

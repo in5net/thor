@@ -11,7 +11,6 @@ export const prefixUnaryOps = [
   '∜',
   '∑',
   '∏',
-  '°',
   'not'
 ] as const;
 export const postfixUnaryOps = [
@@ -25,7 +24,8 @@ export const postfixUnaryOps = [
   '⁷',
   '⁸',
   '⁹',
-  '!'
+  '!',
+  '°'
 ] as const;
 export const unaryOps = [...prefixUnaryOps, ...postfixUnaryOps] as const;
 export const compareOps = [

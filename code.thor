@@ -1,9 +1,3 @@
-for i in 0:10 {
-    print(i)
-}
+ans = sin(π/2) == sin(90°)
 
-print()
-
-for i in 0:10:3 {
-    print(i)
-}
+print(ans)
