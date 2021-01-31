@@ -3,5 +3,4 @@ b = vec(-1, 4, 2)
 c = a × b
 
 print(a ∙ c)
-
-return
+print("pm c = {}")

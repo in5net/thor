@@ -1,25 +1,50 @@
 {
-    "name": "thor",
-    "displayName": "Thor",
-    "description": "Thor: the math-based language",
-    "version": "0.0.1",
-    "engines": {
-        "vscode": "^1.52.0"
-    },
-    "categories": [
-        "Programming Languages"
+  "name": "thor",
+  "displayName": "Thor",
+  "description": "Thor: the math-based language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.52.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "thor",
+        "aliases": [
+          "Thor",
+          "thor"
+        ],
+        "extensions": [
+          ".thor"
+        ],
+        "configuration": "./language-configuration.json"
+      }
     ],
-    "contributes": {
-        "languages": [{
-            "id": "thor",
-            "aliases": ["Thor", "thor"],
-            "extensions": [".thor"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "thor",
-            "scopeName": "source.thor",
-            "path": "./syntaxes/thor.tmLanguage.json"
-        }]
-    }
+    "grammars": [
+      {
+        "language": "thor",
+        "scopeName": "source.thor",
+        "path": "./syntaxes/thor.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "thor",
+        "path": "./snippets.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "run-s build:*",
+    "build:syntaxes": "js-yaml syntaxes/thor.tmLanguage.yaml > syntaxes/thor.tmLanguage.json",
+    "build:snippets": "js-yaml snippets.yaml > snippets.json"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.0.0",
+    "npm-run-all": "^4.1.5"
+  }
 }

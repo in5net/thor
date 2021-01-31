@@ -1,0 +1,34 @@
+Absolute value:
+  prefix: abs
+  body: '|$0|'
+Floor:
+  prefix: floor
+  body: ⌊$0⌋
+Ceiling:
+  prefix: ceil
+  body: ⌈$0⌉
+Square root:
+  prefix: sqrt
+  body: √
+Cube root:
+  prefix: cbrt
+  body: ∛
+Fourth root:
+  prefix: 4rt
+  body: ∜
+Sum:
+  prefix: sum
+  body: ∑
+Product:
+  prefix: product
+  body: ∏
+Degree:
+  prefix: degree
+  body: °
+Dot product:
+  prefix: dot
+  body: ∙
+Cross product:
+  prefix: cross
+  body: ×
+

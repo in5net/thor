@@ -1,3 +1,5 @@
 #!/bin/sh
-sudo rm -R $HOME/.vscode/extensions/thor/
-cp -R vscode/ $HOME/.vscode/extensions/thor/
+cd vscode/
+yarn run build
+rm -R $HOME/.vscode/extensions/thor/
+cp -R ./ $HOME/.vscode/extensions/thor/
