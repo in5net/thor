@@ -7,7 +7,9 @@ repository:
   keywords:
     patterns:
       - name: keyword.control.thor
-        match: \b(let|if|else|for|while|fn|return|import)\b
+        match: \b(let|if|else|for|in|while|fn|return|import)\b
+      - name: keyword.operator.thor
+        match: \b(not|and|or)\b
   strings:
     name: string.quoted.double.thor
     begin: '"'
@@ -16,4 +18,3 @@ repository:
       - name: constant.character.escape.thor
         match: \\.
 scopeName: source.thor
-
