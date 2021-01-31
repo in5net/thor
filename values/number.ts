@@ -1,6 +1,6 @@
 import Boolean from './boolean.ts';
 import Complex from './complex.ts';
-import Iterator from './iterator.ts';
+import Range from './range.ts';
 import List from './list.ts';
 import String from './string.ts';
 import Value from './value.ts';
@@ -83,14 +83,7 @@ export default class Number extends Value {
   }
 
   ':'(other: Value) {
-    if (other instanceof Number) {
-      function* next(this: Number) {
-        for (let i = this.value; i < (other as Number).value; i++) {
-          yield new Number(i);
-        }
-      }
-      return new Iterator(next.call(this));
-    }
+    if (other instanceof Number) return new Range(this.value, other.value);
   }
 
   '=='(other: Value) {

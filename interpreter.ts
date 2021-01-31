@@ -22,9 +22,9 @@ import { GroupingOp } from './token.ts';
 import Value, {
   Boolean,
   Function,
-  Iterator,
   List,
   Number,
+  Range,
   String
 } from './values/mod.ts';
 
@@ -216,9 +216,10 @@ export default class Interpreter implements ExecuteIndex {
         scope.symbolTable.set(identifier.value, item);
         this.visit(body, scope);
       }
-    } else if (iterableValue instanceof Iterator) {
-      for (const value of iterableValue.generator) {
-        scope.symbolTable.set(identifier.value, value);
+    } else if (iterableValue instanceof Range) {
+      const { from, to, step } = iterableValue;
+      for (let i = from; i < to; i += step) {
+        scope.symbolTable.set(identifier.value, new Number(i));
         this.visit(body, scope);
       }
     }

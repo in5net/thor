@@ -1,6 +1,9 @@
-a = vec( 3, 0, 2)
-b = vec(-1, 4, 2)
-c = a × b
+for i in 0:10 {
+    print(i)
+}
 
-print(a ∙ c)
-print("phi = " + Φ)
+print()
+
+for i in 0:10:3 {
+    print(i)
+}
