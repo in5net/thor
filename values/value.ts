@@ -2,10 +2,10 @@ import Scope from '../scope.ts';
 import { BinaryOp, GroupingOp, UnaryOp } from '../token.ts';
 
 type UnaryOpIndex = {
-  [index in UnaryOp | GroupingOp]: () => Value | void;
+  [index in UnaryOp | Exclude<GroupingOp, '[]'>]: () => Value | void;
 };
 type BinaryOpIndex = {
-  [index in BinaryOp]: (other: Value) => Value | void;
+  [index in BinaryOp | '[]']: (other: Value) => Value | void;
 };
 
 export default class Value implements UnaryOpIndex, BinaryOpIndex {
@@ -49,7 +49,7 @@ export default class Value implements UnaryOpIndex, BinaryOpIndex {
   '⁹'() {}
 
   '()'() {}
-  '[]'() {}
+  '[]'(other: Value) {}
   '{}'() {}
   '||'() {}
   '⌊⌋'() {}

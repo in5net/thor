@@ -198,6 +198,14 @@ export class GroupingNode implements Node {
   }
 }
 
+export class PropAccessNode implements Node {
+  constructor(public node: Node, public prop: Node) {}
+
+  toString() {
+    return `${this.node}[${this.prop}]`;
+  }
+}
+
 export class ImportNode implements Node {
   constructor(public identifier: Token<'identifier'>) {}
 

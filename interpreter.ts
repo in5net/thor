@@ -12,6 +12,7 @@ import Node, {
   ImportNode,
   ListNode,
   NumberNode,
+  PropAccessNode,
   ReturnNode,
   StringNode,
   UnaryOpNode,
@@ -48,6 +49,7 @@ type NodeName =
   | 'StringNode'
   | 'UnaryOpNode'
   | 'WhileNode'
+  | 'PropAccessNode'
   | 'ImportNode';
 type NodeIndex = `visit_${NodeName}`;
 type ExecuteIndex = {
@@ -260,13 +262,19 @@ export default class Interpreter implements ExecuteIndex {
     scope: Scope
   ): Value {
     const value = this.visit(node, scope);
-    const operator = (left + right) as GroupingOp;
+    const operator = (left + right) as Exclude<GroupingOp, '[]'>;
 
     const func = value[operator];
     if (!func) Value.illegalUnaryOp(value, operator);
     const returnValue = func.call(value) as Value | undefined;
     if (!returnValue) Value.illegalUnaryOp(value, operator);
     return returnValue;
+  }
+
+  visit_PropAccessNode({ node, prop }: PropAccessNode, scope: Scope): Value {
+    const value = this.visit(node, scope);
+    const propValue = this.visit(prop, scope);
+    return (value['[]'](propValue) as unknown) as Value;
   }
 
   visit_ImportNode({ identifier: { value } }: ImportNode, scope: Scope): Value {

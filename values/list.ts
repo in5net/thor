@@ -11,6 +11,10 @@ export default class List extends Value {
     return `[${this.items.join(', ')}]`;
   }
 
+  '[]'(other: Value) {
+    if (other instanceof Number) return this.items[other.value];
+  }
+
   '+'(other?: Value) {
     if (other instanceof List) return new List([...this.items, ...other.items]);
     if (other instanceof Value) return new List([...this.items, other]);

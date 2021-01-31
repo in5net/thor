@@ -12,6 +12,10 @@ export default class String extends Value {
     return this.value.toString();
   }
 
+  '[]'(other: Value) {
+    if (other instanceof Number) return new String(this.value[other.value]);
+  }
+
   '+'(other?: Value) {
     if (
       other instanceof String ||

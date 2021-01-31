@@ -12,6 +12,7 @@ import Node, {
   ImportNode,
   ListNode,
   NumberNode,
+  PropAccessNode,
   ReturnNode,
   StringNode,
   UnaryOpNode,
@@ -308,30 +309,27 @@ export default class Parser {
   atom(): Node {
     // (NUMBER | BOOLEAN | STRING | IDENTIFIER) | '(' expr ')' | '|' expr '|' | list_expr | if_expr | func_def
     const { token } = this;
+    let rtn: Node;
 
     if (token.is('number')) {
       this.advance();
-      return new NumberNode(token.value);
-    }
-    if (token.is('boolean')) {
+      rtn = new NumberNode(token.value);
+    } else if (token.is('boolean')) {
       this.advance();
-      return new BooleanNode(token.value);
-    }
-    if (token.is('string')) {
+      rtn = new BooleanNode(token.value);
+    } else if (token.is('string')) {
       this.advance();
-      return new StringNode(
+      rtn = new StringNode(
         token.value.map(x => {
           if (typeof x === 'string') return x;
           const parser = new Parser(x);
           return parser.expr();
         })
       );
-    }
-    if (token.is('identifier')) {
+    } else if (token.is('identifier')) {
       this.advance();
-      return new IdentifierNode(token.value);
-    }
-    if (token.is('grouping', '(')) {
+      rtn = new IdentifierNode(token.value);
+    } else if (token.is('grouping', '(')) {
       this.advance();
 
       const expr = this.expr();
@@ -339,14 +337,13 @@ export default class Parser {
       if (!this.token.is('grouping', ')')) return this.expect("')'");
       this.advance();
 
-      return expr;
-    }
-    if (token.is('keyword', 'if')) return this.ifExpr();
-    if (token.is('keyword', 'for')) return this.forExpr();
-    if (token.is('keyword', 'while')) return this.whileExpr();
-    if (token.is('keyword', 'fn')) return this.funcDec();
-    if (token.is('grouping', '[')) return this.listExpr();
-    if (token.is('grouping')) {
+      rtn = expr;
+    } else if (token.is('keyword', 'if')) rtn = this.ifExpr();
+    else if (token.is('keyword', 'for')) rtn = this.forExpr();
+    else if (token.is('keyword', 'while')) rtn = this.whileExpr();
+    else if (token.is('keyword', 'fn')) rtn = this.funcDec();
+    else if (token.is('grouping', '[')) rtn = this.listExpr();
+    else if (token.is('grouping')) {
       const leftGrouping = token.value as LeftGrouping;
       if (!leftGrouping)
         return this.expect(Object.keys(groupings).map(char => `'${char}'`));
@@ -359,20 +356,32 @@ export default class Parser {
         return this.expect(`'${rightGrouping}'`);
       this.advance();
 
-      return new GroupingNode(expr, [leftGrouping, rightGrouping]);
+      rtn = new GroupingNode(expr, [leftGrouping, rightGrouping]);
+    } else
+      this.expect([
+        'number',
+        'identifier',
+        'boolean',
+        'string',
+        "'if'",
+        "'for'",
+        "'while'",
+        "'fn'",
+        ...Object.keys(groupings).map(char => `'${char}'`)
+      ]);
+
+    if (this.token.is('grouping', '[')) {
+      this.advance();
+
+      const expr = this.expr();
+
+      if (!this.token.is('grouping', ']')) this.expect("']'");
+      this.advance();
+
+      return new PropAccessNode(rtn, expr);
     }
 
-    this.expect([
-      'number',
-      'identifier',
-      'boolean',
-      'string',
-      "'if'",
-      "'for'",
-      "'while'",
-      "'fn'",
-      ...Object.keys(groupings).map(char => `'${char}'`)
-    ]);
+    return rtn;
   }
 
   listExpr(): ListNode {

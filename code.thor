@@ -1,3 +1,5 @@
-ans = sin(π/2) == sin(90°)
+str = "henlo wrold"
+lst = [1,2,3,4,5.7]
 
-print(ans)
+print(str[7])
+print(lst[4])

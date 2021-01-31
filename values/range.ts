@@ -14,4 +14,9 @@ export default class Range extends Value {
     if (other instanceof Number)
       return new Range(this.from, this.to, other.value);
   }
+
+  '[]'(other: Value) {
+    if (other instanceof Number)
+      return new Number(Math.max(this.from + this.step * other.value, this.to));
+  }
 }
