@@ -1,3 +1,15 @@
+Pi:
+  prefix: pi
+  body: π
+Tau:
+  prefix: tau
+  body: τ
+Phi:
+  prefix: [phi, golden]
+  body: Φ
+Infinity:
+  prefix: inf
+  body: ∞
 Absolute value:
   prefix: abs
   body: '|$0|'
@@ -31,4 +43,3 @@ Dot product:
 Cross product:
   prefix: cross
   body: ×
-
