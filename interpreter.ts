@@ -57,6 +57,8 @@ type ExecuteIndex = {
 };
 
 export default class Interpreter implements ExecuteIndex {
+  returnValue: Value | undefined;
+
   visit(node: Node, scope: Scope): Value {
     const methodName = `visit_${node.constructor.name}`;
     // @ts-ignore
@@ -88,7 +90,7 @@ export default class Interpreter implements ExecuteIndex {
     const items = [];
     for (const node of nodes) {
       let value = this.visit(node, scope);
-      if (node instanceof ReturnNode) return value;
+      if (this.returnValue) return this.returnValue;
       items.push(value);
     }
     return new List(items);
@@ -254,6 +256,7 @@ export default class Interpreter implements ExecuteIndex {
 
   visit_ReturnNode({ node }: ReturnNode, scope: Scope): Value {
     const value = this.visit(node, scope);
+    this.returnValue = value;
     return value ?? new Number(0);
   }
 

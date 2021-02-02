@@ -17,7 +17,11 @@ else {
 
 function runFile(path: string): void {
   const text = Deno.readTextFileSync(path);
+  const start = performance.now();
   run(text);
+  const end = performance.now();
+  const ms = end - start;
+  console.log(`Ran in ${ms / 1000}s`);
 }
 
 function runPrompt(): void {
@@ -26,7 +30,7 @@ function runPrompt(): void {
     if (line === null) continue;
     const value = run(line, true);
     if (!value) continue;
-    console.log(value.toString());
+    console.log(`< ${value}`);
   }
 }
 

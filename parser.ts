@@ -75,6 +75,11 @@ export default class Parser {
     this.token = this.tokens[++this.index] || EOF;
   }
 
+  back(amount = 1) {
+    this.index -= amount + 1;
+    this.advance();
+  }
+
   get nextToken(): Token {
     return this.tokens[this.index + 1] || EOF;
   }
@@ -427,8 +432,9 @@ export default class Parser {
 
     let elseCase: Node | undefined;
 
-    this.skipNewlines();
+    const newlines = this.skipNewlines();
     if ((this.token as Token).is('keyword', 'else')) elseCase = this.elseExpr();
+    else if (newlines > 0) this.back();
 
     return new IfNode(condition, body, elseCase);
   }
@@ -560,6 +566,7 @@ export default class Parser {
       operators.includes((this.token as Token<'operator', BinaryOp>).value)
     ) {
       const { token } = this;
+      if (token.is('operator', ':') && !this.nextToken.is('number')) break;
       this.advance();
       result = new BinaryOpNode(
         result,
