@@ -53,10 +53,7 @@ export default function run(text: string, repl = false): Value | undefined {
 
     const interpreter = new Interpreter();
     const globalScope = new Scope('<program>');
-    interpreter.visit_ImportNode(
-      new ImportNode(new Token('identifier', 'std')),
-      globalScope
-    );
+    interpreter.visit_ImportNode(new ImportNode('std'), globalScope);
     const value = interpreter.visit(repl ? ast.nodes[0] : ast, globalScope);
     return value;
   } catch (e) {

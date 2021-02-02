@@ -65,28 +65,24 @@ export class IdentifierNode implements Node {
 }
 
 export class DeclarationNode implements Node {
-  constructor(public identifier: Token<'identifier'>, public node: Node) {}
+  constructor(public identifier: string, public node: Node) {}
 
   toString() {
-    return `(${yellow('let')} ${magenta(this.identifier.value)} = ${
-      this.node
-    })`;
+    return `(${yellow('let')} ${magenta(this.identifier)} = ${this.node})`;
   }
 }
 
 export class AssignmentNode implements Node {
   constructor(
-    public identifier: Token<'identifier'>,
+    public identifier: string,
     public operator: IdentifierOp,
     public node?: Node
   ) {}
 
   toString() {
     if (this.node)
-      return `(${magenta(this.identifier.value)} ${this.operator} ${
-        this.node
-      })`;
-    return `(${magenta(this.identifier.value)}${this.operator})`;
+      return `(${magenta(this.identifier)} ${this.operator} ${this.node})`;
+    return `(${magenta(this.identifier)}${this.operator})`;
   }
 }
 
@@ -135,15 +131,15 @@ ${yellow('else')}: ${this.elseCase}`
 
 export class ForNode implements Node {
   constructor(
-    public identifier: Token<'identifier'>,
+    public identifier: string,
     public iterable: Node,
     public body: Node
   ) {}
 
   toString() {
-    return `(${yellow('for')} ${magenta(this.identifier.value)} ${yellow(
-      'in'
-    )} ${this.iterable}: ${this.body})`;
+    return `(${yellow('for')} ${magenta(this.identifier)} ${yellow('in')} ${
+      this.iterable
+    }: ${this.body})`;
   }
 }
 
@@ -164,7 +160,7 @@ export class FuncDefNode implements Node {
   ) {}
 
   toString() {
-    return `(${yellow('fn')} ${this.name}(${this.argNames
+    return `(${yellow('fn')} ${cyan(this.name)}(${this.argNames
       .map(magenta)
       .join(', ')})${this.arrow ? ' ->' : ':'} ${this.body})`;
   }
@@ -207,9 +203,9 @@ export class PropAccessNode implements Node {
 }
 
 export class ImportNode implements Node {
-  constructor(public identifier: Token<'identifier'>) {}
+  constructor(public identifier: string) {}
 
   toString() {
-    return `(${yellow('import')} ${this.identifier.value})`;
+    return `(${yellow('import')} ${this.identifier})`;
   }
 }

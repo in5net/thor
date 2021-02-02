@@ -148,7 +148,7 @@ export default class Parser {
       this.advance();
 
       if (!this.token.is('identifier')) this.expect('identifier');
-      const identifier = this.token as Token<'identifier'>;
+      const identifier = (this.token as Token<'identifier'>).value;
       this.advance();
 
       return new ImportNode(identifier);
@@ -164,7 +164,7 @@ export default class Parser {
       this.advance();
       if (!(this.token as Token).is('identifier'))
         return this.expect('identifier');
-      const identifier = (this.token as unknown) as Token<'identifier'>;
+      const identifier = ((this.token as unknown) as Token<'identifier'>).value;
       this.advance();
 
       if (!(this.token as Token).is('operator', '=')) return this.expect("'='");
@@ -183,7 +183,7 @@ export default class Parser {
         ((this.nextToken as unknown) as Token<'operator', IdentifierOp>).value
       )
     ) {
-      const identifier = (this.token as unknown) as Token<'identifier'>;
+      const identifier = (this.token as Token<'identifier'>).value;
       this.advance();
 
       const operator = (this.token as unknown) as Token<
@@ -467,7 +467,7 @@ export default class Parser {
     this.advance();
 
     if (!this.token.is('identifier')) return this.expect('identifier');
-    const identifier = this.token as Token<'identifier'>;
+    const identifier = (this.token as Token<'identifier'>).value;
     this.advance();
 
     if (!(this.token as Token).is('operator', 'in')) return this.expect("'in'");

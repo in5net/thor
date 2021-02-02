@@ -107,7 +107,7 @@ export default class Interpreter implements ExecuteIndex {
     scope: Scope
   ): Value {
     const value = this.visit(node, scope);
-    scope.symbolTable.add(identifier.value, value);
+    scope.symbolTable.add(identifier, value);
     return value;
   }
 
@@ -118,36 +118,36 @@ export default class Interpreter implements ExecuteIndex {
     let returnValue: Value | undefined;
     const right = node ? this.visit(node, scope) : undefined;
     if (operator === '=') {
-      scope.symbolTable.set(identifier.value, right!);
+      scope.symbolTable.set(identifier, right!);
       return right!;
     }
 
-    const left = this.visit(new IdentifierNode(identifier.value), scope);
+    const left = this.visit(new IdentifierNode(identifier), scope);
 
     switch (operator) {
       case '+=': {
         const value = (left['+'](
           (right as unknown) as Value
         ) as unknown) as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.symbolTable.set(identifier, value);
         break;
       }
       case '-=': {
         const value = (left['-'](
           (right as unknown) as Value
         ) as unknown) as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.symbolTable.set(identifier, value);
         break;
       }
       case '++': {
         const value = (left['+'](new Number(1)) as unknown) as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.symbolTable.set(identifier, value);
         returnValue = left;
         break;
       }
       case '--': {
         const value = (left['-'](new Number(1)) as unknown) as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.symbolTable.set(identifier, value);
         returnValue = left;
         break;
       }
@@ -155,28 +155,28 @@ export default class Interpreter implements ExecuteIndex {
         const value = (left['*'](
           (right as unknown) as Value
         ) as unknown) as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.symbolTable.set(identifier, value);
         break;
       }
       case '/=': {
         const value = (left['/'](
           (right as unknown) as Value
         ) as unknown) as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.symbolTable.set(identifier, value);
         break;
       }
       case '%=': {
         const value = (left['%'](
           (right as unknown) as Value
         ) as unknown) as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.symbolTable.set(identifier, value);
         break;
       }
       case '^=': {
         const value = (left['^'](
           (right as unknown) as Value
         ) as unknown) as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.symbolTable.set(identifier, value);
       }
     }
     return (right || returnValue) as Value;
@@ -217,13 +217,13 @@ export default class Interpreter implements ExecuteIndex {
     const iterableValue = this.visit(iterable, scope);
     if (iterableValue instanceof List) {
       for (const item of iterableValue.items) {
-        scope.symbolTable.set(identifier.value, item);
+        scope.symbolTable.set(identifier, item);
         this.visit(body, scope);
       }
     } else if (iterableValue instanceof Range) {
       const { from, to, step } = iterableValue;
       for (let i = from; i < to; i += step) {
-        scope.symbolTable.set(identifier.value, new Number(i));
+        scope.symbolTable.set(identifier, new Number(i));
         this.visit(body, scope);
       }
     }
@@ -280,9 +280,9 @@ export default class Interpreter implements ExecuteIndex {
     return (value['[]'](propValue) as unknown) as Value;
   }
 
-  visit_ImportNode({ identifier: { value } }: ImportNode, scope: Scope): Value {
+  visit_ImportNode({ identifier }: ImportNode, scope: Scope): Value {
     let mod: any;
-    switch (value) {
+    switch (identifier) {
       case 'std':
         mod = std;
         break;
