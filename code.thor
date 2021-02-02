@@ -4,4 +4,4 @@ fn fib(n) {
 }
 
 print("Here we go...")
-print(fib(40))
+print(fib(10))
