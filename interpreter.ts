@@ -51,7 +51,7 @@ type NodeName =
   | 'WhileNode'
   | 'PropAccessNode'
   | 'ImportNode';
-type NodeIndex = `visit_${NodeName}`;
+type NodeIndex = `visit${NodeName}`;
 type ExecuteIndex = {
   [index in NodeIndex]: (node: any, scope: Scope) => Value | void;
 };
@@ -60,7 +60,7 @@ export default class Interpreter implements ExecuteIndex {
   returnValue: Value | undefined;
 
   visit(node: Node, scope: Scope): Value {
-    const methodName = `visit_${node.constructor.name}`;
+    const methodName = `visit${node.constructor.name}`;
     // @ts-ignore
     const method = this[methodName] as (node: Node, scope: Scope) => Value;
     return method.call(this, node, scope);
@@ -70,15 +70,15 @@ export default class Interpreter implements ExecuteIndex {
     throw `Error: ${message}`;
   }
 
-  visit_NumberNode({ value }: NumberNode, scope: Scope): Number {
+  visitNumberNode({ value }: NumberNode, scope: Scope): Number {
     return new Number(value);
   }
 
-  visit_BooleanNode({ value }: BooleanNode, scope: Scope): Boolean {
+  visitBooleanNode({ value }: BooleanNode, scope: Scope): Boolean {
     return new Boolean(value);
   }
 
-  visit_StringNode({ fragments }: StringNode, scope: Scope): String {
+  visitStringNode({ fragments }: StringNode, scope: Scope): String {
     return new String(
       fragments
         .map(x => (typeof x === 'string' ? x : this.visit(x, scope)))
@@ -86,7 +86,7 @@ export default class Interpreter implements ExecuteIndex {
     );
   }
 
-  visit_ListNode({ nodes }: ListNode, scope: Scope): Value {
+  visitListNode({ nodes }: ListNode, scope: Scope): Value {
     const items = [];
     for (const node of nodes) {
       let value = this.visit(node, scope);
@@ -96,13 +96,13 @@ export default class Interpreter implements ExecuteIndex {
     return new List(items);
   }
 
-  visit_IdentifierNode({ name }: IdentifierNode, scope: Scope): Value {
+  visitIdentifierNode({ name }: IdentifierNode, scope: Scope): Value {
     const value = scope.symbolTable.get(name);
     if (!value) this.error(`'${name}' is not defined`);
     return value;
   }
 
-  visit_DeclarationNode(
+  visitDeclarationNode(
     { identifier, node }: DeclarationNode,
     scope: Scope
   ): Value {
@@ -111,7 +111,7 @@ export default class Interpreter implements ExecuteIndex {
     return value;
   }
 
-  visit_AssignmentNode(
+  visitAssignmentNode(
     { identifier, operator, node }: AssignmentNode,
     scope: Scope
   ): Value {
@@ -182,7 +182,7 @@ export default class Interpreter implements ExecuteIndex {
     return (right || returnValue) as Value;
   }
 
-  visit_UnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Value {
+  visitUnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Value {
     const value = this.visit(node, scope);
 
     const func = value[operator];
@@ -192,7 +192,7 @@ export default class Interpreter implements ExecuteIndex {
     return returnValue;
   }
 
-  visit_BinaryOpNode(
+  visitBinaryOpNode(
     { left, operator, right }: BinaryOpNode,
     scope: Scope
   ): Value {
@@ -206,14 +206,14 @@ export default class Interpreter implements ExecuteIndex {
     return value;
   }
 
-  visit_IfNode({ condition, body, elseCase }: IfNode, scope: Scope) {
+  visitIfNode({ condition, body, elseCase }: IfNode, scope: Scope) {
     // @ts-ignore
     if ((this.visit(condition, scope) as Number | Boolean).value)
       this.visit(body, scope);
     else if (elseCase) this.visit(elseCase, scope);
   }
 
-  visit_ForNode({ identifier, iterable, body }: ForNode, scope: Scope) {
+  visitForNode({ identifier, iterable, body }: ForNode, scope: Scope) {
     const iterableValue = this.visit(iterable, scope);
     if (iterableValue instanceof List) {
       for (const item of iterableValue.items) {
@@ -229,13 +229,13 @@ export default class Interpreter implements ExecuteIndex {
     }
   }
 
-  visit_WhileNode({ condition, body }: WhileNode, scope: Scope) {
+  visitWhileNode({ condition, body }: WhileNode, scope: Scope) {
     // @ts-ignore
     while ((this.visit(condition, scope) as Number | Boolean).value)
       this.visit(body, scope);
   }
 
-  visit_FuncDefNode(
+  visitFuncDefNode(
     { name, argNames, body }: FuncDefNode,
     scope: Scope
   ): Function {
@@ -244,7 +244,7 @@ export default class Interpreter implements ExecuteIndex {
     return value;
   }
 
-  visit_FuncCallNode({ name, args }: FuncCallNode, scope: Scope): Value {
+  visitFuncCallNode({ name, args }: FuncCallNode, scope: Scope): Value {
     const func = scope.symbolTable.get(name) as
       | Function
       | ((...values: Value[]) => Value);
@@ -254,13 +254,13 @@ export default class Interpreter implements ExecuteIndex {
     return value;
   }
 
-  visit_ReturnNode({ node }: ReturnNode, scope: Scope): Value {
+  visitReturnNode({ node }: ReturnNode, scope: Scope): Value {
     const value = this.visit(node, scope);
     this.returnValue = value;
     return value ?? new Number(0);
   }
 
-  visit_GroupingNode(
+  visitGroupingNode(
     { node, groupings: [left, right] }: GroupingNode,
     scope: Scope
   ): Value {
@@ -274,13 +274,13 @@ export default class Interpreter implements ExecuteIndex {
     return returnValue;
   }
 
-  visit_PropAccessNode({ node, prop }: PropAccessNode, scope: Scope): Value {
+  visitPropAccessNode({ node, prop }: PropAccessNode, scope: Scope): Value {
     const value = this.visit(node, scope);
     const propValue = this.visit(prop, scope);
     return (value['[]'](propValue) as unknown) as Value;
   }
 
-  visit_ImportNode({ identifier }: ImportNode, scope: Scope): Value {
+  visitImportNode({ identifier }: ImportNode, scope: Scope): Value {
     let mod: any;
     switch (identifier) {
       case 'std':
