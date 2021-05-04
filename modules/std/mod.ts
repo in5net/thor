@@ -1,10 +1,4 @@
-import Value, {
-  Complex,
-  List,
-  Number,
-  String,
-  Vector
-} from '../../values/mod.ts';
+import Value, { Complex, List, Number, String } from '../../values/mod.ts';
 
 import funcs from './trigonometry.ts';
 
@@ -61,6 +55,93 @@ export function random(min?: Value, max?: Value) {
   throw `random() must receive up to 2 numbers or a list`;
 }
 
+export function norm(n: Value | Number, min: Value, max: Value): Number {
+  if (
+    !(n instanceof Number) ||
+    !(min instanceof Number) ||
+    !(max instanceof Number)
+  )
+    throw 'norm() expects 3 numbers';
+  return new Number((n.value - min.value) / (max.value - min.value));
+}
+
+export function lerp(min: Value, max: Value, norm: Value): Number {
+  if (
+    !(min instanceof Number) ||
+    !(max instanceof Number) ||
+    !(norm instanceof Number)
+  )
+    throw 'lerp() expects 3 numbers';
+  return new Number(min.value + (max.value - min.value) * norm.value);
+}
+
+export function map(
+  n: Value,
+  fromMin: Value,
+  fromMax: Value,
+  toMin: Value,
+  toMax: Value
+): Number {
+  if (
+    !(n instanceof Number) ||
+    !(fromMin instanceof Number) ||
+    !(fromMax instanceof Number) ||
+    !(toMin instanceof Number) ||
+    !(toMax instanceof Number)
+  )
+    throw 'map() expects 5 numbers';
+  return lerp(toMin, toMax, norm(n, fromMin, fromMax));
+}
+
+export function clamp(n: Value, min: Value, max: Value): Number {
+  if (
+    !(n instanceof Number) ||
+    !(min instanceof Number) ||
+    !(max instanceof Number)
+  )
+    throw 'clamp() expects 3 numbers';
+  return new Number(Math.min(Math.max(n.value, min.value), max.value));
+}
+
+export function overlap(
+  min1: Value,
+  max1: Value,
+  min2: Value,
+  max2: Value
+): Number {
+  if (
+    !(min1 instanceof Number) ||
+    !(max1 instanceof Number) ||
+    !(min2 instanceof Number) ||
+    !(max2 instanceof Number)
+  )
+    throw 'overlap() expects 4 numbers';
+  const [mi1, ma1] = minmax(min1, max1);
+  const [mi2, ma2] = minmax(min2, max2);
+  const range1 = ma1.value - mi1.value;
+  const range2 = ma2.value - mi2.value;
+  const range = Math.max(ma1.value, ma2.value) - Math.min(mi1.value, mi2.value);
+  return new Number(range1 + range2 - range);
+}
+
+export function minmax(a: Value, b: Value): [min: Number, max: Number] {
+  if (!(a instanceof Number) || !(b instanceof Number))
+    throw 'minmax() expects 2 numbers';
+  return [
+    new Number(Math.min(a.value, b.value)),
+    new Number(Math.max(a.value, b.value))
+  ];
+}
+
+export function gcd(av: Value, bv: Value): Number {
+  if (!(av instanceof Number) || !(bv instanceof Number))
+    throw 'gcd() expects 2 numbers';
+  let a = av.value;
+  let b = bv.value;
+  while (b !== 0) [a, b] = [b, a % b];
+  return new Number(a);
+}
+
 function _min(array: Value[]): Number {
   let min = Infinity;
   for (const value of array) {
@@ -75,9 +156,4 @@ function _max(array: Value[]): Number {
     if (value instanceof Number && value.value > max) max = value.value;
   }
   return new Number(max);
-}
-
-export function vec(nums: Value[]) {
-  if (nums.some(x => !(x instanceof Number))) return;
-  return new Vector((nums as Number[]).map(x => x.value));
 }

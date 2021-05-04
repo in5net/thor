@@ -62,6 +62,15 @@ export default class Number extends Value {
     else return new Complex(0, Math.sqrt(-this.value));
   }
 
+  '∛'() {
+    return new Number(Math.cbrt(this.value));
+  }
+
+  '∜'() {
+    if (this.value >= 0) return new Number(Math.sqrt(Math.sqrt(this.value)));
+    else return new Complex(0, Math.sqrt(Math.sqrt(-this.value)));
+  }
+
   '!'() {
     return new Number(factorial(this.value));
   }
