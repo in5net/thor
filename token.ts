@@ -73,7 +73,8 @@ export const groupings = {
   '{': '}',
   '|': '|',
   '⌊': '⌋',
-  '⌈': '⌉'
+  '⌈': '⌉',
+  '⟨': '⟩'
 } as const;
 export const keywords = [
   'let',

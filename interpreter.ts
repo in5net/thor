@@ -16,6 +16,7 @@ import Node, {
   ReturnNode,
   StringNode,
   UnaryOpNode,
+  VecNode,
   WhileNode
 } from './nodes.ts';
 import Scope from './scope.ts';
@@ -26,7 +27,8 @@ import Value, {
   List,
   Number,
   Range,
-  String
+  String,
+  Vector
 } from './values/mod.ts';
 
 import * as std from './modules/std/mod.ts';
@@ -44,6 +46,7 @@ type NodeName =
   | 'IdentifierNode'
   | 'IfNode'
   | 'ListNode'
+  | 'VecNode'
   | 'NumberNode'
   | 'ReturnNode'
   | 'StringNode'
@@ -94,6 +97,16 @@ export default class Interpreter implements ExecuteIndex {
       items.push(value);
     }
     return new List(items);
+  }
+
+  visitVecNode({ nodes }: VecNode, scope: Scope): Value {
+    const components: number[] = [];
+    for (const node of nodes) {
+      let value = this.visit(node, scope);
+      if (!(value instanceof Number)) throw `Vectors can only take numbers`;
+      components.push(value.value);
+    }
+    return new Vector(components);
   }
 
   visitIdentifierNode({ name }: IdentifierNode, scope: Scope): Value {

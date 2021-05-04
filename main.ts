@@ -3,7 +3,6 @@ import Lexer from './lexer.ts';
 import { ImportNode } from './nodes.ts';
 import Parser from './parser.ts';
 import Scope from './scope.ts';
-import Token from './token.ts';
 import Value from './values/mod.ts';
 
 let log = false;
@@ -21,7 +20,8 @@ function runFile(path: string): void {
   run(text);
   const end = performance.now();
   const ms = end - start;
-  console.log(`Ran in ${ms / 1000}s`);
+  const s = ms / 1000;
+  console.log(`Ran in ${s.toFixed(3)}s`);
 }
 
 function runPrompt(): void {

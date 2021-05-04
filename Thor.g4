@@ -2,75 +2,64 @@ grammar Thor;
 
 statements: '\n'* statement ('\n'+ statement)* '\n'*;
 
-statement: expr | 'return' expr? | 'import' IDENTIFIER;
+statement: 'return'? expr;
 
 expr:
-	('let' IDENTIFIER '=' expr)
 	| (
-		IDENTIFIER (
-			'='
-			| '+='
-			| '-='
-			| '*='
-			| '/='
-			| '%='
-			| '^='
-		) expr
+		IDENTIFIER (('+' | '-' | '*' | '/' | '%' | '^')? '=') expr
 	)
-	| (IDENTIFIER ('++' | '--'))
-	| comp_expr (('and' | 'or' | 'in') comp_expr)*;
+	| or_expr;
+
+or_expr: and_expr ('or' and_expr)*;
+
+and_expr: not_expr ('and' not_expr)*;
+
+not_expr: ('not' not_expr) | comp_expr;
 
 comp_expr:
-	'not' comp_expr
-	| arith_expr (
-		('==' | '!=' | '<' | '<=' | '>' | '>=' | ':') arith_expr
-	)*;
+	arith_expr ('==' | '!=' | '>' | '>=' | '<' | '<=' arith_expr)*;
 
 arith_expr: term (('+' | '-') term)*;
 
-term: factor (('*' | '/' | '%') factor)* | NUMBER term;
+term:
+	factor (('*' | '∙' | '×' | | '/' | '%') factor)*
+	| NUMBER term;
 
 factor: ('+' | '-') factor | power;
 
 power: postfix ('^' factor)*;
 
-postfix: call '!'?;
+postfix: call ('!' | '°')?;
 
-call: atom ('(' (expr (',' expr)*)? ')')?;
+call: atom '(' list ')';
 
 atom:
-	(NUMBER | BOOLEAN | STRING | IDENTIFIER)
+	(NUMBER | BOOLEAN | IDENTIFIER)
 	| NUMBER postfix
 	| '(' expr ')'
 	| '|' expr '|'
-	| list_expr
+	| '⌊' expr '⌋'
+	| '⌈' expr '⌉'
+	| vec_expr
 	| if_expr
 	| for_expr
-	| while_expr
-	| func_def;
+	| fn_expr;
 
-list_expr: '[' (expr (',' expr)*)? ']';
+vec_expr: '⟨' list '⟩';
 
-if_expr:
-	'if' expr ((':' statement) | ('{' statements '}')) else_expr?;
+if_expr: 'if' expr (':' statement | block);
 
-else_expr:
-	'else' ':'? (statement | ('{' statements '}') | if_expr);
+else_expr: 'else' ':'? (statement | block | if_expr);
 
-for_expr:
-	'for' IDENTIFIER 'in' expr (
-		(':' statement)
-		| ('{' statements '}')
-	);
+for_expr: 'for' IDENTIFIER 'in' expr (':' statement | block);
 
-while_expr:
-	'while' expr ((':' statement) | ('{' statements '}'));
+while_expr: 'while' expr (':' statement | block);
 
-func_def:
-	'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)*)? ')' (
-		('->' statement)
-		| ('{' statements '}')
-	);
+fn_expr: 'fn' IDENTIFIER '(' list ')' ('->' statement | block);
+
+list: expr? (',' expr)*;
+
+block: '{' statements '}';
 
 NUMBER: [0-9]* '.' [0-9]*;
 BOOLEAN: 'true' | 'false';

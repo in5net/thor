@@ -16,11 +16,11 @@ import Node, {
   ReturnNode,
   StringNode,
   UnaryOpNode,
+  VecNode,
   WhileNode
 } from './nodes.ts';
 import Token, {
   BinaryOp,
-  binaryOps,
   compareOps,
   groupings,
   IdentifierOp,
@@ -34,7 +34,6 @@ import Token, {
   UnaryOp
 } from './token.ts';
 
-const SYMBOL_COMPARE_OPS = compareOps.filter(op => !/[a-z]/.test(op));
 const WORD_COMPARE_OPS = compareOps.filter(op => /[a-z]/.test(op));
 
 const EOF = new Token('eof', undefined);
@@ -203,15 +202,33 @@ export default class Parser {
     return this.binaryOp(this.compExpr, WORD_COMPARE_OPS);
   }
 
-  compExpr(): Node {
-    // 'not' comp_expr
+  orExpr(): Node {
+    return this.binaryOp(this.andExpr, ['or']);
+  }
+
+  andExpr(): Node {
+    return this.binaryOp(this.notExpr, ['and']);
+  }
+
+  notExpr(): Node {
     if (this.token.is('operator', 'not')) {
       this.advance();
-      return new UnaryOpNode(this.compExpr(), 'not');
+      return new UnaryOpNode(this.notExpr(), 'not');
     }
+    return this.compExpr();
+  }
 
+  compExpr(): Node {
     // arith_expr (('==' | '!=' | '<' | '<=' | '>' | '>=' | ':') arith_expr)*
-    return this.binaryOp(this.arithExpr, [...SYMBOL_COMPARE_OPS, ':']);
+    return this.binaryOp(this.arithExpr, [
+      '==',
+      '!=',
+      '<',
+      '<=',
+      '>',
+      '>=',
+      ':'
+    ]);
   }
 
   arithExpr(): Node {
@@ -348,6 +365,7 @@ export default class Parser {
     else if (token.is('keyword', 'while')) rtn = this.whileExpr();
     else if (token.is('keyword', 'fn')) rtn = this.funcDec();
     else if (token.is('grouping', '[')) rtn = this.listExpr();
+    else if (token.is('grouping', '⟨')) rtn = this.vecExpr();
     else if (token.is('grouping')) {
       const leftGrouping = token.value as LeftGrouping;
       if (!leftGrouping)
@@ -394,21 +412,18 @@ export default class Parser {
     if (!this.token.is('grouping', '[')) return this.expect("'['");
     this.advance();
 
-    const nodes: Node[] = [];
-
-    if (!this.token.is('grouping', ']')) {
-      nodes.push(this.expr());
-
-      while ((this.token as Token).is('operator', ',')) {
-        this.advance();
-        nodes.push(this.expr());
-      }
-    }
-
-    if (!this.token.is('grouping', ']')) this.expect(["','", "']'"]);
-    this.advance();
+    const nodes = this.list(']');
 
     return new ListNode(nodes);
+  }
+
+  vecExpr(): ListNode {
+    if (!this.token.is('grouping', '⟨')) return this.expect("'⟨'");
+    this.advance();
+
+    const nodes = this.list('⟩');
+
+    return new VecNode(nodes);
   }
 
   ifExpr(): IfNode {
@@ -423,12 +438,8 @@ export default class Parser {
     if (this.token.is('operator', ':')) {
       this.advance();
       body = this.statement();
-    } else if (this.token.is('grouping', '{')) {
-      this.advance();
-      body = this.statements();
-      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
-      this.advance();
-    } else return this.expect(["':'", "'{'"]);
+    } else if (this.token.is('grouping', '{')) body = this.block();
+    else return this.expect(["':'", "'{'"]);
 
     let elseCase: Node | undefined;
 
@@ -448,12 +459,8 @@ export default class Parser {
 
     let body: Node;
 
-    if (this.token.is('grouping', '{')) {
-      this.advance();
-      body = this.statements();
-      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
-      this.advance();
-    } else if (this.token.is('keyword', 'if')) body = this.ifExpr();
+    if (this.token.is('grouping', '{')) body = this.block();
+    else if (this.token.is('keyword', 'if')) body = this.ifExpr();
     else {
       body = this.statement();
     }
@@ -480,12 +487,8 @@ export default class Parser {
     if ((this.token as Token).is('operator', ':')) {
       this.advance();
       body = this.statement();
-    } else if ((this.token as Token).is('grouping', '{')) {
-      this.advance();
-      body = this.statements();
-      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
-      this.advance();
-    } else return this.expect(["':'", "'{'"]);
+    } else if ((this.token as Token).is('grouping', '{')) body = this.block();
+    else return this.expect(["':'", "'{'"]);
 
     return new ForNode(identifier, iterable, body);
   }
@@ -502,12 +505,8 @@ export default class Parser {
     if ((this.token as Token).is('operator', ':')) {
       this.advance();
       body = this.statement();
-    } else if ((this.token as Token).is('grouping', '{')) {
-      this.advance();
-      body = this.statements();
-      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
-      this.advance();
-    } else return this.expect(["':'", "'{'"]);
+    } else if ((this.token as Token).is('grouping', '{')) body = this.block();
+    else return this.expect(["':'", "'{'"]);
 
     return new WhileNode(condition, body);
   }
@@ -549,12 +548,8 @@ export default class Parser {
       arrow = true;
       this.advance();
       body = this.statement();
-    } else if ((this.token as Token).is('grouping', '{')) {
-      this.advance();
-      body = this.statements();
-      if (!(this.token as Token).is('grouping', '}')) return this.expect("'}'");
-      this.advance();
-    } else return this.expect(["'->'", "'{'"]);
+    } else if ((this.token as Token).is('grouping', '{')) body = this.block();
+    else return this.expect(["'->'", "'{'"]);
 
     return new FuncDefNode(name, argNames, body, arrow);
   }
@@ -576,5 +571,33 @@ export default class Parser {
     }
 
     return result;
+  }
+
+  list(end: RightGrouping): Node[] {
+    const nodes: Node[] = [];
+
+    while (!this.token.is('grouping', end)) {
+      nodes.push(this.expr());
+      if (this.token.is('operator', ',')) this.advance();
+      else if (this.token.is('grouping', end)) break;
+      else this.expect(["','", `'${end}'`]);
+    }
+
+    if (!this.token.is('grouping', end)) this.expect(`'${end}'`);
+    this.advance();
+
+    return nodes;
+  }
+
+  block(): ListNode {
+    if (!this.token.is('grouping', '{')) this.expect("'{'");
+    this.advance();
+
+    const statements = this.statements();
+
+    if (!this.token.is('grouping', '}')) this.expect("'}'");
+    this.advance();
+
+    return statements;
   }
 }

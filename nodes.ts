@@ -56,6 +56,14 @@ export class ListNode implements Node {
   }
 }
 
+export class VecNode implements Node {
+  constructor(public nodes: Node[]) {}
+
+  toString() {
+    return `⟨${this.nodes.join(', ')}⟩`;
+  }
+}
+
 export class IdentifierNode implements Node {
   constructor(public name: string) {}
 
