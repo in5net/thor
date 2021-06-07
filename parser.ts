@@ -163,7 +163,7 @@ export default class Parser {
       this.advance();
       if (!(this.token as Token).is('identifier'))
         return this.expect('identifier');
-      const identifier = ((this.token as unknown) as Token<'identifier'>).value;
+      const identifier = (this.token as unknown as Token<'identifier'>).value;
       this.advance();
 
       if (!(this.token as Token).is('operator', '=')) return this.expect("'='");
@@ -179,16 +179,13 @@ export default class Parser {
       this.token.is('identifier') &&
       (this.nextToken as Token).is('operator') &&
       identifierOps.includes(
-        ((this.nextToken as unknown) as Token<'operator', IdentifierOp>).value
+        (this.nextToken as unknown as Token<'operator', IdentifierOp>).value
       )
     ) {
       const identifier = (this.token as Token<'identifier'>).value;
       this.advance();
 
-      const operator = (this.token as unknown) as Token<
-        'operator',
-        IdentifierOp
-      >;
+      const operator = this.token as unknown as Token<'operator', IdentifierOp>;
       this.advance();
 
       // IDENTIFIER ('++' | '--')
@@ -305,6 +302,8 @@ export default class Parser {
     const atom = this.atom();
 
     if (this.token.is('grouping', '(')) {
+      if (!(atom instanceof IdentifierNode)) return this.expect('identifier');
+
       this.advance();
       const args: Node[] = [];
 
@@ -322,7 +321,23 @@ export default class Parser {
         this.advance();
       }
 
-      return new FuncCallNode((atom as IdentifierNode).name, args);
+      if (this.token.is('operator', '=')) {
+        this.advance();
+
+        const body = this.statement();
+
+        return new FuncDefNode(
+          atom.name,
+          args.map(arg => {
+            if (arg instanceof IdentifierNode) return arg.name;
+            else this.expect('identifier');
+          }),
+          body,
+          true
+        );
+      }
+
+      return new FuncCallNode(atom.name, args);
     }
 
     return atom;

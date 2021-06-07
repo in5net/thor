@@ -1,2 +1,3 @@
-r=2
-print(4π*r ^2)
+f(x) = x^2
+g = 2 ^ f
+print(g(2))

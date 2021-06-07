@@ -3,7 +3,9 @@ import Complex from './complex.ts';
 import Range from './range.ts';
 import List from './list.ts';
 import String from './string.ts';
+import { Function } from './function.ts';
 import Value from './value.ts';
+import type { BinaryOp } from '../token.ts';
 
 export default class Number extends Value {
   constructor(public value: number) {
@@ -14,15 +16,23 @@ export default class Number extends Value {
     return this.value.toString();
   }
 
+  operatorFunc(func: Function, op: BinaryOp): Function {
+    const opFunc = new Function(func.name, func.argNames, func.body);
+    opFunc.execute = (args: Value[]) => this[op](func.execute(args)) as Value;
+    return opFunc;
+  }
+
   '+'(other?: Value) {
     if (other instanceof Number) return new Number(this.value + other.value);
     if (other instanceof Complex) return other['+'](this);
+    if (other instanceof Function) return this.operatorFunc(other, '+');
     if (!other) return this;
   }
 
   '-'(other?: Value) {
     if (other instanceof Number) return new Number(this.value - other.value);
     if (other instanceof Complex) return other['-']()!['+'](this);
+    if (other instanceof Function) return this.operatorFunc(other, '-');
     if (!other) return new Number(-this.value);
   }
 
@@ -39,6 +49,7 @@ export default class Number extends Value {
     if (other instanceof Number) return new Number(this.value * other.value);
     if (other instanceof Complex) return other['*'](this);
     if (other instanceof String) return other['*'](this);
+    if (other instanceof Function) return this.operatorFunc(other, '*');
   }
 
   '×'(other: Value) {
@@ -51,10 +62,14 @@ export default class Number extends Value {
 
   '%'(other: Value) {
     if (other instanceof Number) return new Number(this.value % other.value);
+    if (other instanceof Function)
+      return (...args: Value[]) => this['%'](other.execute(args));
   }
 
   '^'(other: Value) {
     if (other instanceof Number) return new Number(this.value ** other.value);
+    if (other instanceof Function)
+      return (...args: Value[]) => this['^'](other.execute(args));
   }
 
   '√'() {
