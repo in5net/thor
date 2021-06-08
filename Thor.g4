@@ -55,6 +55,8 @@ for_expr: 'for' IDENTIFIER 'in' expr (':' statement | block);
 
 while_expr: 'while' expr (':' statement | block);
 
+loop_expr: 'loop' (':' statement | block);
+
 fn_expr: ('fn' IDENTIFIER '(' list ')' ('->' statement | block));
 
 list: expr? (',' expr)*;

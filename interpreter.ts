@@ -11,6 +11,7 @@ import Node, {
   IfNode,
   ImportNode,
   ListNode,
+  LoopNode,
   NumberNode,
   PropAccessNode,
   ReturnNode,
@@ -52,6 +53,7 @@ type NodeName =
   | 'StringNode'
   | 'UnaryOpNode'
   | 'WhileNode'
+  | 'LoopNode'
   | 'PropAccessNode'
   | 'ImportNode';
 type NodeIndex = `visit${NodeName}`;
@@ -139,56 +141,44 @@ export default class Interpreter implements ExecuteIndex {
 
     switch (operator) {
       case '+=': {
-        const value = (left['+'](
-          (right as unknown) as Value
-        ) as unknown) as Value;
+        const value = left['+'](right as unknown as Value) as unknown as Value;
         scope.symbolTable.set(identifier, value);
         break;
       }
       case '-=': {
-        const value = (left['-'](
-          (right as unknown) as Value
-        ) as unknown) as Value;
+        const value = left['-'](right as unknown as Value) as unknown as Value;
         scope.symbolTable.set(identifier, value);
         break;
       }
       case '++': {
-        const value = (left['+'](new Number(1)) as unknown) as Value;
+        const value = left['+'](new Number(1)) as unknown as Value;
         scope.symbolTable.set(identifier, value);
         returnValue = left;
         break;
       }
       case '--': {
-        const value = (left['-'](new Number(1)) as unknown) as Value;
+        const value = left['-'](new Number(1)) as unknown as Value;
         scope.symbolTable.set(identifier, value);
         returnValue = left;
         break;
       }
       case '*=': {
-        const value = (left['*'](
-          (right as unknown) as Value
-        ) as unknown) as Value;
+        const value = left['*'](right as unknown as Value) as unknown as Value;
         scope.symbolTable.set(identifier, value);
         break;
       }
       case '/=': {
-        const value = (left['/'](
-          (right as unknown) as Value
-        ) as unknown) as Value;
+        const value = left['/'](right as unknown as Value) as unknown as Value;
         scope.symbolTable.set(identifier, value);
         break;
       }
       case '%=': {
-        const value = (left['%'](
-          (right as unknown) as Value
-        ) as unknown) as Value;
+        const value = left['%'](right as unknown as Value) as unknown as Value;
         scope.symbolTable.set(identifier, value);
         break;
       }
       case '^=': {
-        const value = (left['^'](
-          (right as unknown) as Value
-        ) as unknown) as Value;
+        const value = left['^'](right as unknown as Value) as unknown as Value;
         scope.symbolTable.set(identifier, value);
       }
     }
@@ -248,6 +238,10 @@ export default class Interpreter implements ExecuteIndex {
       this.visit(body, scope);
   }
 
+  visitLoopNode({ body }: LoopNode, scope: Scope) {
+    while (1) this.visit(body, scope);
+  }
+
   visitFuncDefNode(
     { name, argNames, body }: FuncDefNode,
     scope: Scope
@@ -290,7 +284,7 @@ export default class Interpreter implements ExecuteIndex {
   visitPropAccessNode({ node, prop }: PropAccessNode, scope: Scope): Value {
     const value = this.visit(node, scope);
     const propValue = this.visit(prop, scope);
-    return (value['[]'](propValue) as unknown) as Value;
+    return value['[]'](propValue) as unknown as Value;
   }
 
   visitImportNode({ identifier }: ImportNode, scope: Scope): Value {

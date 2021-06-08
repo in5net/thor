@@ -11,6 +11,7 @@ import Node, {
   IfNode,
   ImportNode,
   ListNode,
+  LoopNode,
   NumberNode,
   PropAccessNode,
   ReturnNode,
@@ -378,6 +379,7 @@ export default class Parser {
     } else if (token.is('keyword', 'if')) rtn = this.ifExpr();
     else if (token.is('keyword', 'for')) rtn = this.forExpr();
     else if (token.is('keyword', 'while')) rtn = this.whileExpr();
+    else if (token.is('keyword', 'loop')) rtn = this.loopExpr();
     else if (token.is('keyword', 'fn')) rtn = this.funcDec();
     else if (token.is('grouping', '[')) rtn = this.listExpr();
     else if (token.is('grouping', '⟨')) rtn = this.vecExpr();
@@ -404,6 +406,7 @@ export default class Parser {
         "'if'",
         "'for'",
         "'while'",
+        "'loop'",
         "'fn'",
         ...Object.keys(groupings).map(char => `'${char}'`)
       ]);
@@ -524,6 +527,21 @@ export default class Parser {
     else return this.expect(["':'", "'{'"]);
 
     return new WhileNode(condition, body);
+  }
+
+  loopExpr(): LoopNode {
+    // 'loop' (':' statement | block)
+    if (!this.token.is('keyword', 'loop')) return this.expect("'loop'");
+    this.advance();
+    let body: Node;
+
+    if ((this.token as Token).is('operator', ':')) {
+      this.advance();
+      body = this.statement();
+    } else if ((this.token as Token).is('grouping', '{')) body = this.block();
+    else return this.expect(["':'", "'{'"]);
+
+    return new LoopNode(body);
   }
 
   funcDec(): FuncDefNode {

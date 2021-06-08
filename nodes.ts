@@ -159,6 +159,14 @@ export class WhileNode implements Node {
   }
 }
 
+export class LoopNode implements Node {
+  constructor(public body: Node) {}
+
+  toString() {
+    return `(${yellow('loop')}: ${this.body})`;
+  }
+}
+
 export class FuncDefNode implements Node {
   constructor(
     public name: string,

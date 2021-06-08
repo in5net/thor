@@ -1,5 +1,4 @@
 import Value, { Complex, List, Number, String } from '../../values/mod.ts';
-
 import funcs from './trigonometry.ts';
 
 export default { '∞': new Number(Infinity), ...funcs };
@@ -21,6 +20,28 @@ export function print(...messages: Value[]) {
 export function input(message?: Value) {
   if (message instanceof String) return new String(prompt(message.value) || '');
   return new String(prompt() || '');
+}
+
+export function int(x: Value): Number {
+  if (x instanceof Number) return new Number(x.value | 0);
+  if (x instanceof String) return new Number(parseInt(x.value));
+  throw 'int() expects a number or string';
+}
+
+export function float(x: Value): Number {
+  if (x instanceof Number) return x;
+  if (x instanceof String) return new Number(parseFloat(x.value));
+  throw 'float() expects a number or string';
+}
+
+export function str(x: Value): String {
+  return new String(x.toString());
+}
+
+export function round(x: Value, nearest: Value = new Number(1)) {
+  if (x instanceof Number && nearest instanceof Number)
+    return new Number(Math.round(x.value * nearest.value) / nearest.value);
+  throw 'round() expects a number';
 }
 
 export function len(value?: Value) {

@@ -30,7 +30,7 @@ function runPrompt(): void {
     if (line === null) continue;
     const value = run(line, true);
     if (!value) continue;
-    console.log(`< ${value}`);
+    console.log(`< ${value.toPrint()}`);
   }
 }
 

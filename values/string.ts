@@ -1,5 +1,3 @@
-import { green } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
-
 import Boolean from './boolean.ts';
 import List from './list.ts';
 import Number from './number.ts';
@@ -12,9 +10,6 @@ export default class String extends Value {
 
   toString(): string {
     return this.value;
-  }
-  toPrint(): string {
-    return green(`"${this.value}"`);
   }
 
   '[]'(other: Value) {

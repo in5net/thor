@@ -82,6 +82,7 @@ export const keywords = [
   'else',
   'for',
   'while',
+  'loop',
   'fn',
   'return',
   'import'
