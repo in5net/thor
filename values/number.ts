@@ -1,3 +1,5 @@
+import { rgb24 } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
+
 import Boolean from './boolean.ts';
 import Complex from './complex.ts';
 import Range from './range.ts';
@@ -14,6 +16,9 @@ export default class Number extends Value {
 
   toString() {
     return this.value.toString();
+  }
+  toPrint(): string {
+    return rgb24(this.toString(), 0xffff00);
   }
 
   operatorFunc(func: Function, op: BinaryOp): Function {

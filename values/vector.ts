@@ -1,3 +1,5 @@
+import { rgb24 } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
+
 import Boolean from './boolean.ts';
 import List from './list.ts';
 import Number from './number.ts';
@@ -8,7 +10,12 @@ export default class Vector extends Value {
     super();
   }
 
-  toString() {
+  toString(): string {
+    return `⟨${this.components
+      .map(x => rgb24(x.toString(), 0xffff00))
+      .join(', ')}⟩`;
+  }
+  toPrint(): string {
     return `vec${this.components.length} <${this.components.join(', ')}>`;
   }
 

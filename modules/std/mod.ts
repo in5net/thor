@@ -14,7 +14,7 @@ export const Φ = new Number((1 + Math.sqrt(5)) / 2);
 export const PHI = Φ;
 
 export function print(...messages: Value[]) {
-  console.log(messages.join(' '));
+  console.log(messages.map(message => message.toPrint()).join(' '));
   return new Number(0);
 }
 

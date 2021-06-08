@@ -8,7 +8,7 @@ export default class Complex extends Value {
     super();
   }
 
-  toString() {
+  toString(): string {
     return `${this.r} + ${this.i}i`;
   }
 

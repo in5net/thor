@@ -6,7 +6,7 @@ import {
   white,
   yellow
 } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
-import Token, {
+import {
   BinaryOp,
   IdentifierOp,
   LeftGrouping,
