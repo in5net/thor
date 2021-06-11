@@ -1,1 +1,6 @@
-loop: print("looping forever...")
+m = [
+    1 0 0
+    0 1 0
+    0 0 1
+]
+print(m)

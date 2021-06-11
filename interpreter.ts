@@ -12,6 +12,7 @@ import Node, {
   ImportNode,
   ListNode,
   LoopNode,
+  MatNode,
   NumberNode,
   PropAccessNode,
   ReturnNode,
@@ -26,6 +27,7 @@ import Value, {
   Boolean,
   Function,
   List,
+  Matrix,
   Number,
   Range,
   String,
@@ -48,6 +50,7 @@ type NodeName =
   | 'IfNode'
   | 'ListNode'
   | 'VecNode'
+  | 'MatNode'
   | 'NumberNode'
   | 'ReturnNode'
   | 'StringNode'
@@ -101,7 +104,7 @@ export default class Interpreter implements ExecuteIndex {
     return new List(items);
   }
 
-  visitVecNode({ nodes }: VecNode, scope: Scope): Value {
+  visitVecNode({ nodes }: VecNode, scope: Scope): Vector {
     const components: number[] = [];
     for (const node of nodes) {
       let value = this.visit(node, scope);
@@ -109,6 +112,20 @@ export default class Interpreter implements ExecuteIndex {
       components.push(value.value);
     }
     return new Vector(components);
+  }
+
+  visitMatNode({ nodes }: MatNode, scope: Scope): Matrix {
+    const data: number[][] = [];
+    for (const nodeRow of nodes) {
+      const row: number[] = [];
+      for (const node of nodeRow) {
+        let value = this.visit(node, scope);
+        if (!(value instanceof Number)) throw `Matrices can only take numbers`;
+        row.push(value.value);
+      }
+      data.push(row);
+    }
+    return new Matrix(data);
   }
 
   visitIdentifierNode({ name }: IdentifierNode, scope: Scope): Value {

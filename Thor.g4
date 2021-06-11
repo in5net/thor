@@ -41,11 +41,15 @@ atom:
 	| '⌊' expr '⌋'
 	| '⌈' expr '⌉'
 	| vec_expr
+	| mat_expr
 	| if_expr
 	| for_expr
 	| fn_expr;
 
 vec_expr: '⟨' list '⟩';
+
+mat_expr: '[' mat_row+ ']';
+mat_row: expr+ '\n';
 
 if_expr: 'if' expr (':' statement | block);
 

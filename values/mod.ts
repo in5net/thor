@@ -9,4 +9,5 @@ export * from './function.ts';
 export { default as Range } from './range.ts';
 
 export { default as Vector } from './vector.ts';
+export { default as Matrix } from './matrix.ts';
 export { default as Complex } from './complex.ts';

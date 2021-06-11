@@ -64,6 +64,14 @@ export class VecNode implements Node {
   }
 }
 
+export class MatNode implements Node {
+  constructor(public nodes: Node[][]) {}
+
+  toString() {
+    return `mat`;
+  }
+}
+
 export class IdentifierNode implements Node {
   constructor(public name: string) {}
 

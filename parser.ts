@@ -12,6 +12,7 @@ import Node, {
   ImportNode,
   ListNode,
   LoopNode,
+  MatNode,
   NumberNode,
   PropAccessNode,
   ReturnNode,
@@ -238,7 +239,7 @@ export default class Parser {
     // factor (('*' | '∙' | '×' | '/' | '%') factor)* | NUMBER (!BINARY_OP)? term
     if (
       this.token.is('number') &&
-      !['newline', 'eof'].includes(this.nextToken.type) &&
+      !['number', 'newline', 'eof'].includes(this.nextToken.type) &&
       !this.nextToken.is('operator') &&
       !Object.values(groupings).includes(
         this.nextToken.value as RightGrouping
@@ -325,7 +326,7 @@ export default class Parser {
       if (this.token.is('operator', '=')) {
         this.advance();
 
-        const body = this.statement();
+        const body = this.expr();
 
         return new FuncDefNode(
           atom.name,
@@ -425,14 +426,36 @@ export default class Parser {
     return rtn;
   }
 
-  listExpr(): ListNode {
+  listExpr(): ListNode | MatNode {
     // '[' (expr (',' expr)*)? ']'
     if (!this.token.is('grouping', '[')) return this.expect("'['");
     this.advance();
 
-    const nodes = this.list(']');
+    if (this.token.is('newline')) this.advance();
 
-    return new ListNode(nodes);
+    const nodes: Node[][] = [];
+
+    while (!this.token.is('grouping', ']')) {
+      const row: Node[] = [];
+      // @ts-ignore
+      while (!this.token.is('newline')) {
+        row.push(this.expr());
+        // @ts-ignore
+        if (this.token.is('operator', ',')) this.advance();
+        // @ts-ignore
+        if (this.token.is('grouping', ']')) break;
+      }
+      // @ts-ignore
+      if (this.token.is('newline')) this.advance();
+
+      nodes.push(row);
+    }
+
+    if (!this.token.is('grouping', ']')) this.expect("']'");
+    this.advance();
+
+    if (nodes.length <= 1) return new ListNode(nodes[0]);
+    return new MatNode(nodes);
   }
 
   vecExpr(): ListNode {

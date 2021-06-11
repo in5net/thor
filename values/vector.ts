@@ -6,12 +6,15 @@ import Number from './number.ts';
 import Value from './value.ts';
 
 export default class Vector extends Value {
-  constructor(public components: number[]) {
+  components: Float64Array;
+
+  constructor(components: number[] | Float64Array) {
     super();
+    this.components = new Float64Array(components);
   }
 
   toString(): string {
-    return `⟨${this.components
+    return `⟨${[...this.components]
       .map(x => rgb24(x.toString(), 0xffff00))
       .join(', ')}⟩`;
   }
