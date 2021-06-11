@@ -154,15 +154,6 @@ export function minmax(a: Value, b: Value): [min: Number, max: Number] {
   ];
 }
 
-export function gcd(av: Value, bv: Value): Number {
-  if (!(av instanceof Number) || !(bv instanceof Number))
-    throw 'gcd() expects 2 numbers';
-  let a = av.value;
-  let b = bv.value;
-  while (b !== 0) [a, b] = [b, a % b];
-  return new Number(a);
-}
-
 function _min(array: Value[]): Number {
   let min = Infinity;
   for (const value of array) {
@@ -177,4 +168,18 @@ function _max(array: Value[]): Number {
     if (value instanceof Number && value.value > max) max = value.value;
   }
   return new Number(max);
+}
+
+export function gcd(av: Value, bv: Value): Number {
+  if (!(av instanceof Number) || !(bv instanceof Number))
+    throw 'gcd() expects 2 numbers';
+  let a = av.value;
+  let b = bv.value;
+  while (b !== 0) [a, b] = [b, a % b];
+  return new Number(a);
+}
+
+export function σ(x: Value): Number {
+  if (!(x instanceof Number)) throw 'σ() expects a number';
+  return new Number(1 / (1 + Math.exp(-x.value)));
 }

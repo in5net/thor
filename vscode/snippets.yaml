@@ -7,6 +7,9 @@ Tau:
 Phi:
   prefix: [phi, golden]
   body: Φ
+Sigma:
+  prefix: [sigma, sigmoid]
+  body: σ
 Infinity:
   prefix: inf
   body: ∞

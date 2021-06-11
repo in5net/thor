@@ -96,4 +96,17 @@ export default class Matrix extends Value {
       return new Boolean(true);
     }
   }
+
+  '!='(other: Value) {
+    const { data, rows, cols } = this;
+    if (other instanceof Matrix) {
+      if (rows !== other.rows || cols !== other.cols) return new Boolean(true);
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          if (data[i][j] === other.data[i][j]) return new Boolean(true);
+        }
+      }
+      return new Boolean(false);
+    }
+  }
 }
