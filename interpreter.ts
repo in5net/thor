@@ -34,8 +34,7 @@ import Value, {
   Vector
 } from './values/mod.ts';
 
-import * as std from './modules/std/mod.ts';
-import * as physics from './modules/physics/mod.ts';
+import { std, physics, fs } from './modules/mod.ts';
 
 type NodeName =
   | 'AssignmentNode'
@@ -312,6 +311,9 @@ export default class Interpreter implements ExecuteIndex {
         break;
       case 'physics':
         mod = physics;
+        break;
+      case 'fs':
+        mod = fs;
         break;
     }
     Object.entries(mod).forEach(([name, value]) => {
