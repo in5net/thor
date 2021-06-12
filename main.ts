@@ -1,3 +1,5 @@
+import { red } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
+
 import Interpreter, { Error as RTError } from './interpreter.ts';
 import Lexer, { Error as CharError } from './lexer.ts';
 import { ImportNode } from './nodes.ts';
@@ -65,24 +67,21 @@ export default function run(text: string, repl = false): Value | void {
     const value = interpreter.visit(repl ? ast.nodes[0] : ast, globalScope);
     return value;
   } catch (e) {
-    if (e instanceof CharError) {
+    if (
+      e instanceof CharError ||
+      e instanceof SyntaxError ||
+      e instanceof RTError
+    ) {
+      let title: string;
+      if (e instanceof CharError) title = 'Char Error:';
+      else if (e instanceof SyntaxError) title = 'Syntax Error:';
+      else title = 'Runtime Error:';
+      console.error(red(title));
+
       const { message, start, end } = e;
       const text = Position.textBetween(start, end);
-      console.error('Char Error:');
       console.error(text);
-      console.error(message);
-    } else if (e instanceof SyntaxError) {
-      const { message, start, end } = e;
-      const text = Position.textBetween(start, end);
-      console.error('Syntax Error:');
-      console.error(text);
-      console.error(message);
-    } else if (e instanceof RTError) {
-      const { message, start, end } = e;
-      const text = Position.textBetween(start, end);
-      console.error('Runtime Error:');
-      console.error(text);
-      console.error(message);
+      console.error(red(message));
     } else {
       console.error('Unknown Error:');
       console.error(e);

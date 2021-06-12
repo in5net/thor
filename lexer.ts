@@ -129,13 +129,16 @@ export default class Lexer {
 
         const tokens: Token[] = [];
         let token = this.nextToken();
-        while (!this.eof() && (this.char as string) !== '}') {
+        while (!this.eof() && !['}', '"'].includes(this.char as string)) {
           tokens.push(token);
           token = this.nextToken();
         }
         tokens.push(token);
         if ((this.char as string) !== '}')
-          this.error("Expected '}' in string", start);
+          this.error(
+            "When putting expressions in strings, you must wrap the expression in curly braces '{}'. It seems like you forgot the ending '}",
+            start
+          );
         fragments.push(tokens);
       } else str += this.char;
 
@@ -146,7 +149,11 @@ export default class Lexer {
         new Token('string', str, fragmentStart, this.position.copy())
       );
 
-    if (this.char !== '"') this.error(`Expected '"'`, start);
+    if (this.char !== '"')
+      this.error(
+        `Strings must start and end with '"'. It seems like you forgot the ending '"'.`,
+        start
+      );
     this.advance();
     return new Token('string', fragments, start, this.position.copy());
   }
