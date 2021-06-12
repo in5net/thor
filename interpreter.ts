@@ -1,5 +1,6 @@
 import Node, {
   AssignmentNode,
+  AwaitNode,
   BinaryOpNode,
   BooleanNode,
   DeclarationNode,
@@ -26,8 +27,10 @@ import Token, { GroupingOp } from './token.ts';
 import Value, {
   Boolean,
   Function,
+  Future,
   List,
   Matrix,
+  None,
   Number,
   Range,
   String,
@@ -53,6 +56,7 @@ type NodeName =
   | 'MatNode'
   | 'NumberNode'
   | 'ReturnNode'
+  | 'AwaitNode'
   | 'StringNode'
   | 'UnaryOpNode'
   | 'WhileNode'
@@ -60,17 +64,18 @@ type NodeName =
   | 'PropAccessNode'
   | 'ImportNode';
 type NodeIndex = `visit${NodeName}`;
+type VisitFunc = (node: any, scope: Scope) => Promise<Value>;
 type ExecuteIndex = {
-  [index in NodeIndex]: (node: any, scope: Scope) => Value | void;
+  [index in NodeIndex]: VisitFunc;
 };
 
 export default class Interpreter implements ExecuteIndex {
   returnValue: Value | undefined;
 
-  visit(node: Node, scope: Scope): Value {
+  visit(node: Node, scope: Scope): Promise<Value> {
     const methodName = `visit${node.constructor.name}`;
     // @ts-ignore
-    const method = this[methodName] as (node: Node, scope: Scope) => Value;
+    const method = this[methodName] as VisitFunc;
     return method.call(this, node, scope);
   }
 
@@ -78,54 +83,65 @@ export default class Interpreter implements ExecuteIndex {
     throw new Error(message, start, end);
   }
 
-  visitNumberNode({ token: { value } }: NumberNode, scope: Scope): Number {
+  async visitNumberNode(
+    { token: { value } }: NumberNode,
+    scope: Scope
+  ): Promise<Number> {
     return new Number(value);
   }
 
-  visitBooleanNode({ token: { value } }: BooleanNode, scope: Scope): Boolean {
+  async visitBooleanNode(
+    { token: { value } }: BooleanNode,
+    scope: Scope
+  ): Promise<Boolean> {
     return new Boolean(value);
   }
 
-  visitStringNode({ fragments }: StringNode, scope: Scope): String {
+  async visitStringNode(
+    { fragments }: StringNode,
+    scope: Scope
+  ): Promise<String> {
     return new String(
       fragments instanceof Token
         ? fragments.value
-        : fragments
-            .map(fragment =>
-              fragment instanceof Token
-                ? fragment.value
-                : this.visit(fragment, scope)
+        : (
+            await Promise.all(
+              fragments.map(async fragment =>
+                fragment instanceof Token
+                  ? fragment.value
+                  : await this.visit(fragment, scope)
+              )
             )
-            .join('')
+          ).join('')
     );
   }
 
-  visitListNode({ nodes }: ListNode, scope: Scope): Value {
+  async visitListNode({ nodes }: ListNode, scope: Scope): Promise<Value> {
     const items = [];
     for (const node of nodes) {
-      let value = this.visit(node, scope);
+      let value = await this.visit(node, scope);
       if (this.returnValue) return this.returnValue;
       items.push(value);
     }
     return new List(items);
   }
 
-  visitVecNode({ nodes }: VecNode, scope: Scope): Vector {
+  async visitVecNode({ nodes }: VecNode, scope: Scope): Promise<Vector> {
     const components: number[] = [];
     for (const node of nodes) {
-      let value = this.visit(node, scope);
+      let value = await this.visit(node, scope);
       if (!(value instanceof Number)) throw `Vectors can only take numbers`;
       components.push(value.value);
     }
     return new Vector(components);
   }
 
-  visitMatNode({ nodes }: MatNode, scope: Scope): Matrix {
+  async visitMatNode({ nodes }: MatNode, scope: Scope): Promise<Matrix> {
     const data: number[][] = [];
     for (const nodeRow of nodes) {
       const row: number[] = [];
       for (const node of nodeRow) {
-        let value = this.visit(node, scope);
+        const value = await this.visit(node, scope);
         if (!(value instanceof Number)) throw `Matrices can only take numbers`;
         row.push(value.value);
       }
@@ -134,36 +150,36 @@ export default class Interpreter implements ExecuteIndex {
     return new Matrix(data);
   }
 
-  visitIdentifierNode(
+  async visitIdentifierNode(
     { token: { value: name, start, end } }: IdentifierNode,
     scope: Scope
-  ): Value {
+  ): Promise<Value> {
     const value = scope.symbolTable.get(name);
     if (!value) this.error(`'${name}' is not defined`, start, end);
     return value;
   }
 
-  visitDeclarationNode(
+  async visitDeclarationNode(
     { identifier: { value: identifier }, node }: DeclarationNode,
     scope: Scope
-  ): Value {
-    const value = this.visit(node, scope);
+  ): Promise<Value> {
+    const value = await this.visit(node, scope);
     scope.symbolTable.add(identifier, value);
     return value;
   }
 
-  visitAssignmentNode(
+  async visitAssignmentNode(
     { identifier, operator: { value: operator }, node }: AssignmentNode,
     scope: Scope
-  ): Value {
+  ): Promise<Value> {
     let returnValue: Value | undefined;
-    const right = node ? this.visit(node, scope) : undefined;
+    const right = node ? await this.visit(node, scope) : undefined;
     if (operator === '=') {
       scope.symbolTable.set(identifier.value, right!);
       return right!;
     }
 
-    const left = this.visit(new IdentifierNode(identifier), scope);
+    const left = await this.visit(new IdentifierNode(identifier), scope);
 
     switch (operator) {
       case '+=': {
@@ -211,11 +227,11 @@ export default class Interpreter implements ExecuteIndex {
     return (right || returnValue) as Value;
   }
 
-  visitUnaryOpNode(
+  async visitUnaryOpNode(
     { node, operator: { value: operator } }: UnaryOpNode,
     scope: Scope
-  ): Value {
-    const value = this.visit(node, scope);
+  ): Promise<Value> {
+    const value = await this.visit(node, scope);
 
     const func = value[operator];
     if (!func) Value.illegalUnaryOp(value, operator);
@@ -224,12 +240,12 @@ export default class Interpreter implements ExecuteIndex {
     return returnValue;
   }
 
-  visitBinaryOpNode(
+  async visitBinaryOpNode(
     { left, operator, right }: BinaryOpNode,
     scope: Scope
-  ): Value {
-    const leftValue = this.visit(left, scope);
-    const rightValue = this.visit(right, scope);
+  ): Promise<Value> {
+    const leftValue = await this.visit(left, scope);
+    const rightValue = await this.visit(right, scope);
 
     const func = leftValue[operator];
     if (!func) Value.illegalBinaryOp(leftValue, operator, rightValue);
@@ -238,43 +254,57 @@ export default class Interpreter implements ExecuteIndex {
     return value;
   }
 
-  visitIfNode({ condition, body, elseCase }: IfNode, scope: Scope) {
+  async visitIfNode(
+    { condition, body, elseCase }: IfNode,
+    scope: Scope
+  ): Promise<Value> {
     // @ts-ignore
     if ((this.visit(condition, scope) as Number | Boolean).value)
-      this.visit(body, scope);
-    else if (elseCase) this.visit(elseCase, scope);
+      return this.visit(body, scope);
+    else if (elseCase) return this.visit(elseCase, scope);
+    return new None();
   }
 
-  visitForNode({ identifier, iterable, body }: ForNode, scope: Scope) {
+  async visitForNode(
+    { identifier, iterable, body }: ForNode,
+    scope: Scope
+  ): Promise<None> {
     const iterableValue = this.visit(iterable, scope);
     if (iterableValue instanceof List) {
       for (const item of iterableValue.items) {
         scope.symbolTable.set(identifier.value, item);
-        this.visit(body, scope);
+        await this.visit(body, scope);
       }
     } else if (iterableValue instanceof Range) {
       const { from, to, step } = iterableValue;
       for (let i = from; i < to; i += step) {
         scope.symbolTable.set(identifier.value, new Number(i));
-        this.visit(body, scope);
+        await this.visit(body, scope);
       }
     }
+    return new None();
   }
 
-  visitWhileNode({ condition, body }: WhileNode, scope: Scope) {
+  async visitWhileNode(
+    { condition, body }: WhileNode,
+    scope: Scope
+  ): Promise<None> {
     // @ts-ignore
     while ((this.visit(condition, scope) as Number | Boolean).value)
-      this.visit(body, scope);
+      await this.visit(body, scope);
+
+    return new None();
   }
 
-  visitLoopNode({ body }: LoopNode, scope: Scope) {
-    while (1) this.visit(body, scope);
+  async visitLoopNode({ body }: LoopNode, scope: Scope): Promise<None> {
+    while (1) await this.visit(body, scope);
+    return new None();
   }
 
-  visitFuncDefNode(
+  async visitFuncDefNode(
     { name: { value: name }, argNames, body }: FuncDefNode,
     scope: Scope
-  ): Function {
+  ): Promise<Function> {
     const value = new Function(
       name,
       argNames.map(arg => arg.value),
@@ -284,32 +314,47 @@ export default class Interpreter implements ExecuteIndex {
     return value;
   }
 
-  visitFuncCallNode(
+  async visitFuncCallNode(
     { name: { value: name, start, end }, args }: FuncCallNode,
     scope: Scope
-  ): Value {
+  ): Promise<Value> {
     const func = scope.symbolTable.get(name) as
       | Function
       | ((...values: Value[]) => Value)
       | undefined;
     if (!func) this.error(`${name} is not a function`, start, end);
-    const argValues = args.map(arg => this.visit(arg, scope));
+    const argValues = await Promise.all(
+      args.map(arg => this.visit(arg, scope))
+    );
     const value =
-      func instanceof Function ? func.execute(argValues) : func(...argValues);
+      func instanceof Function
+        ? await func.execute(argValues)
+        : func(...argValues);
     return value;
   }
 
-  visitReturnNode({ node }: ReturnNode, scope: Scope): Value {
-    const value = this.visit(node, scope);
+  async visitReturnNode({ node }: ReturnNode, scope: Scope): Promise<Value> {
+    const value = await this.visit(node, scope);
     this.returnValue = value;
-    return value ?? new Number(0);
+    return value || new None();
   }
 
-  visitGroupingNode(
+  async visitAwaitNode(
+    { node, start, end }: AwaitNode,
+    scope: Scope
+  ): Promise<Value> {
+    const future = await this.visit(node, scope);
+    if (!(future instanceof Future))
+      this.error('You can only await futures', start, end);
+    const value: Value = await future.promise;
+    return value;
+  }
+
+  async visitGroupingNode(
     { node, groupings: [left, right] }: GroupingNode,
     scope: Scope
-  ): Value {
-    const value = this.visit(node, scope);
+  ): Promise<Value> {
+    const value = await this.visit(node, scope);
     const operator = (left.value + right.value) as Exclude<GroupingOp, '[]'>;
 
     const func = value[operator];
@@ -319,16 +364,19 @@ export default class Interpreter implements ExecuteIndex {
     return returnValue;
   }
 
-  visitPropAccessNode({ node, prop }: PropAccessNode, scope: Scope): Value {
-    const value = this.visit(node, scope);
-    const propValue = this.visit(prop, scope);
+  async visitPropAccessNode(
+    { node, prop }: PropAccessNode,
+    scope: Scope
+  ): Promise<Value> {
+    const value = await this.visit(node, scope);
+    const propValue = await this.visit(prop, scope);
     return value['[]'](propValue) as unknown as Value;
   }
 
-  visitImportNode(
+  async visitImportNode(
     { identifier: { value, start, end } }: ImportNode,
     scope: Scope
-  ): Value {
+  ): Promise<Value> {
     let mod: any;
     switch (value) {
       case 'std':

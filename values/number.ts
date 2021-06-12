@@ -23,7 +23,8 @@ export default class Number extends Value {
 
   operatorFunc(func: Function, op: BinaryOp): Function {
     const opFunc = new Function(func.name, func.argNames, func.body);
-    opFunc.execute = (args: Value[]) => this[op](func.execute(args)) as Value;
+    opFunc.execute = async (args: Value[]) =>
+      this[op](await func.execute(args)) as Value;
     return opFunc;
   }
 
@@ -67,14 +68,12 @@ export default class Number extends Value {
 
   '%'(other: Value) {
     if (other instanceof Number) return new Number(this.value % other.value);
-    if (other instanceof Function)
-      return (...args: Value[]) => this['%'](other.execute(args));
+    if (other instanceof Function) return this.operatorFunc(other, '%');
   }
 
   '^'(other: Value) {
     if (other instanceof Number) return new Number(this.value ** other.value);
-    if (other instanceof Function)
-      return (...args: Value[]) => this['^'](other.execute(args));
+    if (other instanceof Function) return this.operatorFunc(other, '^');
   }
 
   '√'() {

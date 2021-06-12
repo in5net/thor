@@ -18,28 +18,28 @@ else {
   runFile(Deno.args[0]);
 }
 
-function runFile(path: string): void {
+async function runFile(path: string): Promise<void> {
   const text = Deno.readTextFileSync(path);
   const start = performance.now();
-  run(text);
+  await run(text);
   const end = performance.now();
   const ms = end - start;
   const s = ms / 1000;
   console.log(`Ran in ${s.toFixed(3)}s`);
 }
 
-function runPrompt(): void {
+async function runPrompt(): Promise<void> {
   console.log('Thor 🐶');
   while (true) {
     const line = prompt('>');
     if (line === null) continue;
-    const value = run(line, true);
+    const value = await run(line, true);
     if (!value) continue;
     console.log(value.toPrint());
   }
 }
 
-export default function run(text: string, repl = false): Value | void {
+async function run(text: string, repl = false): Promise<Value | void> {
   try {
     const lexer = new Lexer(text);
     const tokens = lexer.lex();
@@ -65,7 +65,10 @@ export default function run(text: string, repl = false): Value | void {
       ),
       globalScope
     );
-    const value = interpreter.visit(repl ? ast.nodes[0] : ast, globalScope);
+    const value = await interpreter.visit(
+      repl ? ast.nodes[0] : ast,
+      globalScope
+    );
     return value;
   } catch (e) {
     if (

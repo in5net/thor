@@ -87,6 +87,7 @@ export const keywords = [
   'loop',
   'fn',
   'return',
+  'await',
   'import'
 ] as const;
 

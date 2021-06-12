@@ -72,6 +72,16 @@ export class StringNode extends Node {
   }
 }
 
+export class AwaitNode extends Node {
+  constructor(readonly node: Node, start: Position) {
+    super(start, node.end);
+  }
+
+  toString() {
+    return `(await ${this.node})`;
+  }
+}
+
 export class ListNode extends Node {
   constructor(readonly nodes: Node[], start: Position, end: Position) {
     super(start, end);

@@ -31,13 +31,13 @@ export class Function extends BaseFunction {
     super(name);
   }
 
-  execute(args: Value[]): Value {
+  async execute(args: Value[]): Promise<Value> {
     const interpreter = new Interpreter();
     const scope = this.generateScope();
 
     this.populateArgs(this.argNames, args, scope);
 
-    const value = interpreter.visit(this.body, scope);
+    const value = await interpreter.visit(this.body, scope);
     return value;
   }
 }

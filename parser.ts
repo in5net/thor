@@ -1,5 +1,6 @@
 import Node, {
   AssignmentNode,
+  AwaitNode,
   BinaryOpNode,
   BooleanNode,
   DeclarationNode,
@@ -398,7 +399,8 @@ export default class Parser {
       this.advance();
 
       rtn = expr;
-    } else if (token.is('keyword', 'if')) rtn = this.ifExpr();
+    } else if (token.is('keyword', 'await')) rtn = this.awaitExpr();
+    else if (token.is('keyword', 'if')) rtn = this.ifExpr();
     else if (token.is('keyword', 'for')) rtn = this.forExpr();
     else if (token.is('keyword', 'while')) rtn = this.whileExpr();
     else if (token.is('keyword', 'loop')) rtn = this.loopExpr();
@@ -501,6 +503,17 @@ export default class Parser {
     const nodes = this.list('⟩');
 
     return new VecNode(nodes, start, this.token.end);
+  }
+
+  awaitExpr(): AwaitNode {
+    const { start } = this.token;
+
+    if (!this.token.is('keyword', 'await')) this.expect("'await'", start);
+    this.advance();
+
+    const body = this.expr();
+
+    return new AwaitNode(body, start);
   }
 
   ifExpr(): IfNode {

@@ -1,7 +1,7 @@
-import Value, { String } from '../../values/mod.ts';
+import Value, { Future, String } from '../../values/mod.ts';
 
-export function readfile(path: Value): String {
+export function readfile(path: Value): Future<String> {
   if (!(path instanceof String)) throw 'readfile() expects a string';
-  const data = Deno.readTextFileSync(path.value);
-  return new String(data);
+  const data = Deno.readTextFile(path.value).then(str => new String(str));
+  return new Future(data);
 }

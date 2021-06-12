@@ -7,7 +7,10 @@ export { default as String } from './string.ts';
 export { default as List } from './list.ts';
 export * from './function.ts';
 export { default as Range } from './range.ts';
+export { default as Future } from './future.ts';
 
 export { default as Vector } from './vector.ts';
 export { default as Matrix } from './matrix.ts';
 export { default as Complex } from './complex.ts';
+
+export { default as None } from './none.ts';
