@@ -29,6 +29,7 @@ function runFile(path: string): void {
 }
 
 function runPrompt(): void {
+  console.log('Thor 🐶');
   while (true) {
     const line = prompt('>');
     if (line === null) continue;
@@ -86,6 +87,6 @@ export default function run(text: string, repl = false): Value | void {
       console.error('Unknown Error:');
       console.error(e);
     }
-    Deno.exit(1);
+    if (!repl) Deno.exit(1);
   }
 }

@@ -90,10 +90,10 @@ export default class Lexer {
 
   number(): Token<'number'> {
     const start = this.position.copy();
-    this.advance();
 
     let str = this.char;
     let decimals = 0;
+    this.advance();
 
     while (DIGITS.test(this.char) || this.char === '.') {
       if (this.char === '.' && ++decimals > 1) break;
@@ -159,8 +159,9 @@ export default class Lexer {
   }
 
   word(): Token<'keyword' | 'boolean' | 'operator' | 'identifier'> {
-    let str = this.char;
     const start = this.position.copy();
+
+    let str = this.char;
     this.advance();
 
     while ([LETTERS, DIGITS].some(regex => regex.test(this.char))) {
@@ -179,8 +180,9 @@ export default class Lexer {
   }
 
   operator(): Token<'operator'> {
-    let str = this.char;
     const start = this.position.copy();
+
+    let str = this.char;
     this.advance();
 
     if (['=', '+', '-'].includes(this.char)) {
