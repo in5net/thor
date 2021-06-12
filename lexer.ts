@@ -1,3 +1,4 @@
+import Position from './position.ts';
 import Token, {
   Boolean,
   booleans,
@@ -24,11 +25,17 @@ const ESCAPE_CHARS: Record<string, string | undefined> = {
 const EOF = '<eof>';
 
 export default class Lexer {
-  index = -1;
-  char!: string;
+  index = 0;
+  char: string;
+  position: Position;
 
   constructor(private text: string) {
-    this.advance();
+    this.char = text[0] || EOF;
+    this.position = new Position(text);
+  }
+
+  error(message: string, start: Position): never {
+    throw new Error(message, start, this.position.copy());
   }
 
   lex(): Token[] {
@@ -48,6 +55,7 @@ export default class Lexer {
 
   advance(): void {
     this.char = this.text[++this.index] || EOF;
+    this.position.advance();
   }
 
   get nextChar(): string {
@@ -59,32 +67,33 @@ export default class Lexer {
       const { char } = this;
       if (WHITESPACE.test(char)) this.advance();
       else if (/[\n;]/.test(char)) {
+        const start = this.position.copy();
         this.advance();
-        return new Token('newline', undefined);
+        return new Token('newline', undefined, start, this.position.copy());
       } else if (DIGITS.test(char) || char === '.') return this.number();
       else if (char === '"') return this.string();
       else if (LETTERS.test(char)) return this.word();
       else if (char === '-' && this.nextChar === '>') {
+        const start = this.position.copy();
         this.advance();
         this.advance();
-        return new Token('arrow', undefined);
+        return new Token('arrow', undefined, start, this.position.copy());
       } else if (operators.includes(char as Operator)) return this.operator();
-      else if (
-        Object.entries(groupings)
-          .flat()
-          .includes(char as Grouping)
-      ) {
+      else if (Object.entries(groupings).flat().includes(char)) {
+        const start = this.position.copy();
         this.advance();
-        return new Token('grouping', char);
-      } else throw `Illegal character '${char}'`;
+        return new Token('grouping', char, start, this.position.copy());
+      } else this.error(`Illegal character '${char}'`, this.position.copy());
     }
-    return new Token('eof', undefined);
+    return Token.EOF;
   }
 
   number(): Token<'number'> {
+    const start = this.position.copy();
+    this.advance();
+
     let str = this.char;
     let decimals = 0;
-    this.advance();
 
     while (DIGITS.test(this.char) || this.char === '.') {
       if (this.char === '.' && ++decimals > 1) break;
@@ -93,24 +102,30 @@ export default class Lexer {
       this.advance();
     }
 
-    return new Token('number', parseFloat(str));
+    return new Token('number', parseFloat(str), start, this.position.copy());
   }
 
   string(): Token<'string'> {
+    const start = this.position.copy();
     this.advance();
+
     let fragments: String = [];
     let str = '';
     let escapeCharacter = false;
 
+    let fragmentStart = this.position.copy();
     while (!this.eof() && (this.char !== '"' || escapeCharacter)) {
       if (escapeCharacter) {
         str += ESCAPE_CHARS[this.char] || this.char;
         escapeCharacter = false;
       } else if (this.char === '\\') escapeCharacter = true;
       else if (this.char === '{') {
-        fragments.push(str);
+        fragments.push(
+          new Token('string', str, fragmentStart, this.position.copy())
+        );
         str = '';
         this.advance();
+        fragmentStart = this.position.copy();
 
         const tokens: Token[] = [];
         let token = this.nextToken();
@@ -119,20 +134,26 @@ export default class Lexer {
           token = this.nextToken();
         }
         tokens.push(token);
-        if ((this.char as string) !== '}') throw "Expected '}' in string";
+        if ((this.char as string) !== '}')
+          this.error("Expected '}' in string", start);
         fragments.push(tokens);
       } else str += this.char;
 
       this.advance();
     }
-    if (str) fragments.push(str);
+    if (str)
+      fragments.push(
+        new Token('string', str, fragmentStart, this.position.copy())
+      );
 
+    if (this.char !== '"') this.error(`Expected '"'`, start);
     this.advance();
-    return new Token('string', fragments);
+    return new Token('string', fragments, start, this.position.copy());
   }
 
   word(): Token<'keyword' | 'boolean' | 'operator' | 'identifier'> {
     let str = this.char;
+    const start = this.position.copy();
     this.advance();
 
     while ([LETTERS, DIGITS].some(regex => regex.test(this.char))) {
@@ -140,16 +161,19 @@ export default class Lexer {
       this.advance();
     }
 
-    if (keywords.includes(str as Keyword)) return new Token('keyword', str);
+    const end = this.position.copy();
+    if (keywords.includes(str as Keyword))
+      return new Token('keyword', str, start, end);
     if (booleans.includes(str as Boolean))
-      return new Token('boolean', str === 'true');
+      return new Token('boolean', str === 'true', start, end);
     if (operators.includes(str as Operator))
-      return new Token('operator', str as Operator);
-    return new Token('identifier', str);
+      return new Token('operator', str as Operator, start, end);
+    return new Token('identifier', str, start, end);
   }
 
   operator(): Token<'operator'> {
     let str = this.char;
+    const start = this.position.copy();
     this.advance();
 
     if (['=', '+', '-'].includes(this.char)) {
@@ -157,6 +181,14 @@ export default class Lexer {
       this.advance();
     }
 
-    return new Token('operator', str as Operator);
+    return new Token('operator', str as Operator, start, this.position.copy());
   }
+}
+
+export class Error {
+  constructor(
+    readonly message: string,
+    readonly start: Position,
+    readonly end: Position
+  ) {}
 }

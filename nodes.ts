@@ -6,7 +6,8 @@ import {
   white,
   yellow
 } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
-import {
+import Position from './position.ts';
+import Token, {
   BinaryOp,
   IdentifierOp,
   LeftGrouping,
@@ -15,39 +16,66 @@ import {
 } from './token.ts';
 
 export default abstract class Node {
+  constructor(readonly start: Position, readonly end: Position) {}
+
   abstract toString(): string;
 }
 
-export class NumberNode implements Node {
-  constructor(public value: number) {}
+export class NumberNode extends Node {
+  constructor(readonly token: Token<'number'>) {
+    super(token.start, token.end);
+  }
 
   toString() {
-    return rgb24(this.value.toString(), 0xffa01c);
+    return rgb24(this.token.value.toString(), 0xffa01c);
   }
 }
 
-export class BooleanNode implements Node {
-  constructor(public value: boolean) {}
+export class BooleanNode extends Node {
+  constructor(readonly token: Token<'boolean'>) {
+    super(token.start, token.end);
+  }
 
   toString() {
-    return this.value.toString();
+    return this.token.value.toString();
   }
 }
 
-export class StringNode implements Node {
-  constructor(public fragments: (string | Node)[]) {}
+export class StringNode extends Node {
+  constructor(
+    readonly fragments:
+      | Token<'string', string>
+      | (Token<'string', string> | Node)[]
+  ) {
+    super(
+      (fragments instanceof Token ? fragments : fragments[0]).start,
+      (fragments instanceof Token ? fragments : fragments[fragments.length - 1])
+        .end
+    );
+  }
 
   toString() {
+    const { fragments } = this;
     return green(
-      `"${this.fragments
-        .map(x => (typeof x === 'string' ? x : white(`{${x}}`)))
-        .join('')}"`
+      `"${
+        fragments instanceof Token
+          ? fragments.value
+          : fragments
+              .map(fragment =>
+                fragment instanceof Token
+                  ? fragment.value
+                  : white(`{${fragment}}`)
+              )
+              .join('')
+      }"`
     );
   }
 }
 
-export class ListNode implements Node {
-  constructor(public nodes: Node[]) {}
+export class ListNode extends Node {
+  constructor(readonly nodes: Node[], start: Position, end: Position) {
+    super(start, end);
+  }
 
   toString() {
     return `[
@@ -56,84 +84,109 @@ export class ListNode implements Node {
   }
 }
 
-export class VecNode implements Node {
-  constructor(public nodes: Node[]) {}
+export class VecNode extends Node {
+  constructor(readonly nodes: Node[], start: Position, end: Position) {
+    super(start, end);
+  }
 
   toString() {
     return `⟨${this.nodes.join(', ')}⟩`;
   }
 }
 
-export class MatNode implements Node {
-  constructor(public nodes: Node[][]) {}
+export class MatNode extends Node {
+  constructor(readonly nodes: Node[][], start: Position, end: Position) {
+    super(start, end);
+  }
 
   toString() {
     return `mat`;
   }
 }
 
-export class IdentifierNode implements Node {
-  constructor(public name: string) {}
+export class IdentifierNode extends Node {
+  constructor(readonly token: Token<'identifier'>) {
+    super(token.start, token.end);
+  }
 
   toString() {
-    return magenta(this.name);
+    return magenta(this.token.value);
   }
 }
 
-export class DeclarationNode implements Node {
-  constructor(public identifier: string, public node: Node) {}
-
-  toString() {
-    return `(${yellow('let')} ${magenta(this.identifier)} = ${this.node})`;
-  }
-}
-
-export class AssignmentNode implements Node {
+export class DeclarationNode extends Node {
   constructor(
-    public identifier: string,
-    public operator: IdentifierOp,
-    public node?: Node
-  ) {}
+    readonly identifier: Token<'identifier'>,
+    readonly node: Node,
+    start: Position
+  ) {
+    super(start, node.end);
+  }
+
+  toString() {
+    return `(${yellow('let')} ${magenta(this.identifier.value)} = ${
+      this.node
+    })`;
+  }
+}
+
+export class AssignmentNode extends Node {
+  constructor(
+    readonly identifier: Token<'identifier'>,
+    readonly operator: Token<'operator', IdentifierOp>,
+    readonly node?: Node
+  ) {
+    super(identifier.start, node?.end || operator.end);
+  }
 
   toString() {
     if (this.node)
-      return `(${magenta(this.identifier)} ${this.operator} ${this.node})`;
-    return `(${magenta(this.identifier)}${this.operator})`;
+      return `(${magenta(this.identifier.value)} ${this.operator.value} ${
+        this.node
+      })`;
+    return `(${magenta(this.identifier.value)}${this.operator.value})`;
   }
 }
 
-export class UnaryOpNode implements Node {
+export class UnaryOpNode extends Node {
   constructor(
-    public node: Node,
-    public operator: UnaryOp,
-    public postfix = false
-  ) {}
+    readonly node: Node,
+    readonly operator: Token<'operator', UnaryOp>,
+    readonly postfix = false
+  ) {
+    super(node.start, operator.end);
+  }
 
   toString() {
-    const operatorStr = yellow(this.operator);
+    const operatorStr = yellow(this.operator.value);
     if (this.postfix) return `(${this.node}${operatorStr})`;
     return `(${operatorStr}${this.node})`;
   }
 }
 
-export class BinaryOpNode implements Node {
+export class BinaryOpNode extends Node {
   constructor(
-    public left: Node,
-    public operator: BinaryOp,
-    public right: Node
-  ) {}
+    readonly left: Node,
+    readonly operator: BinaryOp,
+    readonly right: Node
+  ) {
+    super(left.start, right.end);
+  }
 
   toString() {
     return `(${this.left} ${yellow(this.operator)} ${this.right})`;
   }
 }
 
-export class IfNode implements Node {
+export class IfNode extends Node {
   constructor(
-    public condition: Node,
-    public body: Node,
-    public elseCase?: Node
-  ) {}
+    readonly condition: Node,
+    readonly body: Node,
+    start: Position,
+    readonly elseCase?: Node
+  ) {
+    super(start, body.end);
+  }
 
   toString() {
     return `(${yellow('if')} ${this.condition}: ${this.body}${
@@ -145,72 +198,95 @@ ${yellow('else')}: ${this.elseCase}`
   }
 }
 
-export class ForNode implements Node {
+export class ForNode extends Node {
   constructor(
-    public identifier: string,
-    public iterable: Node,
-    public body: Node
-  ) {}
+    readonly identifier: Token<'identifier'>,
+    readonly iterable: Node,
+    readonly body: Node,
+    start: Position
+  ) {
+    super(start, body.end);
+  }
 
   toString() {
-    return `(${yellow('for')} ${magenta(this.identifier)} ${yellow('in')} ${
-      this.iterable
-    }: ${this.body})`;
+    return `(${yellow('for')} ${magenta(this.identifier.value)} ${yellow(
+      'in'
+    )} ${this.iterable}: ${this.body})`;
   }
 }
 
-export class WhileNode implements Node {
-  constructor(public condition: Node, public body: Node) {}
+export class WhileNode extends Node {
+  constructor(readonly condition: Node, readonly body: Node, start: Position) {
+    super(start, body.end);
+  }
 
   toString() {
     return `(${yellow('while')} ${this.condition}: ${this.body})`;
   }
 }
 
-export class LoopNode implements Node {
-  constructor(public body: Node) {}
+export class LoopNode extends Node {
+  constructor(readonly body: Node, start: Position) {
+    super(start, body.end);
+  }
 
   toString() {
     return `(${yellow('loop')}: ${this.body})`;
   }
 }
 
-export class FuncDefNode implements Node {
+export class FuncDefNode extends Node {
   constructor(
-    public name: string,
-    public argNames: string[],
-    public body: Node,
-    public arrow = false
-  ) {}
+    readonly name: Token<'identifier'>,
+    readonly argNames: Token<'identifier'>[],
+    readonly body: Node,
+    start: Position,
+    readonly arrow = false
+  ) {
+    super(start, body.end);
+  }
 
   toString() {
-    return `(${yellow('fn')} ${cyan(this.name)}(${this.argNames
-      .map(magenta)
+    return `(${yellow('fn')} ${cyan(this.name.value)}(${this.argNames
+      .map(node => magenta(node.value))
       .join(', ')})${this.arrow ? ' ->' : ':'} ${this.body})`;
   }
 }
 
-export class FuncCallNode implements Node {
-  constructor(public name: string, public args: Node[]) {}
+export class FuncCallNode extends Node {
+  constructor(
+    readonly name: Token<'identifier'>,
+    readonly args: Node[],
+    end: Position
+  ) {
+    super(name.start, end);
+  }
 
   toString() {
-    return `(${cyan(this.name)}(${this.args.join(', ')}))`;
+    return `(${cyan(this.name.value)}(${this.args.join(', ')}))`;
   }
 }
 
-export class ReturnNode implements Node {
-  constructor(public node: Node) {}
+export class ReturnNode extends Node {
+  constructor(readonly node: Node, start: Position) {
+    super(start, node.end);
+  }
 
   toString() {
     return `(${yellow('return')} ${this.node})`;
   }
 }
 
-export class GroupingNode implements Node {
+export class GroupingNode extends Node {
   constructor(
-    public node: Node,
-    public groupings: [LeftGrouping, RightGrouping]
-  ) {}
+    readonly node: Node,
+    readonly groupings: [
+      Token<'grouping', LeftGrouping>,
+      Token<'grouping', RightGrouping>
+    ]
+  ) {
+    super(groupings[0].start, groupings[1].end);
+  }
 
   toString() {
     const [l, r] = this.groupings;
@@ -218,18 +294,22 @@ export class GroupingNode implements Node {
   }
 }
 
-export class PropAccessNode implements Node {
-  constructor(public node: Node, public prop: Node) {}
+export class PropAccessNode extends Node {
+  constructor(readonly node: Node, readonly prop: Node, end: Position) {
+    super(node.start, end);
+  }
 
   toString() {
     return `${this.node}[${this.prop}]`;
   }
 }
 
-export class ImportNode implements Node {
-  constructor(public identifier: string) {}
+export class ImportNode extends Node {
+  constructor(readonly identifier: Token<'identifier'>, start: Position) {
+    super(start, identifier.end);
+  }
 
   toString() {
-    return `(${yellow('import')} ${this.identifier})`;
+    return `(${yellow('import')} ${this.identifier.value})`;
   }
 }

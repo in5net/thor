@@ -1,4 +1,6 @@
+import fs
 
-
-data = readfile("./code.thor")
+path = "./code.thor"
+print("path: {path}")
+data = readfile(path)
 print(data)

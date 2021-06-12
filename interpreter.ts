@@ -22,7 +22,7 @@ import Node, {
   WhileNode
 } from './nodes.ts';
 import Scope from './scope.ts';
-import { GroupingOp } from './token.ts';
+import Token, { GroupingOp } from './token.ts';
 import Value, {
   Boolean,
   Function,
@@ -35,6 +35,7 @@ import Value, {
 } from './values/mod.ts';
 
 import { std, physics, fs } from './modules/mod.ts';
+import Position from './position.ts';
 
 type NodeName =
   | 'AssignmentNode'
@@ -73,23 +74,29 @@ export default class Interpreter implements ExecuteIndex {
     return method.call(this, node, scope);
   }
 
-  error(message: string): never {
-    throw `Error: ${message}`;
+  error(message: string, start: Position, end: Position): never {
+    throw new Error(message, start, end);
   }
 
-  visitNumberNode({ value }: NumberNode, scope: Scope): Number {
+  visitNumberNode({ token: { value } }: NumberNode, scope: Scope): Number {
     return new Number(value);
   }
 
-  visitBooleanNode({ value }: BooleanNode, scope: Scope): Boolean {
+  visitBooleanNode({ token: { value } }: BooleanNode, scope: Scope): Boolean {
     return new Boolean(value);
   }
 
   visitStringNode({ fragments }: StringNode, scope: Scope): String {
     return new String(
-      fragments
-        .map(x => (typeof x === 'string' ? x : this.visit(x, scope)))
-        .join('')
+      fragments instanceof Token
+        ? fragments.value
+        : fragments
+            .map(fragment =>
+              fragment instanceof Token
+                ? fragment.value
+                : this.visit(fragment, scope)
+            )
+            .join('')
     );
   }
 
@@ -127,14 +134,17 @@ export default class Interpreter implements ExecuteIndex {
     return new Matrix(data);
   }
 
-  visitIdentifierNode({ name }: IdentifierNode, scope: Scope): Value {
+  visitIdentifierNode(
+    { token: { value: name, start, end } }: IdentifierNode,
+    scope: Scope
+  ): Value {
     const value = scope.symbolTable.get(name);
-    if (!value) this.error(`'${name}' is not defined`);
+    if (!value) this.error(`'${name}' is not defined`, start, end);
     return value;
   }
 
   visitDeclarationNode(
-    { identifier, node }: DeclarationNode,
+    { identifier: { value: identifier }, node }: DeclarationNode,
     scope: Scope
   ): Value {
     const value = this.visit(node, scope);
@@ -143,13 +153,13 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   visitAssignmentNode(
-    { identifier, operator, node }: AssignmentNode,
+    { identifier, operator: { value: operator }, node }: AssignmentNode,
     scope: Scope
   ): Value {
     let returnValue: Value | undefined;
     const right = node ? this.visit(node, scope) : undefined;
     if (operator === '=') {
-      scope.symbolTable.set(identifier, right!);
+      scope.symbolTable.set(identifier.value, right!);
       return right!;
     }
 
@@ -158,50 +168,53 @@ export default class Interpreter implements ExecuteIndex {
     switch (operator) {
       case '+=': {
         const value = left['+'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier, value);
+        scope.symbolTable.set(identifier.value, value);
         break;
       }
       case '-=': {
         const value = left['-'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier, value);
+        scope.symbolTable.set(identifier.value, value);
         break;
       }
       case '++': {
         const value = left['+'](new Number(1)) as unknown as Value;
-        scope.symbolTable.set(identifier, value);
+        scope.symbolTable.set(identifier.value, value);
         returnValue = left;
         break;
       }
       case '--': {
         const value = left['-'](new Number(1)) as unknown as Value;
-        scope.symbolTable.set(identifier, value);
+        scope.symbolTable.set(identifier.value, value);
         returnValue = left;
         break;
       }
       case '*=': {
         const value = left['*'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier, value);
+        scope.symbolTable.set(identifier.value, value);
         break;
       }
       case '/=': {
         const value = left['/'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier, value);
+        scope.symbolTable.set(identifier.value, value);
         break;
       }
       case '%=': {
         const value = left['%'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier, value);
+        scope.symbolTable.set(identifier.value, value);
         break;
       }
       case '^=': {
         const value = left['^'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier, value);
+        scope.symbolTable.set(identifier.value, value);
       }
     }
     return (right || returnValue) as Value;
   }
 
-  visitUnaryOpNode({ node, operator }: UnaryOpNode, scope: Scope): Value {
+  visitUnaryOpNode(
+    { node, operator: { value: operator } }: UnaryOpNode,
+    scope: Scope
+  ): Value {
     const value = this.visit(node, scope);
 
     const func = value[operator];
@@ -236,13 +249,13 @@ export default class Interpreter implements ExecuteIndex {
     const iterableValue = this.visit(iterable, scope);
     if (iterableValue instanceof List) {
       for (const item of iterableValue.items) {
-        scope.symbolTable.set(identifier, item);
+        scope.symbolTable.set(identifier.value, item);
         this.visit(body, scope);
       }
     } else if (iterableValue instanceof Range) {
       const { from, to, step } = iterableValue;
       for (let i = from; i < to; i += step) {
-        scope.symbolTable.set(identifier, new Number(i));
+        scope.symbolTable.set(identifier.value, new Number(i));
         this.visit(body, scope);
       }
     }
@@ -259,18 +272,27 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   visitFuncDefNode(
-    { name, argNames, body }: FuncDefNode,
+    { name: { value: name }, argNames, body }: FuncDefNode,
     scope: Scope
   ): Function {
-    const value = new Function(name, argNames, body).setScope(scope);
+    const value = new Function(
+      name,
+      argNames.map(arg => arg.value),
+      body
+    ).setScope(scope);
     scope.symbolTable.set(name, value);
     return value;
   }
 
-  visitFuncCallNode({ name, args }: FuncCallNode, scope: Scope): Value {
+  visitFuncCallNode(
+    { name: { value: name, start, end }, args }: FuncCallNode,
+    scope: Scope
+  ): Value {
     const func = scope.symbolTable.get(name) as
       | Function
-      | ((...values: Value[]) => Value);
+      | ((...values: Value[]) => Value)
+      | undefined;
+    if (!func) this.error(`${name} is not a function`, start, end);
     const argValues = args.map(arg => this.visit(arg, scope));
     const value =
       func instanceof Function ? func.execute(argValues) : func(...argValues);
@@ -288,7 +310,7 @@ export default class Interpreter implements ExecuteIndex {
     scope: Scope
   ): Value {
     const value = this.visit(node, scope);
-    const operator = (left + right) as Exclude<GroupingOp, '[]'>;
+    const operator = (left.value + right.value) as Exclude<GroupingOp, '[]'>;
 
     const func = value[operator];
     if (!func) Value.illegalUnaryOp(value, operator);
@@ -303,9 +325,12 @@ export default class Interpreter implements ExecuteIndex {
     return value['[]'](propValue) as unknown as Value;
   }
 
-  visitImportNode({ identifier }: ImportNode, scope: Scope): Value {
+  visitImportNode(
+    { identifier: { value, start, end } }: ImportNode,
+    scope: Scope
+  ): Value {
     let mod: any;
-    switch (identifier) {
+    switch (value) {
       case 'std':
         mod = std;
         break;
@@ -315,6 +340,8 @@ export default class Interpreter implements ExecuteIndex {
       case 'fs':
         mod = fs;
         break;
+      default:
+        this.error(`Module ${value} doesn't exist`, start, end);
     }
     Object.entries(mod).forEach(([name, value]) => {
       if (name === 'default')
@@ -325,4 +352,12 @@ export default class Interpreter implements ExecuteIndex {
     });
     return new Number(0);
   }
+}
+
+export class Error {
+  constructor(
+    readonly message: string,
+    readonly start: Position,
+    readonly end: Position
+  ) {}
 }

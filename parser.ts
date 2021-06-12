@@ -21,6 +21,7 @@ import Node, {
   VecNode,
   WhileNode
 } from './nodes.ts';
+import Position from './position.ts';
 import Token, {
   BinaryOp,
   compareOps,
@@ -38,8 +39,6 @@ import Token, {
 
 const WORD_COMPARE_OPS = compareOps.filter(op => /[a-z]/.test(op));
 
-const EOF = new Token('eof', undefined);
-
 export default class Parser {
   index = -1;
   token!: Token;
@@ -48,11 +47,11 @@ export default class Parser {
     this.advance();
   }
 
-  error(message?: string): never {
-    throw `Syntax Error${message ? `: ${message}` : ''}`;
+  error(message: string, start: Position): never {
+    throw new Error(message, start, this.token.end);
   }
 
-  expect(strs: string | string[]): never {
+  expect(strs: string | string[], start: Position): never {
     let message: string;
     if (typeof strs === 'string') message = strs;
     else
@@ -65,15 +64,16 @@ export default class Parser {
           break;
         default:
           const begin = strs.slice(0, -2);
-          return this.error(
-            `Expected ${begin.join(', ')}, or ${strs[strs.length - 1]}`
+          this.error(
+            `Expected ${begin.join(', ')}, or ${strs[strs.length - 1]}`,
+            start
           );
       }
-    this.error(`Expected ${message}`);
+    this.error(`Expected ${message}`, start);
   }
 
   advance() {
-    this.token = this.tokens[++this.index] || EOF;
+    this.token = this.tokens[++this.index] || Token.EOF;
   }
 
   back(amount = 1) {
@@ -82,7 +82,7 @@ export default class Parser {
   }
 
   get nextToken(): Token {
-    return this.tokens[this.index + 1] || EOF;
+    return this.tokens[this.index + 1] || Token.EOF;
   }
 
   skipNewlines() {
@@ -99,13 +99,9 @@ export default class Parser {
   }
 
   parse(): ListNode {
-    if (this.eof()) return new ListNode([]);
+    if (this.eof()) return new ListNode([], Position.EOF, Position.EOF);
 
-    const result = this.statements();
-
-    if (!this.eof()) this.expect('<eof>');
-
-    return result;
+    return this.statements();
   }
 
   statements(): ListNode {
@@ -114,6 +110,7 @@ export default class Parser {
 
     this.skipNewlines();
 
+    const { start } = this.token;
     statements.push(this.statement());
 
     let moreStatements = true;
@@ -131,28 +128,33 @@ export default class Parser {
       }
       statements.push(statement);
     }
+    const { end } = this.token;
 
-    return new ListNode(statements);
+    return new ListNode(statements, start, end);
   }
 
   statement(): Node {
+    const { start } = this.token;
+
     // 'return' expr?
     if (this.token.is('keyword', 'return')) {
+      const { start } = this.token;
       this.advance();
       const node = this.expr();
 
-      return new ReturnNode(node);
+      return new ReturnNode(node, start);
     }
 
     // 'import' IDENTIFIER
     if (this.token.is('keyword', 'import')) {
+      const { start } = this.token;
       this.advance();
 
-      if (!this.token.is('identifier')) this.expect('identifier');
-      const identifier = (this.token as Token<'identifier'>).value;
+      if (!this.token.is('identifier')) this.expect('identifier', start);
+      const identifier = this.token as Token<'identifier'>;
       this.advance();
 
-      return new ImportNode(identifier);
+      return new ImportNode(identifier, start);
     }
 
     // expr
@@ -160,20 +162,23 @@ export default class Parser {
   }
 
   expr(): Node {
+    const { start } = this.token;
+
     // 'let' IDENTIFIER '=' expr
     if (this.token.is('keyword', 'let')) {
+      const { start } = this.token;
       this.advance();
       if (!(this.token as Token).is('identifier'))
-        return this.expect('identifier');
-      const identifier = (this.token as unknown as Token<'identifier'>).value;
+        this.expect('identifier', start);
+      const identifier = this.token as unknown as Token<'identifier'>;
       this.advance();
 
-      if (!(this.token as Token).is('operator', '=')) return this.expect("'='");
+      if (!(this.token as Token).is('operator', '=')) this.expect("'='", start);
       this.advance();
 
       const expr = this.expr();
 
-      return new DeclarationNode(identifier, expr);
+      return new DeclarationNode(identifier, expr, start);
     }
 
     // IDENTIFIER ('=' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=') expr
@@ -184,7 +189,7 @@ export default class Parser {
         (this.nextToken as unknown as Token<'operator', IdentifierOp>).value
       )
     ) {
-      const identifier = (this.token as Token<'identifier'>).value;
+      const identifier = this.token as Token<'identifier'>;
       this.advance();
 
       const operator = this.token as unknown as Token<'operator', IdentifierOp>;
@@ -194,7 +199,7 @@ export default class Parser {
       let expr: Node | undefined;
       if (!['++', '--'].includes(operator.value)) expr = this.expr();
 
-      return new AssignmentNode(identifier, operator.value, expr);
+      return new AssignmentNode(identifier, operator, expr);
     }
 
     // comp_expr (('and' | 'or' | 'in') comp_expr)*
@@ -210,9 +215,13 @@ export default class Parser {
   }
 
   notExpr(): Node {
-    if (this.token.is('operator', 'not')) {
+    const { token } = this;
+    if (token.is('operator', 'not')) {
       this.advance();
-      return new UnaryOpNode(this.notExpr(), 'not');
+      return new UnaryOpNode(
+        this.notExpr(),
+        token as Token<'operator', UnaryOp>
+      );
     }
     return this.compExpr();
   }
@@ -251,7 +260,7 @@ export default class Parser {
 
       const term = this.term();
 
-      return new BinaryOpNode(new NumberNode(number.value), '*', term);
+      return new BinaryOpNode(new NumberNode(number), '*', term);
     }
     return this.binaryOp(this.factor, ['*', '∙', '×', '/', '%']);
   }
@@ -269,7 +278,7 @@ export default class Parser {
       this.advance();
       return new UnaryOpNode(
         this.factor(),
-        (token as Token<'operator', UnaryOp>).value
+        token as Token<'operator', UnaryOp>
       );
     }
 
@@ -285,13 +294,18 @@ export default class Parser {
     // call POSTFIX_UNARY_OP?
     const call = this.call();
     if (this.token.is('operator')) {
+      const { token } = this;
       const number = '⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(this.token.value);
       if (number >= 0) {
         this.advance();
-        return new BinaryOpNode(call, '^', new NumberNode(number));
+        return new BinaryOpNode(
+          call,
+          '^',
+          new NumberNode(new Token('number', number, token.start, token.end))
+        );
       }
       if (postfixUnaryOps.includes(this.token.value as PostfixUnaryOp)) {
-        const operator = this.token.value as PostfixUnaryOp;
+        const operator = this.token as Token<'operator', PostfixUnaryOp>;
         this.advance();
         return new UnaryOpNode(call, operator, true);
       }
@@ -300,11 +314,13 @@ export default class Parser {
   }
 
   call(): Node {
+    const { start } = this.token;
+
     // atom ('(' (expr (',' expr)*)? ')')?
     const atom = this.atom();
 
     if (this.token.is('grouping', '(')) {
-      if (!(atom instanceof IdentifierNode)) return this.expect('identifier');
+      if (!(atom instanceof IdentifierNode)) this.expect('identifier', start);
 
       this.advance();
       const args: Node[] = [];
@@ -319,7 +335,7 @@ export default class Parser {
         }
 
         if (!(this.token as Token).is('grouping', ')'))
-          return this.expect(["','", "')'"]);
+          this.expect(["','", "')'"], start);
         this.advance();
       }
 
@@ -329,17 +345,18 @@ export default class Parser {
         const body = this.expr();
 
         return new FuncDefNode(
-          atom.name,
+          atom.token,
           args.map(arg => {
-            if (arg instanceof IdentifierNode) return arg.name;
-            else this.expect('identifier');
+            if (arg instanceof IdentifierNode) return arg.token;
+            else this.expect('identifier', start);
           }),
           body,
+          start,
           true
         );
       }
 
-      return new FuncCallNode(atom.name, args);
+      return new FuncCallNode(atom.token, args, this.token.end);
     }
 
     return atom;
@@ -352,28 +369,32 @@ export default class Parser {
 
     if (token.is('number')) {
       this.advance();
-      rtn = new NumberNode(token.value);
+      rtn = new NumberNode(token);
     } else if (token.is('boolean')) {
       this.advance();
-      rtn = new BooleanNode(token.value);
+      rtn = new BooleanNode(token);
     } else if (token.is('string')) {
+      const { value } = token;
       this.advance();
       rtn = new StringNode(
-        token.value.map(x => {
-          if (typeof x === 'string') return x;
-          const parser = new Parser(x);
-          return parser.expr();
-        })
+        value instanceof Token
+          ? value
+          : value.map(fragment => {
+              if (fragment instanceof Token) return fragment;
+              const parser = new Parser(fragment);
+              return parser.expr();
+            })
       );
     } else if (token.is('identifier')) {
       this.advance();
-      rtn = new IdentifierNode(token.value);
+      rtn = new IdentifierNode(token);
     } else if (token.is('grouping', '(')) {
+      const { start } = this.token;
       this.advance();
 
       const expr = this.expr();
 
-      if (!this.token.is('grouping', ')')) return this.expect("')'");
+      if (!this.token.is('grouping', ')')) this.expect("')'", start);
       this.advance();
 
       rtn = expr;
@@ -385,50 +406,62 @@ export default class Parser {
     else if (token.is('grouping', '[')) rtn = this.listExpr();
     else if (token.is('grouping', '⟨')) rtn = this.vecExpr();
     else if (token.is('grouping')) {
-      const leftGrouping = token.value as LeftGrouping;
-      if (!leftGrouping)
-        return this.expect(Object.keys(groupings).map(char => `'${char}'`));
+      const { start } = this.token;
+      const leftGroupingToken = token as Token<'grouping', LeftGrouping>;
+      if (!leftGroupingToken)
+        this.expect(
+          Object.keys(groupings).map(char => `'${char}'`),
+          start
+        );
       this.advance();
 
       const expr = this.expr();
 
-      const rightGrouping = groupings[leftGrouping];
+      const rightGrouping = groupings[leftGroupingToken.value];
       if (!this.token.is('grouping', rightGrouping))
-        return this.expect(`'${rightGrouping}'`);
+        this.expect(`'${rightGrouping}'`, start);
+      const rightGroupingToken = this.token as Token<'grouping', RightGrouping>;
       this.advance();
 
-      rtn = new GroupingNode(expr, [leftGrouping, rightGrouping]);
+      rtn = new GroupingNode(expr, [leftGroupingToken, rightGroupingToken]);
     } else
-      this.expect([
-        'number',
-        'identifier',
-        'boolean',
-        'string',
-        "'if'",
-        "'for'",
-        "'while'",
-        "'loop'",
-        "'fn'",
-        ...Object.keys(groupings).map(char => `'${char}'`)
-      ]);
+      this.expect(
+        [
+          'number',
+          'identifier',
+          'boolean',
+          'string',
+          "'if'",
+          "'for'",
+          "'while'",
+          "'loop'",
+          "'fn'",
+          ...Object.keys(groupings).map(char => `'${char}'`)
+        ],
+        this.token.start.copy()
+      );
 
     if (this.token.is('grouping', '[')) {
+      const { start } = this.token;
       this.advance();
 
       const expr = this.expr();
 
-      if (!this.token.is('grouping', ']')) this.expect("']'");
+      if (!this.token.is('grouping', ']')) this.expect("']'", start);
+      const { end } = this.token;
       this.advance();
 
-      return new PropAccessNode(rtn, expr);
+      return new PropAccessNode(rtn, expr, end);
     }
 
     return rtn;
   }
 
   listExpr(): ListNode | MatNode {
+    const { start } = this.token;
+
     // '[' (expr (',' expr)*)? ']'
-    if (!this.token.is('grouping', '[')) return this.expect("'['");
+    if (!this.token.is('grouping', '[')) this.expect("'['", start);
     this.advance();
 
     if (this.token.is('newline')) this.advance();
@@ -451,25 +484,30 @@ export default class Parser {
       nodes.push(row);
     }
 
-    if (!this.token.is('grouping', ']')) this.expect("']'");
+    if (!this.token.is('grouping', ']')) this.expect("']'", start);
+    const { end } = this.token;
     this.advance();
 
-    if (nodes.length <= 1) return new ListNode(nodes[0]);
-    return new MatNode(nodes);
+    if (nodes.length <= 1) return new ListNode(nodes[0], start, end);
+    return new MatNode(nodes, start, end);
   }
 
   vecExpr(): ListNode {
-    if (!this.token.is('grouping', '⟨')) return this.expect("'⟨'");
+    const { start } = this.token;
+
+    if (!this.token.is('grouping', '⟨')) this.expect("'⟨'", start);
     this.advance();
 
     const nodes = this.list('⟩');
 
-    return new VecNode(nodes);
+    return new VecNode(nodes, start, this.token.end);
   }
 
   ifExpr(): IfNode {
+    const { start } = this.token;
+
     // 'if' expr ((':' statement) | ('{' statements '}')) else_expr?
-    if (!this.token.is('keyword', 'if')) return this.expect("'if'");
+    if (!this.token.is('keyword', 'if')) this.expect("'if'", start);
     this.advance();
 
     const condition = this.expr();
@@ -480,7 +518,7 @@ export default class Parser {
       this.advance();
       body = this.statement();
     } else if (this.token.is('grouping', '{')) body = this.block();
-    else return this.expect(["':'", "'{'"]);
+    else this.expect(["':'", "'{'"], start);
 
     let elseCase: Node | undefined;
 
@@ -488,12 +526,14 @@ export default class Parser {
     if ((this.token as Token).is('keyword', 'else')) elseCase = this.elseExpr();
     else if (newlines > 0) this.back();
 
-    return new IfNode(condition, body, elseCase);
+    return new IfNode(condition, body, start, elseCase);
   }
 
   elseExpr(): Node {
+    const { start } = this.token;
+
     // 'else' ':'? (statement | ('{' statements '}') | if_expr)
-    if (!this.token.is('keyword', 'else')) return this.expect("'else'");
+    if (!this.token.is('keyword', 'else')) this.expect("'else'", start);
     this.advance();
 
     if (this.token.is('operator', ':')) this.advance();
@@ -510,15 +550,17 @@ export default class Parser {
   }
 
   forExpr(): ForNode {
+    const { start } = this.token;
+
     // 'for' IDENTIFIER 'in' expr ((':' statement) | ('{' statements '}'))
-    if (!this.token.is('keyword', 'for')) return this.expect("'for'");
+    if (!this.token.is('keyword', 'for')) this.expect("'for'", start);
     this.advance();
 
-    if (!this.token.is('identifier')) return this.expect('identifier');
-    const identifier = (this.token as Token<'identifier'>).value;
+    if (!this.token.is('identifier')) this.expect('identifier', start);
+    const identifier = this.token as Token<'identifier'>;
     this.advance();
 
-    if (!(this.token as Token).is('operator', 'in')) return this.expect("'in'");
+    if (!(this.token as Token).is('operator', 'in')) this.expect("'in'", start);
     this.advance();
 
     const iterable = this.expr();
@@ -529,14 +571,16 @@ export default class Parser {
       this.advance();
       body = this.statement();
     } else if ((this.token as Token).is('grouping', '{')) body = this.block();
-    else return this.expect(["':'", "'{'"]);
+    else this.expect(["':'", "'{'"], start);
 
-    return new ForNode(identifier, iterable, body);
+    return new ForNode(identifier, iterable, body, start);
   }
 
   whileExpr(): WhileNode {
+    const { start } = this.token;
+
     // 'while' expr ((':' statement) | ('{' statements '}'))
-    if (!this.token.is('keyword', 'while')) return this.expect("'while'");
+    if (!this.token.is('keyword', 'while')) this.expect("'while'", start);
     this.advance();
 
     const condition = this.expr();
@@ -547,14 +591,16 @@ export default class Parser {
       this.advance();
       body = this.statement();
     } else if ((this.token as Token).is('grouping', '{')) body = this.block();
-    else return this.expect(["':'", "'{'"]);
+    else this.expect(["':'", "'{'"], start);
 
-    return new WhileNode(condition, body);
+    return new WhileNode(condition, body, start);
   }
 
   loopExpr(): LoopNode {
+    const { start } = this.token;
+
     // 'loop' (':' statement | block)
-    if (!this.token.is('keyword', 'loop')) return this.expect("'loop'");
+    if (!this.token.is('keyword', 'loop')) this.expect("'loop'", start);
     this.advance();
     let body: Node;
 
@@ -562,38 +608,41 @@ export default class Parser {
       this.advance();
       body = this.statement();
     } else if ((this.token as Token).is('grouping', '{')) body = this.block();
-    else return this.expect(["':'", "'{'"]);
+    else this.expect(["':'", "'{'"], start);
 
-    return new LoopNode(body);
+    return new LoopNode(body, start);
   }
 
   funcDec(): FuncDefNode {
+    const { start } = this.token;
+
     // 'fn' IDENTIFIER '(' (IDENTIFIER (',' IDENTIFIER)* ')')? (('->' statement) | ('{' statements '}'))
-    if (!this.token.is('keyword', 'fn')) return this.expect("'fn'");
+    if (!this.token.is('keyword', 'fn')) this.expect("'fn'", start);
     this.advance();
 
-    if (!this.token.is('identifier')) return this.expect('identifier');
-    const name = (this.token as Token<'identifier'>).value;
+    if (!this.token.is('identifier')) this.expect('identifier', start);
+    const name = this.token as Token<'identifier'>;
     this.advance();
 
-    if (!(this.token as Token).is('grouping', '(')) return this.expect("'('");
+    if (!(this.token as Token).is('grouping', '(')) this.expect("'('", start);
     this.advance();
 
-    const argNames: string[] = [];
+    const argNames: Token<'identifier'>[] = [];
     if ((this.token as Token).is('identifier')) {
-      argNames.push((this.token as Token<'identifier'>).value);
+      argNames.push(this.token as Token<'identifier'>);
       this.advance();
       while ((this.token as Token).is('operator', ',')) {
+        const start = (this.token as Token).start.copy();
         this.advance();
         if (!(this.token as Token).is('identifier'))
-          return this.expect('identifier');
+          this.expect('identifier', start);
 
-        argNames.push((this.token as Token<'identifier'>).value);
+        argNames.push(this.token as Token<'identifier'>);
         this.advance();
       }
 
       // @ts-ignore
-      if (!this.token.is('grouping', ')')) return this.expect(["','", "')'"]);
+      if (!this.token.is('grouping', ')')) this.expect(["','", "')'"]);
     }
     this.advance();
 
@@ -605,9 +654,9 @@ export default class Parser {
       this.advance();
       body = this.statement();
     } else if ((this.token as Token).is('grouping', '{')) body = this.block();
-    else return this.expect(["'->'", "'{'"]);
+    else this.expect(["'->'", "'{'"], start);
 
-    return new FuncDefNode(name, argNames, body, arrow);
+    return new FuncDefNode(name, argNames, body, start, arrow);
   }
 
   binaryOp(left: () => Node, operators: BinaryOp[], right = left) {
@@ -630,30 +679,41 @@ export default class Parser {
   }
 
   list(end: RightGrouping): Node[] {
+    const { start } = this.token;
     const nodes: Node[] = [];
 
     while (!this.token.is('grouping', end)) {
+      const { start } = this.token;
       nodes.push(this.expr());
       if (this.token.is('operator', ',')) this.advance();
       else if (this.token.is('grouping', end)) break;
-      else this.expect(["','", `'${end}'`]);
+      else this.expect(["','", `'${end}'`], start);
     }
 
-    if (!this.token.is('grouping', end)) this.expect(`'${end}'`);
+    if (!this.token.is('grouping', end)) this.expect(`'${end}'`, start);
     this.advance();
 
     return nodes;
   }
 
   block(): ListNode {
-    if (!this.token.is('grouping', '{')) this.expect("'{'");
+    const { start } = this.token;
+    if (!this.token.is('grouping', '{')) this.expect("'{'", start);
     this.advance();
 
     const statements = this.statements();
 
-    if (!this.token.is('grouping', '}')) this.expect("'}'");
+    if (!this.token.is('grouping', '}')) this.expect("'}'", start);
     this.advance();
 
     return statements;
   }
+}
+
+export class Error {
+  constructor(
+    readonly message: string,
+    readonly start: Position,
+    readonly end: Position
+  ) {}
 }

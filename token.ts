@@ -1,5 +1,7 @@
 import { green } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
 
+import Position from './position.ts';
+
 export const booleans = ['true', 'false'] as const;
 export const prefixUnaryOps = [
   '+',
@@ -89,7 +91,9 @@ export const keywords = [
 ] as const;
 
 export type Boolean = typeof booleans[number];
-export type String = (string | Token[])[];
+export type String =
+  | Token<'string', string>
+  | (Token<'string', string> | Token[])[];
 export type PrefixUnaryOp = typeof prefixUnaryOps[number];
 export type PostfixUnaryOp = typeof postfixUnaryOps[number];
 export type UnaryOp = typeof unaryOps[number];
@@ -133,13 +137,24 @@ export default class Token<
   T extends keyof TokenMap = keyof TokenMap,
   V = TokenMap[T]
 > {
-  constructor(public type: T, public value: V) {}
+  constructor(
+    public type: T,
+    public value: V,
+    public start: Position,
+    public end: Position
+  ) {}
 
-  toString() {
+  static EOF = new Token('eof', undefined, Position.EOF, Position.EOF);
+
+  toString(): string {
     const { type, value } = this;
     return `${TokenName[type]}${
       value !== undefined ? `: ${green(`'${value}'`)}` : ''
     }`;
+  }
+  toPrint(): string {
+    const { start, end } = this;
+    return `${this.toString()} pos: ${Position.textBetween(start, end)}`;
   }
 
   is<Type extends keyof TokenMap, Value = TokenMap[Type]>(
