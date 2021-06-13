@@ -1,7 +1,8 @@
-fn diameter(r) -> 2r
-fn circumference(r) -> π * diameter(r)
-fn surface_area(r) -> 4π * r²
-fn volume(r) -> 4/3 * π * r³
+
+diameter(r) = 2r
+circumference(r) = π * diameter(r)
+surface_area(r) = 4π * r²
+volume(r) = 4/3 * π * r³
 
 radius = 2
 print("Radius: {radius}")

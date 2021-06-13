@@ -45,16 +45,14 @@ async function run(text: string, repl = false): Promise<Value | void> {
     const tokens = lexer.lex();
     if (log)
       console.log(
-        'tokens:',
-        `[
+        `TOKENS:
   ${tokens.map(token => token.toPrint()).join(',\n  ')}
-]`,
-        '\n'
+`
       );
 
     const parser = new Parser(tokens);
     const ast = parser.parse();
-    if (log) console.log('ast:', ast.toString(), '\n');
+    if (log) console.log('AST:', ast.toString(), '\n');
 
     const interpreter = new Interpreter();
     const globalScope = new Scope('<program>');

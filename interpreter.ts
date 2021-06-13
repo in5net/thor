@@ -259,7 +259,7 @@ export default class Interpreter implements ExecuteIndex {
     scope: Scope
   ): Promise<Value> {
     // @ts-ignore
-    if ((this.visit(condition, scope) as Number | Boolean).value)
+    if (((await this.visit(condition, scope)) as Number | Boolean).value)
       return this.visit(body, scope);
     else if (elseCase) return this.visit(elseCase, scope);
     return new None();
@@ -269,17 +269,25 @@ export default class Interpreter implements ExecuteIndex {
     { identifier, iterable, body }: ForNode,
     scope: Scope
   ): Promise<None> {
-    const iterableValue = this.visit(iterable, scope);
+    const iterableValue = await this.visit(iterable, scope);
     if (iterableValue instanceof List) {
       for (const item of iterableValue.items) {
         scope.symbolTable.set(identifier.value, item);
         await this.visit(body, scope);
+        if (this.returnValue) break;
       }
     } else if (iterableValue instanceof Range) {
       const { from, to, step } = iterableValue;
       for (let i = from; i < to; i += step) {
         scope.symbolTable.set(identifier.value, new Number(i));
         await this.visit(body, scope);
+        if (this.returnValue) break;
+      }
+    } else if (iterableValue instanceof Number) {
+      for (let i = 0; i < iterableValue.value; i++) {
+        scope.symbolTable.set(identifier.value, new Number(i));
+        await this.visit(body, scope);
+        if (this.returnValue) break;
       }
     }
     return new None();
@@ -290,14 +298,19 @@ export default class Interpreter implements ExecuteIndex {
     scope: Scope
   ): Promise<None> {
     // @ts-ignore
-    while ((this.visit(condition, scope) as Number | Boolean).value)
+    while (((await this.visit(condition, scope)) as Number | Boolean).value) {
       await this.visit(body, scope);
+      if (this.returnValue) break;
+    }
 
     return new None();
   }
 
   async visitLoopNode({ body }: LoopNode, scope: Scope): Promise<None> {
-    while (1) await this.visit(body, scope);
+    while (1) {
+      await this.visit(body, scope);
+      if (this.returnValue) break;
+    }
     return new None();
   }
 

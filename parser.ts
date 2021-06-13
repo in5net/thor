@@ -25,6 +25,7 @@ import Node, {
 import Position from './position.ts';
 import Token, {
   BinaryOp,
+  binaryOps,
   compareOps,
   groupings,
   IdentifierOp,
@@ -252,11 +253,14 @@ export default class Parser {
       !['number', 'superscript', 'newline', 'eof'].includes(
         this.nextToken.type
       ) &&
-      !this.nextToken.is('operator') &&
-      !Object.values(groupings).includes(
-        this.nextToken.value as RightGrouping
+      !(
+        this.nextToken.is('operator') &&
+        binaryOps.includes(this.nextToken.value as BinaryOp)
       ) &&
-      !this.nextToken.is('grouping', '{')
+      !(
+        this.nextToken.is('grouping') &&
+        Object.values(groupings).includes(this.nextToken.value as RightGrouping)
+      )
     ) {
       const number = this.token;
       this.advance();
