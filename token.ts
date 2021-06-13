@@ -15,20 +15,7 @@ export const prefixUnaryOps = [
   '∏',
   'not'
 ] as const;
-export const postfixUnaryOps = [
-  '⁰',
-  '¹',
-  '²',
-  '³',
-  '⁴',
-  '⁵',
-  '⁶',
-  '⁷',
-  '⁸',
-  '⁹',
-  '!',
-  '°'
-] as const;
+export const postfixUnaryOps = ['!', '°'] as const;
 export const unaryOps = [...prefixUnaryOps, ...postfixUnaryOps] as const;
 export const compareOps = [
   '==',
@@ -108,8 +95,9 @@ export type Grouping = LeftGrouping | RightGrouping;
 export type GroupingOp = '()' | '[]' | '{}' | '||' | '⌊⌋' | '⌈⌉';
 export type Keyword = typeof keywords[number];
 
-interface TokenMap {
+export interface TokenMap {
   number: number;
+  superscript: Token<Exclude<keyof TokenMap, 'superscript'>>[];
   boolean: boolean;
   string: String;
   identifier: string;
@@ -123,6 +111,7 @@ interface TokenMap {
 
 enum TokenName {
   number = 'number',
+  superscript = 'superscript',
   boolean = 'boolean',
   string = 'string',
   identifier = 'identifier',

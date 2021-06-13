@@ -249,7 +249,9 @@ export default class Parser {
     // factor (('*' | '∙' | '×' | '/' | '%') factor)* | NUMBER (!BINARY_OP)? term
     if (
       this.token.is('number') &&
-      !['number', 'newline', 'eof'].includes(this.nextToken.type) &&
+      !['number', 'superscript', 'newline', 'eof'].includes(
+        this.nextToken.type
+      ) &&
       !this.nextToken.is('operator') &&
       !Object.values(groupings).includes(
         this.nextToken.value as RightGrouping
@@ -294,22 +296,22 @@ export default class Parser {
   postfix(): Node {
     // call POSTFIX_UNARY_OP?
     const call = this.call();
-    if (this.token.is('operator')) {
-      const { token } = this;
-      const number = '⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(this.token.value);
-      if (number >= 0) {
-        this.advance();
-        return new BinaryOpNode(
-          call,
-          '^',
-          new NumberNode(new Token('number', number, token.start, token.end))
-        );
-      }
-      if (postfixUnaryOps.includes(this.token.value as PostfixUnaryOp)) {
-        const operator = this.token as Token<'operator', PostfixUnaryOp>;
-        this.advance();
-        return new UnaryOpNode(call, operator, true);
-      }
+    if (
+      this.token.is('operator') &&
+      postfixUnaryOps.includes(this.token.value as PostfixUnaryOp)
+    ) {
+      const operator = this.token as Token<'operator', PostfixUnaryOp>;
+      this.advance();
+      return new UnaryOpNode(call, operator, true);
+    }
+    if (this.token.is('superscript')) {
+      const tokens = (this.token as Token<'superscript'>).value;
+      this.advance();
+
+      const parser = new Parser(tokens);
+      const node = parser.arithExpr();
+
+      return new BinaryOpNode(call, '^', node);
     }
     return call;
   }

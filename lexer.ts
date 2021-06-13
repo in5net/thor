@@ -2,13 +2,13 @@ import Position from './position.ts';
 import Token, {
   Boolean,
   booleans,
-  Grouping,
   groupings,
   Keyword,
   keywords,
   Operator,
   operators,
-  String
+  String,
+  TokenMap
 } from './token.ts';
 
 const WHITESPACE = /[ \t\r]/;
@@ -21,8 +21,12 @@ const ESCAPE_CHARS: Record<string, string | undefined> = {
   r: '\r',
   t: '\t'
 };
+const SUPERSCRIPT =
+  'ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾᴿˢᵀᵁⱽᵂˣʸᶻ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾';
+const NORMALSCRIPT =
+  'abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ0123456789+-=()';
 
-const EOF = '<eof>';
+const EOF = '\0';
 
 export default class Lexer {
   index = 0;
@@ -62,7 +66,7 @@ export default class Lexer {
     return this.text[this.index + 1] || EOF;
   }
 
-  nextToken(): Token {
+  nextToken() {
     while (!this.eof()) {
       const { char } = this;
       if (WHITESPACE.test(char)) this.advance();
@@ -71,6 +75,7 @@ export default class Lexer {
         this.advance();
         return new Token('newline', undefined, start, this.position.copy());
       } else if (DIGITS.test(char) || char === '.') return this.number();
+      else if (SUPERSCRIPT.includes(char)) return this.superscript();
       else if (char === '"') return this.string();
       else if (LETTERS.test(char)) return this.word();
       else if (char === '-' && this.nextChar === '>') {
@@ -88,6 +93,27 @@ export default class Lexer {
     return Token.EOF;
   }
 
+  superscript(): Token<'superscript'> {
+    const start = this.position.copy();
+    let str = '';
+
+    let index = SUPERSCRIPT.indexOf(this.char);
+    while (index >= 0) {
+      const normalChar = NORMALSCRIPT[index];
+      str += normalChar;
+      this.advance();
+      index = SUPERSCRIPT.indexOf(this.char);
+    }
+
+    const lexer = new Lexer(str);
+    const tokens = lexer.lex() as Token<
+      Exclude<keyof TokenMap, 'superscript'>
+    >[];
+    tokens.pop();
+
+    return new Token('superscript', tokens, start, this.position.copy());
+  }
+
   number(): Token<'number'> {
     const start = this.position.copy();
 
@@ -95,7 +121,8 @@ export default class Lexer {
     let decimals = 0;
     this.advance();
 
-    while (DIGITS.test(this.char) || this.char === '.') {
+    while (DIGITS.test(this.char) || ['.', '_'].includes(this.char)) {
+      if (this.char === '_') continue;
       if (this.char === '.' && ++decimals > 1) break;
 
       str += this.char;

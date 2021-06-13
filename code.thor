@@ -1,8 +1,3 @@
-import fs
+f(x) = 2ˣ
 
-path = "./code.thor"
-print("path: {path}")
-future = readfile(path)
-print("future: {future}")
-data = await future
-print(data)
+print(f(5))

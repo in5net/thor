@@ -47,8 +47,8 @@ async function run(text: string, repl = false): Promise<Value | void> {
       console.log(
         'tokens:',
         `[
-        ${tokens.map(token => token.toPrint()).join(',\n  ')}
-      ]`,
+  ${tokens.map(token => token.toPrint()).join(',\n  ')}
+]`,
         '\n'
       );
 
