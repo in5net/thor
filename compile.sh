@@ -1,2 +1,2 @@
 #!/bin/sh
-deno compile --allow-read --output thor main.ts
+deno compile --allow-read --allow-net=deno.land --output thor main.ts

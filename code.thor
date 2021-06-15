@@ -1,3 +1,4 @@
-f(x) = 2²ˣ
+import fs
 
-print(f(3))
+data = await readfile("./code.thor")
+print(data)

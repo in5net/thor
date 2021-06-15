@@ -37,7 +37,6 @@ import Value, {
   Vector
 } from './values/mod.ts';
 
-import { std, physics, fs } from './modules/mod.ts';
 import Position from './position.ts';
 
 type NodeName =
@@ -390,28 +389,21 @@ export default class Interpreter implements ExecuteIndex {
     { identifier: { value, start, end } }: ImportNode,
     scope: Scope
   ): Promise<Value> {
-    let mod: any;
-    switch (value) {
-      case 'std':
-        mod = std;
-        break;
-      case 'physics':
-        mod = physics;
-        break;
-      case 'fs':
-        mod = fs;
-        break;
-      default:
-        this.error(`Module ${value} doesn't exist`, start, end);
+    try {
+      const relUrl = `./modules/${value}/mod.ts`;
+      const path = new URL(relUrl, import.meta.url).href;
+      const mod = await import(path);
+      Object.entries(mod).forEach(([name, value]) => {
+        if (name === 'default')
+          Object.entries(mod.default).forEach(([dname, dvalue]) =>
+            scope.symbolTable.set(dname, dvalue as Value)
+          );
+        scope.symbolTable.set(name, value as Value);
+      });
+      return new Number(0);
+    } catch {
+      this.error(`Module ${value} doesn't exist`, start, end);
     }
-    Object.entries(mod).forEach(([name, value]) => {
-      if (name === 'default')
-        Object.entries(mod.default).forEach(([dname, dvalue]) =>
-          scope.symbolTable.set(dname, dvalue as Value)
-        );
-      scope.symbolTable.set(name, value as Value);
-    });
-    return new Number(0);
   }
 }
 

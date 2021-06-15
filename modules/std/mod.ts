@@ -1,7 +1,7 @@
 import Value, { Complex, List, Number, String } from '../../values/mod.ts';
-import funcs from './trigonometry.ts';
+export * from './trigonometry.ts';
 
-export default { '∞': new Number(Infinity), ...funcs };
+export default { '∞': new Number(Infinity) };
 export const i = new Complex(0, 1);
 
 export const π = new Number(Math.PI);
@@ -137,21 +137,21 @@ export function overlap(
     !(max2 instanceof Number)
   )
     throw 'overlap() expects 4 numbers';
-  const [mi1, ma1] = minmax(min1, max1);
-  const [mi2, ma2] = minmax(min2, max2);
+  const [mi1, ma1] = minmax(min1, max1).items as [min: Number, max: Number];
+  const [mi2, ma2] = minmax(min2, max2).items as [min: Number, max: Number];
   const range1 = ma1.value - mi1.value;
   const range2 = ma2.value - mi2.value;
   const range = Math.max(ma1.value, ma2.value) - Math.min(mi1.value, mi2.value);
   return new Number(range1 + range2 - range);
 }
 
-export function minmax(a: Value, b: Value): [min: Number, max: Number] {
+export function minmax(a: Value, b: Value): List {
   if (!(a instanceof Number) || !(b instanceof Number))
     throw 'minmax() expects 2 numbers';
-  return [
+  return new List([
     new Number(Math.min(a.value, b.value)),
     new Number(Math.max(a.value, b.value))
-  ];
+  ]);
 }
 
 function _min(array: Value[]): Number {
