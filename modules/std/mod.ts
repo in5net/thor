@@ -183,3 +183,9 @@ export function σ(x: Value): Number {
   if (!(x instanceof Number)) throw 'σ() expects a number';
   return new Number(1 / (1 + Math.exp(-x.value)));
 }
+
+export function exit(code: Value): never {
+  if (!code) Deno.exit();
+  if (!(code instanceof Number)) throw 'exit() expects a number or nothing';
+  Deno.exit(code.value);
+}
