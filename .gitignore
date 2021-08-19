@@ -1,3 +1,4 @@
+node_modules/
+dist/
 .antlr/
 .DS_Store
-thor
