@@ -87,10 +87,39 @@ export default class Interpreter implements ExecuteIndex {
   constructor(readonly safe = false) {}
 
   visit(node: Node, scope: Scope): Promise<Value> {
-    const methodName = `visit${node.constructor.name}`;
-    // @ts-ignore
-    const method = this[methodName] as VisitFunc;
-    return method.call(this, node, scope);
+    if (node instanceof NumberNode) return this.visitNumberNode(node, scope);
+    if (node instanceof BooleanNode) return this.visitBooleanNode(node, scope);
+    if (node instanceof StringNode) return this.visitStringNode(node, scope);
+    if (node instanceof ListNode) return this.visitListNode(node, scope);
+    if (node instanceof VecNode) return this.visitVecNode(node, scope);
+    if (node instanceof MatNode) return this.visitMatNode(node, scope);
+    if (node instanceof IdentifierNode) this.visitIdentifierNode(node, scope);
+    if (node instanceof ReturnNode) return this.visitReturnNode(node, scope);
+    if (node instanceof AssignmentNode)
+      return this.visitAssignmentNode(node, scope);
+    if (node instanceof FuncDefNode) return this.visitFuncDefNode(node, scope);
+    if (node instanceof FuncCallNode)
+      return this.visitFuncCallNode(node, scope);
+    if (node instanceof IfNode) return this.visitIfNode(node, scope);
+    if (node instanceof ForNode) return this.visitForNode(node, scope);
+    if (node instanceof WhileNode) return this.visitWhileNode(node, scope);
+    if (node instanceof ImportNode) return this.visitImportNode(node, scope);
+    if (node instanceof LoopNode) return this.visitLoopNode(node, scope);
+    if (node instanceof PropAccessNode)
+      return this.visitPropAccessNode(node, scope);
+    if (node instanceof GroupingNode)
+      return this.visitGroupingNode(node, scope);
+    if (node instanceof AwaitNode) return this.visitAwaitNode(node, scope);
+    if (node instanceof UnaryOpNode) return this.visitUnaryOpNode(node, scope);
+    if (node instanceof BinaryOpNode)
+      return this.visitBinaryOpNode(node, scope);
+    if (node instanceof DeclarationNode)
+      return this.visitDeclarationNode(node, scope);
+    this.error(
+      `Unknown node type: ${node.constructor.name}`,
+      node.start,
+      node.end
+    );
   }
 
   error(message: string, start: Position, end: Position): never {
