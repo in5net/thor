@@ -84,7 +84,7 @@ export class Error {
 export default class Interpreter implements ExecuteIndex {
   returnValue?: Value;
 
-  constructor(readonly safe = false) {}
+  constructor(readonly stdout = process.stdout, readonly safe = false) {}
 
   visit(node: Node, scope: Scope): Promise<Value> {
     if (node instanceof NumberNode) return this.visitNumberNode(node, scope);
@@ -388,9 +388,16 @@ export default class Interpreter implements ExecuteIndex {
       | ((...values: Value[]) => Value)
       | undefined;
     if (!func) this.error(`${name} is not a function`, start, end);
+
     const argValues = await Promise.all(
       args.map(arg => this.visit(arg, scope))
     );
+    if (name === 'print') {
+      this.stdout.write(
+        `${argValues.map(value => value.toPrint()).join(' ')}\n`
+      );
+      return None;
+    }
     const value =
       func instanceof Function
         ? await func.execute(argValues, this.safe)

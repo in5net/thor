@@ -17,11 +17,6 @@ export const e = new Number(Math.E);
 export const Φ = new Number((1 + Math.sqrt(5)) / 2);
 export const PHI = Φ;
 
-export function print(...messages: Value[]) {
-  console.log(messages.map(message => message.toPrint()).join(' '));
-  return new Number(0);
-}
-
 export function input(message?: Value) {
   if (message instanceof String)
     return new String(question(`${message.value} `) || '');
@@ -191,11 +186,4 @@ export function gcd(av: Value, bv: Value): Number {
 export function σ(x: Value): Number {
   if (!(x instanceof Number)) throw new Error('σ() expects a number');
   return new Number(1 / (1 + Math.exp(-x.value)));
-}
-
-export function exit(code: Value): never {
-  if (!code) process.exit();
-  if (!(code instanceof Number))
-    throw new Error('exit() expects a number or nothing');
-  process.exit(code.value);
 }

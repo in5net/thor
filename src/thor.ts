@@ -41,7 +41,7 @@ export async function runPrompt(): Promise<never> {
 
 async function run(
   text: string,
-  { safe = false, repl = false, log = false } = {}
+  { stdout = process.stdout, safe = false, repl = false, log = false } = {}
 ): Promise<Value> {
   try {
     const lexer = new Lexer(text);
@@ -57,7 +57,7 @@ async function run(
     const ast = parser.parse();
     if (log) console.log('AST:', ast.toString(), '\n');
 
-    const interpreter = new Interpreter(safe);
+    const interpreter = new Interpreter(stdout, safe);
     const globalScope = new Scope('<program>');
     interpreter.visitImportNode(
       new ImportNode(
@@ -98,7 +98,7 @@ async function run(
 
 export default async function thor(
   text: string,
-  { safe = false, log = false } = {}
+  { stdout = process.stdout, safe = false, log = false } = {}
 ): Promise<Value> {
-  return run(text, { safe, log });
+  return run(text, { stdout, safe, log });
 }
