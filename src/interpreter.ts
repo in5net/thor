@@ -383,12 +383,6 @@ export default class Interpreter implements ExecuteIndex {
     { name: { value: name, start, end }, args }: FuncCallNode,
     scope: Scope
   ): Promise<Value> {
-    const func = scope.symbolTable.get(name) as
-      | Function
-      | ((...values: Value[]) => Value)
-      | undefined;
-    if (!func) this.error(`${name} is not a function`, start, end);
-
     const argValues = await Promise.all(
       args.map(arg => this.visit(arg, scope))
     );
@@ -398,6 +392,13 @@ export default class Interpreter implements ExecuteIndex {
       );
       return None;
     }
+
+    const func = scope.symbolTable.get(name) as
+      | Function
+      | ((...values: Value[]) => Value)
+      | undefined;
+    if (!func) this.error(`${name} is not a function`, start, end);
+
     const value =
       func instanceof Function
         ? await func.execute(argValues, this.safe)
