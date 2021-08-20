@@ -84,7 +84,7 @@ export class Error {
 export default class Interpreter implements ExecuteIndex {
   returnValue?: Value;
 
-  constructor(readonly stdout = process.stdout, readonly safe = false) {}
+  constructor(readonly stdout?: Buffer, readonly safe = false) {}
 
   visit(node: Node, scope: Scope): Promise<Value> {
     if (node instanceof NumberNode) return this.visitNumberNode(node, scope);
@@ -388,9 +388,9 @@ export default class Interpreter implements ExecuteIndex {
       args.map(arg => this.visit(arg, scope))
     );
     if (name === 'print') {
-      this.stdout.write(
-        `${argValues.map(value => value.toPrint()).join(' ')}\n`
-      );
+      const msg = `${argValues.map(value => value.toPrint()).join(' ')}\n`;
+      if (this.stdout) this.stdout.write(msg);
+      else console.log(msg);
       return None;
     }
 

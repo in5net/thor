@@ -41,7 +41,12 @@ export async function runPrompt(): Promise<never> {
 
 async function run(
   text: string,
-  { stdout = process.stdout, safe = false, repl = false, log = false } = {}
+  {
+    stdout,
+    safe,
+    repl,
+    log
+  }: { stdout?: Buffer; safe?: boolean; repl?: boolean; log?: boolean } = {}
 ): Promise<Value> {
   try {
     const lexer = new Lexer(text);
@@ -98,7 +103,7 @@ async function run(
 
 export default async function thor(
   text: string,
-  { stdout = process.stdout, safe = false, log = false } = {}
+  { stdout, safe, log }: { stdout?: Buffer; safe?: boolean; log?: boolean } = {}
 ): Promise<Value> {
   return run(text, { stdout, safe, log });
 }

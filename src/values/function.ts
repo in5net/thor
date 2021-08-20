@@ -32,7 +32,7 @@ export class Function extends BaseFunction {
   }
 
   async execute(args: Value[], safe = false): Promise<Value> {
-    const interpreter = new Interpreter(process.stdout, safe);
+    const interpreter = new Interpreter(undefined, safe);
     const scope = this.generateScope();
 
     this.populateArgs(this.argNames, args, scope);
