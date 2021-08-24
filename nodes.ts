@@ -5,7 +5,7 @@ import {
   rgb24,
   white,
   yellow
-} from 'https://deno.land/std@0.83.0/fmt/colors.ts';
+} from 'https://deno.land/std@0.106.0/fmt/colors.ts';
 import Position from './position.ts';
 import Token, {
   BinaryOp,
@@ -37,7 +37,7 @@ export class BooleanNode extends Node {
   }
 
   toString() {
-    return this.token.value.toString();
+    return rgb24(this.token.value.toString(), 0xffff00);
   }
 }
 
@@ -69,6 +69,23 @@ export class StringNode extends Node {
               .join('')
       }"`
     );
+  }
+}
+
+export class MapNode extends Node {
+  constructor(
+    readonly fields: [Token<'identifier'>, Node][],
+    start: Position,
+    end: Position
+  ) {
+    super(start, end);
+  }
+
+  toString() {
+    return white(`{
+  ${this.fields.map(([key, value]) => `${key.value}: ${value}`).join(`,
+  `)}
+}`);
   }
 }
 
@@ -310,7 +327,7 @@ export class PropAccessNode extends Node {
   }
 
   toString() {
-    return `${this.node}[${this.prop}]`;
+    return `(${this.node}[${this.prop}])`;
   }
 }
 

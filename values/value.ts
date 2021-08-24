@@ -68,6 +68,7 @@ export default abstract class Value implements UnaryOpIndex, BinaryOpIndex {
   '^'(other: Value) {}
   ','(other: Value) {}
   ':'(other: Value) {}
+  '.'(other: Value) {}
 
   '='(other: Value) {}
   '+='(other: Value) {}

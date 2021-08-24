@@ -1,4 +1,10 @@
-import fs
+obj = {
+    name: {
+        first: "Andy",
+        last: "Candy"
+    },
+    age: 12,
+    likesPets: true
+}
 
-data = await readfile("./code.thor")
-print(data)
+print(obj.name.first)

@@ -5,6 +5,7 @@ export { default as Number } from './number.ts';
 export { default as Boolean } from './boolean.ts';
 export { default as String } from './string.ts';
 export { default as List } from './list.ts';
+export { default as HashMap } from './map.ts';
 export * from './function.ts';
 export { default as Range } from './range.ts';
 export { default as Future } from './future.ts';

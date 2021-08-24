@@ -1,4 +1,4 @@
-import { gray } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
+import { gray } from 'https://deno.land/std@0.106.0/fmt/colors.ts';
 
 export default class Position {
   constructor(

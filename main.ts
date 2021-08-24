@@ -1,4 +1,4 @@
-import { red } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
+import { red } from 'https://deno.land/std@0.106.0/fmt/colors.ts';
 
 import Interpreter, { Error as RTError } from './interpreter.ts';
 import Lexer, { Error as CharError } from './lexer.ts';
@@ -56,7 +56,7 @@ async function run(text: string, repl = false): Promise<Value | void> {
 
     const interpreter = new Interpreter();
     const globalScope = new Scope('<program>');
-    interpreter.visitImportNode(
+    await interpreter.visitImportNode(
       new ImportNode(
         new Token('identifier', 'std', Position.EOF, Position.EOF),
         Position.EOF

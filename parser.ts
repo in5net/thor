@@ -13,6 +13,7 @@ import Node, {
   ImportNode,
   ListNode,
   LoopNode,
+  MapNode,
   MatNode,
   NumberNode,
   PropAccessNode,
@@ -64,12 +65,13 @@ export default class Parser {
         case 2:
           message = `${strs[0]} or ${strs[1]}`;
           break;
-        default:
+        default: {
           const begin = strs.slice(0, -2);
           this.error(
             `Expected ${begin.join(', ')}, or ${strs[strs.length - 1]}`,
             start
           );
+        }
       }
     this.error(`Expected ${message}`, start);
   }
@@ -118,7 +120,7 @@ export default class Parser {
     let moreStatements = true;
 
     while (true) {
-      let newlines = this.skipNewlines();
+      const newlines = this.skipNewlines();
       if (newlines === 0) moreStatements = false;
 
       if (!moreStatements || this.token.is('grouping', '}')) break;
@@ -136,8 +138,6 @@ export default class Parser {
   }
 
   statement(): Node {
-    const { start } = this.token;
-
     // 'return' expr?
     if (this.token.is('keyword', 'return')) {
       const { start } = this.token;
@@ -164,8 +164,6 @@ export default class Parser {
   }
 
   expr(): Node {
-    const { start } = this.token;
-
     // 'let' IDENTIFIER '=' expr
     if (this.token.is('keyword', 'let')) {
       const { start } = this.token;
@@ -323,11 +321,11 @@ export default class Parser {
   call(): Node {
     const { start } = this.token;
 
-    // atom ('(' (expr (',' expr)*)? ')')?
-    const atom = this.atom();
+    // prop ('(' (expr (',' expr)*)? ')')?
+    const prop = this.prop();
 
     if (this.token.is('grouping', '(')) {
-      if (!(atom instanceof IdentifierNode)) this.expect('identifier', start);
+      if (!(prop instanceof IdentifierNode)) this.expect('identifier', start);
 
       this.advance();
       const args: Node[] = [];
@@ -352,7 +350,7 @@ export default class Parser {
         const body = this.expr();
 
         return new FuncDefNode(
-          atom.token,
+          prop.token,
           args.map(arg => {
             if (arg instanceof IdentifierNode) return arg.token;
             else this.expect('identifier', start);
@@ -363,10 +361,36 @@ export default class Parser {
         );
       }
 
-      return new FuncCallNode(atom.token, args, this.token.end);
+      return new FuncCallNode(prop.token, args, this.token.end);
     }
 
-    return atom;
+    return prop;
+  }
+
+  prop(): Node {
+    // IDENTIFIER ('.' IDENTIFIER)*
+    let rtn = this.atom();
+
+    while (this.token.is('operator', '.')) {
+      this.advance();
+      const prop = this.atom();
+      if (!(prop instanceof IdentifierNode))
+        this.expect('identifier', this.token.start);
+      rtn = new PropAccessNode(
+        rtn,
+        new StringNode([
+          new Token(
+            'string',
+            prop.token.value,
+            prop.token.start,
+            prop.token.end
+          )
+        ]),
+        this.token.end
+      );
+    }
+
+    return rtn;
   }
 
   atom(): Node {
@@ -392,7 +416,8 @@ export default class Parser {
               return parser.expr();
             })
       );
-    } else if (token.is('identifier')) {
+    } else if (token.is('grouping', '{')) rtn = this.mapExpr();
+    else if (token.is('identifier')) {
       this.advance();
       rtn = new IdentifierNode(token);
     } else if (token.is('grouping', '(')) {
@@ -439,6 +464,7 @@ export default class Parser {
           'identifier',
           'boolean',
           'string',
+          '{',
           "'if'",
           "'for'",
           "'while'",
@@ -509,6 +535,39 @@ export default class Parser {
     const nodes = this.list('⟩');
 
     return new VecNode(nodes, start, this.token.end);
+  }
+
+  mapExpr(): MapNode {
+    const { start } = this.token;
+
+    if (!this.token.is('grouping', '{')) this.expect("'{'", start);
+    this.advance();
+
+    const fields: [Token<'identifier'>, Node][] = [];
+
+    while (!this.token.is('grouping', '}')) {
+      this.skipNewlines();
+
+      const key = this.token as Token;
+      if (!key.is('identifier')) this.expect("':'", key.start);
+      this.advance();
+
+      let token = this.token as Token;
+      if (!token.is('operator', ':')) this.expect("':'", token.start);
+      this.advance();
+
+      fields.push([key, this.expr()]);
+
+      token = this.token as Token;
+      if (token.is('operator', ',')) this.advance();
+      else break;
+    }
+    this.skipNewlines();
+
+    if (!this.token.is('grouping', '}')) this.expect("'}'", start);
+    this.advance();
+
+    return new MapNode(fields, start, this.token.end);
   }
 
   awaitExpr(): AwaitNode {

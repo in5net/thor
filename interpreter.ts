@@ -13,6 +13,7 @@ import Node, {
   ImportNode,
   ListNode,
   LoopNode,
+  MapNode,
   MatNode,
   NumberNode,
   PropAccessNode,
@@ -28,6 +29,7 @@ import Value, {
   Boolean,
   Function,
   Future,
+  HashMap,
   List,
   Matrix,
   None,
@@ -51,7 +53,8 @@ type NodeName =
   | 'IdentifierNode'
   | 'IfNode'
   | 'ListNode'
-  | 'VecNode'
+  | 'ReturnNode'
+  | 'MapNode'
   | 'MatNode'
   | 'NumberNode'
   | 'ReturnNode'
@@ -147,6 +150,15 @@ export default class Interpreter implements ExecuteIndex {
       data.push(row);
     }
     return new Matrix(data);
+  }
+
+  async visitMapNode({ fields }: MapNode, scope: Scope): Promise<HashMap> {
+    const map = new Map<string, Value>();
+    for (const [key, node] of fields) {
+      const value = await this.visit(node, scope);
+      map.set(key.value, value);
+    }
+    return new HashMap(map);
   }
 
   async visitIdentifierNode(
@@ -306,7 +318,7 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   async visitLoopNode({ body }: LoopNode, scope: Scope): Promise<None> {
-    while (1) {
+    while (true) {
       await this.visit(body, scope);
       if (this.returnValue) break;
     }
@@ -400,8 +412,9 @@ export default class Interpreter implements ExecuteIndex {
           );
         scope.symbolTable.set(name, value as Value);
       });
-      return new Number(0);
+      return new None();
     } catch {
+      console.log(`Could not import ${value}`);
       this.error(`Module ${value} doesn't exist`, start, end);
     }
   }

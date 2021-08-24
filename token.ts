@@ -1,4 +1,4 @@
-import { green } from 'https://deno.land/std@0.83.0/fmt/colors.ts';
+import { green } from 'https://deno.land/std@0.106.0/fmt/colors.ts';
 
 import Position from './position.ts';
 
@@ -52,6 +52,7 @@ export const binaryOps = [
   '^',
   ',',
   ':',
+  '.',
   ...compareOps,
   ...identifierOps
 ] as const;

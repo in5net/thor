@@ -74,7 +74,7 @@ export default class Lexer {
         const start = this.position.copy();
         this.advance();
         return new Token('newline', undefined, start, this.position.copy());
-      } else if (DIGITS.test(char) || char === '.') return this.number();
+      } else if (DIGITS.test(char)) return this.number();
       else if (SUPERSCRIPT.includes(char)) return this.superscript();
       else if (char === '"') return this.string();
       else if (LETTERS.test(char)) return this.word();
