@@ -284,7 +284,7 @@ export class FuncDefNode extends Node {
 
 export class FuncCallNode extends Node {
   constructor(
-    readonly name: Token<'identifier'>,
+    readonly name: IdentifierNode | PropAccessNode,
     readonly args: Node[],
     end: Position
   ) {
@@ -292,7 +292,10 @@ export class FuncCallNode extends Node {
   }
 
   toString() {
-    return `(${cyan(this.name.value)}(${this.args.join(', ')}))`;
+    const { name } = this;
+    return `(${
+      name instanceof IdentifierNode ? cyan(name.token.value) : name.toString()
+    }(${this.args.join(', ')}))`;
   }
 }
 

@@ -335,15 +335,17 @@ export default class Interpreter implements ExecuteIndex {
       body,
       fnName
     );
+    value.setScope(scope);
     if (fnName) scope.symbolTable.set(fnName, value);
     return value;
   }
 
   async visitFuncCallNode(
-    { name: { value: name, start, end }, args }: FuncCallNode,
+    { name, args }: FuncCallNode,
     scope: Scope
   ): Promise<Value> {
-    const func = scope.symbolTable.get(name) as
+    const { start, end } = name;
+    const func = (await this.visit(name, scope)) as
       | Function
       | ((...values: Value[]) => Value)
       | undefined;

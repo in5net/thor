@@ -325,7 +325,11 @@ export default class Parser {
     const prop = this.prop();
 
     if (this.token.is('grouping', '(')) {
-      if (!(prop instanceof IdentifierNode)) this.expect('identifier', start);
+      if (
+        !(prop instanceof IdentifierNode) &&
+        !(prop instanceof PropAccessNode)
+      )
+        this.expect('identifier', start);
 
       this.advance();
       const args: Node[] = [];
@@ -347,6 +351,8 @@ export default class Parser {
       if (this.token.is('operator', '=')) {
         this.advance();
 
+        if (!(prop instanceof IdentifierNode)) this.expect('identifier', start);
+
         const body = this.expr();
 
         return new FuncDefNode(
@@ -361,7 +367,7 @@ export default class Parser {
         );
       }
 
-      return new FuncCallNode(prop.token, args, this.token.end);
+      return new FuncCallNode(prop, args, this.token.end);
     }
 
     return prop;

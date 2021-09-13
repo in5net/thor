@@ -140,7 +140,7 @@ export default class Token<
   toString(): string {
     const { type, value } = this;
     return `${TokenName[type]}${
-      value !== undefined ? `: ${green(`'${value}'`)}` : ''
+      value !== undefined ? `: ${green(`${value}`)}` : ''
     }`;
   }
   toPrint(): string {
