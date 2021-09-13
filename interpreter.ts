@@ -326,15 +326,16 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   async visitFuncDefNode(
-    { name: { value: name }, argNames, body }: FuncDefNode,
+    { name, argNames, body }: FuncDefNode,
     scope: Scope
   ): Promise<Function> {
+    const fnName = name?.value;
     const value = new Function(
-      name,
       argNames.map(arg => arg.value),
-      body
-    ).setScope(scope);
-    scope.symbolTable.set(name, value);
+      body,
+      fnName
+    );
+    if (fnName) scope.symbolTable.set(fnName, value);
     return value;
   }
 

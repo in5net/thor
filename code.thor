@@ -1,10 +1,8 @@
 obj = {
-    name: {
-        first: "Andy",
-        last: "Candy"
-    },
+    name: "Andy Cat",
     age: 12,
-    likesPets: true
+    likesPets: true,
+    hello: fn() -> print("Hello!")
 }
 
-print(obj.name.first)
+obj.hello()

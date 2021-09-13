@@ -13,8 +13,8 @@ import Token, {
 
 const WHITESPACE = /[ \t\r]/;
 const DIGITS = /[0-9]/;
-// letters, underscore, & greek letters
-const LETTERS = /[a-zA-Z_\u0391-\u03C9∞]/;
+// letters, underscore, $ & greek letters
+const LETTERS = /[a-zA-Z_$\u0391-\u03C9∞]/;
 const ESCAPE_CHARS: Record<string, string | undefined> = {
   '\\': '\\',
   n: '\n',
@@ -70,6 +70,7 @@ export default class Lexer {
     while (!this.eof()) {
       const { char } = this;
       if (WHITESPACE.test(char)) this.advance();
+      else if (char === '/' && this.nextChar === '/') this.comment();
       else if (/[\n;]/.test(char)) {
         const start = this.position.copy();
         this.advance();
@@ -91,6 +92,16 @@ export default class Lexer {
       } else this.error(`Illegal character '${char}'`, this.position.copy());
     }
     return Token.EOF;
+  }
+
+  comment(): void {
+    if (this.char !== '/' || this.nextChar !== '/') return;
+    this.advance();
+    this.advance();
+
+    while (!['\n', EOF].includes(this.char)) {
+      this.advance();
+    }
   }
 
   superscript(): Token<'superscript'> {

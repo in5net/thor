@@ -264,19 +264,21 @@ export class LoopNode extends Node {
 
 export class FuncDefNode extends Node {
   constructor(
-    readonly name: Token<'identifier'>,
     readonly argNames: Token<'identifier'>[],
     readonly body: Node,
     start: Position,
+    readonly name?: Token<'identifier'>,
     readonly arrow = false
   ) {
     super(start, body.end);
   }
 
   toString() {
-    return `(${yellow('fn')} ${cyan(this.name.value)}(${this.argNames
-      .map(node => magenta(node.value))
-      .join(', ')})${this.arrow ? ' ->' : ':'} ${this.body})`;
+    return `(${yellow('fn')} ${
+      this.name ? cyan(this.name.value) : ''
+    }(${this.argNames.map(node => magenta(node.value)).join(', ')})${
+      this.arrow ? ' ->' : ':'
+    } ${this.body})`;
   }
 }
 

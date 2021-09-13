@@ -1,0 +1,141 @@
+100%
+
+
+a @add b
+add(a,b)
+
+class Point {
+    constructor(x, y) {
+        this.x = x
+        this.y = y
+    }
+
+    call (this,other) {
+        if other:
+            return Point(this.x + other.x, this.y + other.y)
+        return Point(-this.x, -this.y)
+    }
+    * (){
+
+    }
+}
+
+a = Point(1, 2)
+b = Point(7, 6)
+a - b
+-a
+
+a + b
+b + a
+
+a / b
+a()
+
+
+⊻ ⋈ 
+
+
+
+arr = [1, 2, 3, 4, 5]
+slice = arr[1:5:2] // [2, 4]
+
+z = 3 + 4i
+imag(z)
+real(z)
+
+
+m1 = [
+    1  5 -6
+    4  5  8
+    3  3  3
+]
+m2=[...]
+m1 * m2
+
+⋐funckey⋑
+
+***
+
+im$verry$great.hi
+
+&amp; //easter egg
+
+7 = 7 //cannot do
+😀 = 7 //cannot do number like
+😀.kids = 🦻
+
+class a(x, y) {
+    name: 7 //is comma optional?
+
+    
+    if x > 5: name = "ur mom"
+    else: name = "u suck" //makes else reserved
+
+    while
+    for 1:10 {
+
+    }
+}
+new function(){
+    this.blah = 7
+    @blah
+}
+
+obj = {
+    @a = 7
+    for x in 0:10 {
+        @b = x
+    }
+    @x = {
+        @me = lol
+        }
+}
+
+obj.value.value
+
+h = {}
+$h = 7
+a = $h + 2
+$h = 3
+
+{   
+@blah = ${ //mk proxy
+    @source = {} //source if no handler
+    @subGetEnd = fn() // on (refrenced?) value retreved 
+    @valueSet  = fn() // on (refrenced?) value set simmlar to above
+    @keyGet = fn(key) //if a key would be gotten
+    @keySet = fn(key,value) //if a key would be set
+    }
+}
+
+obj.value 
+
+${} //
+
+word = ${}
+print(word.l) // --> 7
+word.l.a // --> 9
+
+
+$word //access proxy object
+
+h // keys, value
+
+
+first = "ur"
+last = "mom"
+
+$: fullname = "{first} {last}"
+
+get$word = fn (value) -> ...
+
+get$blah // getMeta(this).getters['blah']
+get$blah // 
+
+
+v1 ( v2 ) //call?
+v 2 //times?
+
+(4i).mutiplyer //usefull?
+
+

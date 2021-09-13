@@ -22,7 +22,7 @@ export default class Number extends Value {
   }
 
   operatorFunc(func: Function, op: BinaryOp): Function {
-    const opFunc = new Function(func.name, func.argNames, func.body);
+    const opFunc = new Function(func.argNames, func.body, func.name);
     opFunc.execute = async (args: Value[]) =>
       this[op](await func.execute(args)) as Value;
     return opFunc;

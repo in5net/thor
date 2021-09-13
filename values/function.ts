@@ -27,7 +27,7 @@ export class BaseFunction extends Value {
 }
 
 export class Function extends BaseFunction {
-  constructor(name: string, public argNames: string[], public body: Node) {
+  constructor(public argNames: string[], public body: Node, name?: string) {
     super(name);
   }
 

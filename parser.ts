@@ -350,13 +350,13 @@ export default class Parser {
         const body = this.expr();
 
         return new FuncDefNode(
-          prop.token,
           args.map(arg => {
             if (arg instanceof IdentifierNode) return arg.token;
             else this.expect('identifier', start);
           }),
           body,
           start,
+          prop.token,
           true
         );
       }
@@ -698,16 +698,18 @@ export default class Parser {
     if (!this.token.is('keyword', 'fn')) this.expect("'fn'", start);
     this.advance();
 
-    if (!this.token.is('identifier')) this.expect('identifier', start);
-    const name = this.token as Token<'identifier'>;
-    this.advance();
+    let name: Token<'identifier'> | undefined;
+    if (this.token.is('identifier')) {
+      name = this.token as unknown as Token<'identifier'>;
+      this.advance();
+    }
 
     if (!(this.token as Token).is('grouping', '(')) this.expect("'('", start);
     this.advance();
 
     const argNames: Token<'identifier'>[] = [];
     if ((this.token as Token).is('identifier')) {
-      argNames.push(this.token as Token<'identifier'>);
+      argNames.push(this.token as unknown as Token<'identifier'>);
       this.advance();
       while ((this.token as Token).is('operator', ',')) {
         const start = (this.token as Token).start.copy();
@@ -715,7 +717,7 @@ export default class Parser {
         if (!(this.token as Token).is('identifier'))
           this.expect('identifier', start);
 
-        argNames.push(this.token as Token<'identifier'>);
+        argNames.push(this.token as unknown as Token<'identifier'>);
         this.advance();
       }
 
@@ -734,7 +736,7 @@ export default class Parser {
     } else if ((this.token as Token).is('grouping', '{')) body = this.block();
     else this.expect(["'->'", "'{'"], start);
 
-    return new FuncDefNode(name, argNames, body, start, arrow);
+    return new FuncDefNode(argNames, body, start, name, arrow);
   }
 
   binaryOp(left: () => Node, operators: BinaryOp[], right = left) {
