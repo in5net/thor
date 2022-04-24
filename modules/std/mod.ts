@@ -1,5 +1,5 @@
 import Value, { Complex, List, Number, String } from '../../values/mod.ts';
-export * from './trigonometry.ts';
+export * from './trig.ts';
 
 export default { '∞': new Number(Infinity) };
 export const i = new Complex(0, 1);

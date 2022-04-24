@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Thor",
+  "patterns": [
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#strings"
+    }
+  ],
+  "repository": {
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.thor",
+          "match": "\\b(let|if|else|for|in|while|fn|return|await|import)\\b"
+        },
+        {
+          "name": "keyword.operator.thor",
+          "match": "\\b(not|and|or)\\b"
+        },
+        {
+          "name": "constant.language.thor",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.thor",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.thor",
+          "match": "\\\\."
+        }
+      ]
+    }
+  },
+  "scopeName": "source.thor"
+}
