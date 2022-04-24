@@ -29,10 +29,10 @@ export default abstract class Value implements UnaryOpIndex, BinaryOpIndex {
     throw `Illegal operation: ${left.constructor.name} ${operator} ${right.constructor.name}`;
   }
 
-  '+'(other?: Value) {}
-  '-'(other?: Value) {}
-  '±'(other?: Value) {}
-  '∓'(other?: Value) {}
+  '+'(_other?: Value) {}
+  '-'(_other?: Value) {}
+  '±'(_other?: Value) {}
+  '∓'(_other?: Value) {}
   '√'() {}
   '∛'() {}
   '∜'() {}
@@ -54,39 +54,39 @@ export default abstract class Value implements UnaryOpIndex, BinaryOpIndex {
   '⁹'() {}
 
   '()'() {}
-  '[]'(other: Value) {}
+  '[]'(_other: Value) {}
   '{}'() {}
   '||'() {}
   '⌊⌋'() {}
   '⌈⌉'() {}
 
-  '*'(other: Value) {}
-  '∙'(other: Value) {}
-  '×'(other: Value) {}
-  '/'(other: Value) {}
-  '%'(other: Value) {}
-  '^'(other: Value) {}
-  ','(other: Value) {}
-  ':'(other: Value) {}
-  '.'(other: Value) {}
+  '*'(_other: Value) {}
+  '∙'(_other: Value) {}
+  '×'(_other: Value) {}
+  '/'(_other: Value) {}
+  '%'(_other: Value) {}
+  '^'(_other: Value) {}
+  ','(_other: Value) {}
+  ':'(_other: Value) {}
+  '.'(_other: Value) {}
 
-  '='(other: Value) {}
-  '+='(other: Value) {}
-  '-='(other: Value) {}
-  '++'(other: Value) {}
-  '--'(other: Value) {}
-  '*='(other: Value) {}
-  '/='(other: Value) {}
-  '%='(other: Value) {}
-  '^='(other: Value) {}
+  '='(_other: Value) {}
+  '+='(_other: Value) {}
+  '-='(_other: Value) {}
+  '++'(_other: Value) {}
+  '--'(_other: Value) {}
+  '*='(_other: Value) {}
+  '/='(_other: Value) {}
+  '%='(_other: Value) {}
+  '^='(_other: Value) {}
 
-  '=='(other: Value) {}
-  '!='(other: Value) {}
-  '<'(other: Value) {}
-  '<='(other: Value) {}
-  '>'(other: Value) {}
-  '>='(other: Value) {}
-  and(other: Value) {}
-  or(other: Value) {}
-  in(other: Value) {}
+  '=='(_other: Value) {}
+  '!='(_other: Value) {}
+  '<'(_other: Value) {}
+  '<='(_other: Value) {}
+  '>'(_other: Value) {}
+  '>='(_other: Value) {}
+  and(_other: Value) {}
+  or(_other: Value) {}
+  in(_other: Value) {}
 }
