@@ -401,19 +401,25 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   async visitImportNode(
-    { identifier: { value, start, end } }: ImportNode,
+    { moduleIdentifier: { value, start, end }, identifiers }: ImportNode,
     scope: Scope
   ): Promise<Value> {
     try {
       const relUrl = `./modules/${value}/mod.ts`;
       const path = new URL(relUrl, import.meta.url).href;
       const mod = await import(path);
+      const nameInImport = (name: string) => {
+        if (!identifiers) return true;
+        return identifiers.some(identifier => identifier.value === name);
+      };
       Object.entries(mod).forEach(([name, value]) => {
         if (name === 'default')
-          Object.entries(mod.default).forEach(([dname, dvalue]) =>
-            scope.symbolTable.set(dname, dvalue as Value)
-          );
-        scope.symbolTable.set(name, value as Value);
+          Object.entries(mod.default).forEach(([dname, dvalue]) => {
+            if (nameInImport(dname))
+              scope.symbolTable.set(dname, dvalue as Value);
+          });
+        else if (nameInImport(name))
+          scope.symbolTable.set(name, value as Value);
       });
       return new None();
     } catch {

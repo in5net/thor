@@ -330,11 +330,24 @@ export class PropAccessNode extends Node {
 }
 
 export class ImportNode extends Node {
-  constructor(readonly identifier: Token<'identifier'>, start: Position) {
-    super(start, identifier.end);
+  constructor(
+    readonly moduleIdentifier: Token<'identifier'>,
+    start: Position,
+    end: Position,
+    readonly identifiers?: Token<'identifier'>[]
+  ) {
+    super(start, end);
   }
 
   toString() {
-    return `(${yellow('import')} ${this.identifier.value})`;
+    const {
+      moduleIdentifier: { value: module },
+      identifiers
+    } = this;
+    if (identifiers)
+      return `(${yellow('import')} {${identifiers
+        .map(id => id.value)
+        .join(', ')}} ${yellow('from')} ${module})`;
+    return `(${yellow('import')} ${module})`;
   }
 }

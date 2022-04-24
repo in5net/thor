@@ -1,9 +1,4 @@
-obj = {
-    name: "Andy Cat",
-    age: 12,
-    likesPets: true,
-    hello: fn() -> print("Hello!
-")
-}
+import {c} from physics
 
-obj.hello()
+print("c = {c}")
+print("g = {g}")

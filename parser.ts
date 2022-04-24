@@ -147,16 +147,49 @@ export default class Parser {
       return new ReturnNode(node, start);
     }
 
-    // 'import' IDENTIFIER
+    // ('import' IDENTIFIER) | ('import' '{' (IDENTIFIER (',' IDENTIFIER)*)? '}' 'from' IDENTIFIER)
     if (this.token.is('keyword', 'import')) {
       const { start } = this.token;
       this.advance();
 
-      if (!this.token.is('identifier')) this.expect('identifier', start);
+      if (this.token.is('identifier')) {
+        const identifier = this.token as Token<'identifier'>;
+        this.advance();
+        return new ImportNode(identifier, start, identifier.end);
+      }
+
+      if (!(this.token as Token).is('grouping', '{')) this.expect("'{'", start);
+      this.advance();
+
+      const identifiers: Token<'identifier'>[] = [];
+      if ((this.token as Token).is('identifier')) {
+        identifiers.push(this.token as unknown as Token<'identifier'>);
+        this.advance();
+        while ((this.token as Token).is('operator', ',')) {
+          const start = (this.token as Token).start.copy();
+          this.advance();
+          if (!(this.token as Token).is('identifier'))
+            this.expect('identifier', start);
+
+          identifiers.push(this.token as unknown as Token<'identifier'>);
+          this.advance();
+        }
+
+        if (!this.token.is('grouping', '}'))
+          this.expect(["','", "'}'"], this.token.start);
+      }
+      this.advance();
+
+      if (!this.token.is('keyword', 'from'))
+        this.expect("'from'", (this.token as Token).start);
+      this.advance();
+
+      if (!this.token.is('identifier'))
+        this.expect('identifier', (this.token as Token).start);
       const identifier = this.token as Token<'identifier'>;
       this.advance();
 
-      return new ImportNode(identifier, start);
+      return new ImportNode(identifier, start, identifier.end, identifiers);
     }
 
     // expr
@@ -727,8 +760,8 @@ export default class Parser {
         this.advance();
       }
 
-      // @ts-ignore
-      if (!this.token.is('grouping', ')')) this.expect(["','", "')'"]);
+      if (!this.token.is('grouping', ')'))
+        this.expect(["','", "')'"], this.token.end);
     }
     this.advance();
 

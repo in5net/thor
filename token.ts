@@ -76,7 +76,8 @@ export const keywords = [
   'fn',
   'return',
   'await',
-  'import'
+  'import',
+  'from'
 ] as const;
 
 export type Boolean = typeof booleans[number];

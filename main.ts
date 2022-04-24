@@ -59,6 +59,7 @@ async function run(text: string, repl = false): Promise<Value | void> {
     await interpreter.visitImportNode(
       new ImportNode(
         new Token('identifier', 'std', Position.EOF, Position.EOF),
+        Position.EOF,
         Position.EOF
       ),
       globalScope
