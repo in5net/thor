@@ -1,4 +1,4 @@
-import { red } from 'https://deno.land/std@0.106.0/fmt/colors.ts';
+import { red } from 'fmt/colors.ts';
 
 import Interpreter, { Error as RTError } from './interpreter.ts';
 import Lexer, { Error as CharError } from './lexer.ts';

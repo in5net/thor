@@ -1,4 +1,4 @@
-import { rgb24 } from 'https://deno.land/std@0.106.0/fmt/colors.ts';
+import { rgb24 } from 'fmt/colors.ts';
 
 import Boolean from './boolean.ts';
 import List from './list.ts';

@@ -1,4 +1,4 @@
-import { green } from 'https://deno.land/std@0.106.0/fmt/colors.ts';
+import { green } from 'fmt/colors.ts';
 
 import Position from './position.ts';
 
