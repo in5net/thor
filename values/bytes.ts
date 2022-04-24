@@ -2,8 +2,8 @@ import { rgb24 } from 'fmt/colors.ts';
 
 import Value from './value.ts';
 
-export default class Uint8Array extends Value {
-  constructor(public value: globalThis.Uint8Array) {
+export default class Bytes extends Value {
+  constructor(public value: Uint8Array) {
     super();
   }
 
@@ -11,8 +11,8 @@ export default class Uint8Array extends Value {
     return this.value.toString();
   }
   toPrint(): string {
-    return `uint8[] [${[...this.value]
-      .map(v => rgb24(v.toString(), 0xffff00))
+    return `bytes [${[...this.value]
+      .map(v => rgb24(v.toString(16), 0xffff00))
       .join(', ')}]`;
   }
 }
