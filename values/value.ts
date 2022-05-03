@@ -88,5 +88,8 @@ export default abstract class Value implements UnaryOpIndex, BinaryOpIndex {
   '>='(_other: Value) {}
   and(_other: Value) {}
   or(_other: Value) {}
+  xor(_other: Value) {}
+  nand(_other: Value) {}
+  nor(_other: Value) {}
   in(_other: Value) {}
 }

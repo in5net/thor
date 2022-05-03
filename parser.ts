@@ -27,6 +27,7 @@ import Position from './position.ts';
 import Token, {
   BinaryOp,
   binaryOps,
+  boolCompareOps,
   compareOps,
   groupings,
   IdentifierOp,
@@ -39,8 +40,6 @@ import Token, {
   RightGrouping,
   UnaryOp
 } from './token.ts';
-
-const WORD_COMPARE_OPS = compareOps.filter(op => /[a-z]/.test(op));
 
 export default class Parser {
   index = -1;
@@ -236,7 +235,7 @@ export default class Parser {
     }
 
     // comp_expr (('and' | 'or' | 'in') comp_expr)*
-    return this.binaryOp(this.compExpr, WORD_COMPARE_OPS);
+    return this.binaryOp(this.compExpr, boolCompareOps);
   }
 
   orExpr(): Node {
@@ -778,7 +777,7 @@ export default class Parser {
     return new FuncDefNode(argNames, body, start, name, arrow);
   }
 
-  binaryOp(left: () => Node, operators: BinaryOp[], right = left) {
+  binaryOp(left: () => Node, operators: readonly BinaryOp[], right = left) {
     let result = left.call(this);
 
     while (

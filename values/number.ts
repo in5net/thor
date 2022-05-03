@@ -152,6 +152,20 @@ export default class Number extends Value {
       return new Boolean(!!this.value || !!other.value);
   }
 
+  xor(other: Value) {
+    if (other instanceof Number) return new Number(this.value ^ other.value);
+  }
+
+  nand(other: Value) {
+    if (other instanceof Number)
+      return new Boolean(!this.value && !other.value);
+  }
+
+  nor(other: Value) {
+    if (other instanceof Number)
+      return new Boolean(!this.value || !other.value);
+  }
+
   in(other: Value) {
     if (other instanceof List)
       return new Boolean(

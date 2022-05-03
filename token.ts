@@ -17,17 +17,16 @@ export const prefixUnaryOps = [
 ] as const;
 export const postfixUnaryOps = ['!', '°'] as const;
 export const unaryOps = [...prefixUnaryOps, ...postfixUnaryOps] as const;
-export const compareOps = [
-  '==',
-  '!=',
-  '<',
-  '<=',
-  '>',
-  '>=',
+export const numberCompareOps = ['==', '!=', '<', '<=', '>', '>='] as const;
+export const boolCompareOps = [
   'and',
   'or',
+  'xor',
+  'nand',
+  'nor',
   'in'
 ] as const;
+export const compareOps = [...boolCompareOps, ...numberCompareOps] as const;
 export const identifierOps = [
   '=',
   '+=',

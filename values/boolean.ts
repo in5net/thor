@@ -29,12 +29,25 @@ export default class Boolean extends Value {
   }
 
   and(other: Value) {
-    if (other instanceof Boolean)
-      return new Boolean(this.value && !!other.value);
+    if (other instanceof Boolean) return new Boolean(this.value && other.value);
   }
 
   or(other: Value) {
+    if (other instanceof Boolean) return new Boolean(this.value || other.value);
+  }
+
+  xor(other: Value) {
     if (other instanceof Boolean)
-      return new Boolean(this.value || !!other.value);
+      return new Boolean(this.value !== other.value);
+  }
+
+  nand(other: Value) {
+    if (other instanceof Boolean)
+      return new Boolean(!this.value && !other.value);
+  }
+
+  nor(other: Value) {
+    if (other instanceof Boolean)
+      return new Boolean(!this.value || !other.value);
   }
 }
