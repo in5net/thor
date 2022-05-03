@@ -2,7 +2,7 @@ import Position from './position.ts';
 import Token, {
   Boolean,
   booleans,
-  groupings,
+  groupingChars,
   Keyword,
   keywords,
   Operator,
@@ -13,8 +13,6 @@ import Token, {
 
 const WHITESPACE = /[ \t\r]/;
 const DIGITS = /[0-9]/;
-// letters, underscore, $ & greek letters
-const LETTERS = /[a-zA-Z_$\u0391-\u03C9∞]/;
 const ESCAPE_CHARS: Record<string, string | undefined> = {
   '\\': '\\',
   n: '\n',
@@ -78,18 +76,18 @@ export default class Lexer {
       } else if (DIGITS.test(char)) return this.number();
       else if (SUPERSCRIPT.includes(char)) return this.superscript();
       else if (char === '"') return this.string();
-      else if (LETTERS.test(char)) return this.word();
       else if (char === '-' && this.nextChar === '>') {
         const start = this.position.copy();
         this.advance();
         this.advance();
         return new Token('arrow', undefined, start, this.position.copy());
       } else if (operators.includes(char as Operator)) return this.operator();
-      else if (Object.entries(groupings).flat().includes(char)) {
+      else if (groupingChars.includes(char)) {
         const start = this.position.copy();
         this.advance();
         return new Token('grouping', char, start, this.position.copy());
-      } else this.error(`Illegal character '${char}'`, this.position.copy());
+      } else if (/\S/.test(char)) return this.word();
+      else this.error(`Illegal character '${char}'`, this.position.copy());
     }
     return Token.EOF;
   }
@@ -202,7 +200,12 @@ export default class Lexer {
     let str = this.char;
     this.advance();
 
-    while ([LETTERS, DIGITS].some(regex => regex.test(this.char))) {
+    while (
+      /\S/.test(this.char) &&
+      !operators.includes(this.char as Operator) &&
+      !groupingChars.includes(this.char)
+    ) {
+      console.log(this.char);
       str += this.char;
       this.advance();
     }

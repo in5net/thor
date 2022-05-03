@@ -65,6 +65,7 @@ export const groupings = {
   '⌈': '⌉',
   '⟨': '⟩'
 } as const;
+export const groupingChars = Object.entries(groupings).flat();
 export const keywords = [
   'let',
   'if',
