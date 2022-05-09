@@ -165,7 +165,7 @@ export default class Interpreter implements ExecuteIndex {
     { token: { value: name, start, end } }: IdentifierNode,
     scope: Scope
   ): Promise<Value> {
-    const value = scope.symbolTable.get(name);
+    const value = scope.get(name);
     if (!value) this.error(`'${name}' is not defined`, start, end);
     return value;
   }
@@ -175,7 +175,7 @@ export default class Interpreter implements ExecuteIndex {
     scope: Scope
   ): Promise<Value> {
     const value = await this.visit(node, scope);
-    scope.symbolTable.add(identifier, value);
+    scope.add(identifier, value);
     return value;
   }
 
@@ -186,7 +186,7 @@ export default class Interpreter implements ExecuteIndex {
     let returnValue: Value | undefined;
     const right = node ? await this.visit(node, scope) : undefined;
     if (operator === '=') {
-      scope.symbolTable.set(identifier.value, right!);
+      scope.set(identifier.value, right!);
       return right!;
     }
 
@@ -195,44 +195,44 @@ export default class Interpreter implements ExecuteIndex {
     switch (operator) {
       case '+=': {
         const value = left['+'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.set(identifier.value, value);
         break;
       }
       case '-=': {
         const value = left['-'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.set(identifier.value, value);
         break;
       }
       case '++': {
         const value = left['+'](new Number(1)) as unknown as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.set(identifier.value, value);
         returnValue = left;
         break;
       }
       case '--': {
         const value = left['-'](new Number(1)) as unknown as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.set(identifier.value, value);
         returnValue = left;
         break;
       }
       case '*=': {
         const value = left['*'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.set(identifier.value, value);
         break;
       }
       case '/=': {
         const value = left['/'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.set(identifier.value, value);
         break;
       }
       case '%=': {
         const value = left['%'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.set(identifier.value, value);
         break;
       }
       case '^=': {
         const value = left['^'](right as unknown as Value) as unknown as Value;
-        scope.symbolTable.set(identifier.value, value);
+        scope.set(identifier.value, value);
       }
     }
     return (right || returnValue) as Value;
@@ -283,20 +283,20 @@ export default class Interpreter implements ExecuteIndex {
     const iterableValue = await this.visit(iterable, scope);
     if (iterableValue instanceof List) {
       for (const item of iterableValue.items) {
-        scope.symbolTable.set(identifier.value, item);
+        scope.set(identifier.value, item);
         await this.visit(body, scope);
         if (this.returnValue) break;
       }
     } else if (iterableValue instanceof Range) {
       const { from, to, step } = iterableValue;
       for (let i = from; i < to; i += step) {
-        scope.symbolTable.set(identifier.value, new Number(i));
+        scope.set(identifier.value, new Number(i));
         await this.visit(body, scope);
         if (this.returnValue) break;
       }
     } else if (iterableValue instanceof Number) {
       for (let i = 0; i < iterableValue.value; i++) {
-        scope.symbolTable.set(identifier.value, new Number(i));
+        scope.set(identifier.value, new Number(i));
         await this.visit(body, scope);
         if (this.returnValue) break;
       }
@@ -326,17 +326,13 @@ export default class Interpreter implements ExecuteIndex {
   }
 
   async visitFuncDefNode(
-    { name, argNames, body }: FuncDefNode,
+    { name, args, body }: FuncDefNode,
     scope: Scope
   ): Promise<Function> {
     const fnName = name?.value;
-    const value = new Function(
-      argNames.map(arg => arg.value),
-      body,
-      fnName
-    );
+    const value = new Function(args, body, fnName);
     value.setScope(scope);
-    if (fnName) scope.symbolTable.set(fnName, value);
+    if (fnName) scope.set(fnName, value);
     return value;
   }
 
@@ -415,11 +411,9 @@ export default class Interpreter implements ExecuteIndex {
       Object.entries(mod).forEach(([name, value]) => {
         if (name === 'default')
           Object.entries(mod.default).forEach(([dname, dvalue]) => {
-            if (nameInImport(dname))
-              scope.symbolTable.set(dname, dvalue as Value);
+            if (nameInImport(dname)) scope.set(dname, dvalue as Value);
           });
-        else if (nameInImport(name))
-          scope.symbolTable.set(name, value as Value);
+        else if (nameInImport(name)) scope.set(name, value as Value);
       });
       return new None();
     } catch {

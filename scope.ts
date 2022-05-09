@@ -1,17 +1,9 @@
 import Value from './values/mod.ts';
 
 export default class Scope {
-  symbolTable = new SymbolTable();
-
-  constructor(public name: string, public parent?: Scope) {
-    this.symbolTable.parent = parent?.symbolTable;
-  }
-}
-
-export class SymbolTable {
   symbols = new Map<string, Value>();
 
-  constructor(public parent?: SymbolTable) {}
+  constructor(public name: string, public parent?: Scope) {}
 
   add(name: string, value: Value): void {
     this.symbols.set(name, value);
@@ -23,9 +15,10 @@ export class SymbolTable {
     return value;
   }
 
-  set(name: string, value: Value): void {
+  set(name: string, value: Value): Value {
     // TODO: search parent first, then set
     this.symbols.set(name, value);
+    return value;
   }
 
   remove(name: string): void {

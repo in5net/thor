@@ -1,4 +1,4 @@
-import { cyan, green, magenta, rgb24, white, yellow } from 'fmt/colors.ts';
+import { red, cyan, green, magenta, rgb24, white, yellow } from 'fmt/colors.ts';
 import Position from './position.ts';
 import Token, {
   BinaryOp,
@@ -255,9 +255,10 @@ export class LoopNode extends Node {
   }
 }
 
+export type Arg = [name: Token<'identifier'>, type?: Token<'type'>];
 export class FuncDefNode extends Node {
   constructor(
-    readonly argNames: Token<'identifier'>[],
+    readonly args: Arg[],
     readonly body: Node,
     start: Position,
     readonly name?: Token<'identifier'>,
@@ -269,9 +270,12 @@ export class FuncDefNode extends Node {
   toString() {
     return `(${yellow('fn')} ${
       this.name ? cyan(this.name.value) : ''
-    }(${this.argNames.map(node => magenta(node.value)).join(', ')})${
-      this.arrow ? ' ->' : ':'
-    } ${this.body})`;
+    }(${this.args
+      .map(
+        ([name, type]) =>
+          `${magenta(name.value)}${type ? `: ${red(type.value)}` : ''}`
+      )
+      .join(', ')})${this.arrow ? ' ->' : ':'} ${this.body})`;
   }
 }
 

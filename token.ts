@@ -1,6 +1,7 @@
 import { green } from 'fmt/colors.ts';
 
 import Position from './position.ts';
+import type Type from './type.ts';
 
 export const booleans = ['true', 'false'] as const;
 export const prefixUnaryOps = [
@@ -102,6 +103,7 @@ export interface TokenMap {
   superscript: Token<Exclude<keyof TokenMap, 'superscript'>>[];
   boolean: boolean;
   string: String;
+  type: Type;
   identifier: string;
   operator: Operator;
   arrow: undefined;
@@ -116,6 +118,7 @@ enum TokenName {
   superscript = 'superscript',
   boolean = 'boolean',
   string = 'string',
+  type = 'type',
   identifier = 'identifier',
   operator = 'operator',
   arrow = 'arrow',

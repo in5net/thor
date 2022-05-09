@@ -10,6 +10,7 @@ import Token, {
   String,
   TokenMap
 } from './token.ts';
+import Type from './type.ts';
 
 const WHITESPACE = /[ \t\r]/;
 const DIGITS = /[0-9]/;
@@ -194,7 +195,7 @@ export default class Lexer {
     return new Token('string', fragments, start, this.position.copy());
   }
 
-  word(): Token<'keyword' | 'boolean' | 'operator' | 'identifier'> {
+  word(): Token {
     const start = this.position.copy();
 
     let str = this.char;
@@ -205,7 +206,6 @@ export default class Lexer {
       !operators.includes(this.char as Operator) &&
       !groupingChars.includes(this.char)
     ) {
-      console.log(this.char);
       str += this.char;
       this.advance();
     }
@@ -217,6 +217,8 @@ export default class Lexer {
       return new Token('boolean', str === 'true', start, end);
     if (operators.includes(str as Operator))
       return new Token('operator', str as Operator, start, end);
+    if (Type[str as keyof typeof Type])
+      return new Token('type', Type[str as keyof typeof Type], start, end);
     return new Token('identifier', str, start, end);
   }
 

@@ -1,4 +1,5 @@
 import Node, {
+  Arg,
   AssignmentNode,
   AwaitNode,
   BinaryOpNode,
@@ -40,6 +41,7 @@ import Token, {
   RightGrouping,
   UnaryOp
 } from './token.ts';
+import Type from './type.ts';
 
 export default class Parser {
   index = -1;
@@ -389,8 +391,8 @@ export default class Parser {
 
         return new FuncDefNode(
           args.map(arg => {
-            if (arg instanceof IdentifierNode) return arg.token;
-            else this.expect('identifier', start);
+            if (arg instanceof IdentifierNode) return [arg.token];
+            this.expect('identifier', start);
           }),
           body,
           start,
@@ -745,19 +747,26 @@ export default class Parser {
     if (!(this.token as Token).is('grouping', '(')) this.expect("'('", start);
     this.advance();
 
-    const argNames: Token<'identifier'>[] = [];
+    const args: Arg[] = [];
     if ((this.token as Token).is('identifier')) {
-      argNames.push(this.token as unknown as Token<'identifier'>);
-      this.advance();
-      while ((this.token as Token).is('operator', ',')) {
-        const start = (this.token as Token).start.copy();
-        this.advance();
+      do {
         if (!(this.token as Token).is('identifier'))
-          this.expect('identifier', start);
+          this.expect('identifier', this.token.start);
 
-        argNames.push(this.token as unknown as Token<'identifier'>);
+        const arg: Arg = [this.token as unknown as Token<'identifier'>];
         this.advance();
-      }
+
+        if (this.token.is('operator', ':')) {
+          this.advance();
+
+          if (!(this.token as Token).is('type'))
+            this.expect('type', (this.token as Token).start);
+
+          arg[1] = this.token as unknown as Token<'type'>;
+          this.advance();
+        }
+        args.push(arg);
+      } while ((this.token as Token).is('operator', ','));
 
       if (!this.token.is('grouping', ')'))
         this.expect(["','", "')'"], this.token.end);
@@ -774,7 +783,7 @@ export default class Parser {
     } else if ((this.token as Token).is('grouping', '{')) body = this.block();
     else this.expect(["'->'", "'{'"], start);
 
-    return new FuncDefNode(argNames, body, start, name, arrow);
+    return new FuncDefNode(args, body, start, name, arrow);
   }
 
   binaryOp(left: () => Node, operators: readonly BinaryOp[], right = left) {

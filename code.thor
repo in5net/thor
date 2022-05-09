@@ -1,2 +1,6 @@
-外 = "outside"
-print("外 = {外}")
+fn say(message: str) {
+    print("String: {message}")
+}
+
+say("Hello")
+say(1)
