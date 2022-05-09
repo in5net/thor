@@ -185,10 +185,7 @@ export default class Interpreter implements ExecuteIndex {
   ): Promise<Value> {
     let returnValue: Value | undefined;
     const right = node ? await this.visit(node, scope) : undefined;
-    if (operator === '=') {
-      scope.set(identifier.value, right!);
-      return right!;
-    }
+    if (operator === '=') return scope.set(identifier.value, right!);
 
     const left = await this.visit(new IdentifierNode(identifier), scope);
 
@@ -269,7 +266,6 @@ export default class Interpreter implements ExecuteIndex {
     { condition, body, elseCase }: IfNode,
     scope: Scope
   ): Promise<Value> {
-    // @ts-ignore
     if (((await this.visit(condition, scope)) as Number | Boolean).value)
       return this.visit(body, scope);
     else if (elseCase) return this.visit(elseCase, scope);
