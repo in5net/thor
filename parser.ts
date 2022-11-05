@@ -29,7 +29,6 @@ import Token, {
   BinaryOp,
   binaryOps,
   boolCompareOps,
-  compareOps,
   groupings,
   IdentifierOp,
   identifierOps,
@@ -41,7 +40,6 @@ import Token, {
   RightGrouping,
   UnaryOp
 } from './token.ts';
-import Type from './type.ts';
 
 export default class Parser {
   index = -1;

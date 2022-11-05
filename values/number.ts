@@ -1,13 +1,13 @@
 import { rgb24 } from 'fmt/colors.ts';
 
+import type { BinaryOp } from '../token.ts';
 import Boolean from './boolean.ts';
 import Complex from './complex.ts';
-import Range from './range.ts';
-import List from './list.ts';
-import String from './string.ts';
 import { Function } from './function.ts';
+import List from './list.ts';
+import Range from './range.ts';
+import String from './string.ts';
 import Value from './value.ts';
-import type { BinaryOp } from '../token.ts';
 
 export default class Number extends Value {
   constructor(public value: number) {
