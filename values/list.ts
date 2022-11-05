@@ -25,9 +25,9 @@ export default class List extends Value {
       return new List(
         this.items.map(
           (value, i) =>
-            (value['*'](
+            value['*'](
               other instanceof List ? other.items[i] : other
-            ) as unknown) as Value
+            ) as unknown as Value
         )
       );
   }
@@ -37,9 +37,9 @@ export default class List extends Value {
       return new List(
         this.items.map(
           (value, i) =>
-            (value['/'](
+            value['/'](
               other instanceof List ? other.items[i] : other
-            ) as unknown) as Value
+            ) as unknown as Value
         )
       );
   }

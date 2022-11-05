@@ -1,7 +1,7 @@
 import { rgb24 } from 'fmt/colors.ts';
 
-import Number from './number.ts';
 import Boolean from './boolean.ts';
+import Number from './number.ts';
 import Value from './value.ts';
 
 type Mat = number[][] | Float64Array[];

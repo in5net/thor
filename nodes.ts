@@ -1,4 +1,4 @@
-import { red, cyan, green, magenta, rgb24, white, yellow } from 'fmt/colors.ts';
+import { cyan, green, magenta, red, rgb24, white, yellow } from 'fmt/colors.ts';
 import Position from './position.ts';
 import Token, {
   BinaryOp,

@@ -2,10 +2,10 @@ import Interpreter from '../interpreter.ts';
 import Node, { Arg } from '../nodes.ts';
 import Scope from '../scope.ts';
 import Type from '../type.ts';
-import Value from './value.ts';
-import Number from './number.ts';
 import Boolean from './boolean.ts';
+import Number from './number.ts';
 import String from './string.ts';
+import Value from './value.ts';
 
 export class BaseFunction extends Value {
   constructor(public name = '<anonymous>') {

@@ -1,4 +1,11 @@
-import Value, { Complex, List, Number, String } from '../../values/mod.ts';
+import Value, {
+  Boolean,
+  Complex,
+  List,
+  Number,
+  String,
+  Vector
+} from '../../values/mod.ts';
 export * from './trig.ts';
 
 export default { '∞': new Number(Infinity) };
@@ -188,4 +195,26 @@ export function exit(code: Value): never {
   if (!code) Deno.exit();
   if (!(code instanceof Number)) throw 'exit() expects a number or nothing';
   Deno.exit(code.value);
+}
+
+export function zeros(length: Number): Vector {
+  if (!(length instanceof Number)) throw 'zeros() expects a number';
+  return new Vector(new Array(length.value).fill(0));
+}
+
+export function ones(length: Number): Vector {
+  if (!(length instanceof Number)) throw 'ones() expects a number';
+  return new Vector(new Array(length.value).fill(1));
+}
+
+export function falses(length: Number): List {
+  if (!(length instanceof Number)) throw 'falses() expects a number';
+  return new List(
+    new Array(length.value).fill(0).map(() => new Boolean(false))
+  );
+}
+
+export function trues(length: Number): List {
+  if (!(length instanceof Number)) throw 'trues() expects a number';
+  return new List(new Array(length.value).fill(0).map(() => new Boolean(true)));
 }
